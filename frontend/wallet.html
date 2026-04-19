@@ -406,25 +406,45 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
   </section>
 </div>
 
-<script>
+<script type="module">
 // ─────────────────────────────────────────────────────────────────────────────
-// API base + auth. In production this is the same host; token is whatever
-// the existing dashboard uses (localStorage.authToken for this starter code).
+// API base + auth — uses Firebase ID token stored by index.html on sign-in.
 // ─────────────────────────────────────────────────────────────────────────────
 const API = '/api/v1';
+
+import { auth } from './firebase-init.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+async function getFreshToken() {
+  const user = auth.currentUser;
+  if (!user) return localStorage.getItem('authToken') || '';
+  const token = await user.getIdToken();
+  localStorage.setItem('authToken', token);
+  return token;
+}
+
 function authHeaders() {
   const t = localStorage.getItem('authToken') || '';
-  return t ? { 'Authorization': 'Token ' + t } : {};
+  return t ? { 'Authorization': 'Bearer ' + t } : {};
 }
+
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    // Redirect to login if not authenticated
+    window.location.href = 'index.html';
+  }
+});
 async function apiGet(path) {
-  const r = await fetch(API + path, { headers: authHeaders() });
+  const t = await getFreshToken();
+  const r = await fetch(API + path, { headers: t ? { 'Authorization': 'Bearer ' + t } : {} });
   if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
   return r.json();
 }
 async function apiPost(path, body, method = 'POST') {
+  const t = await getFreshToken();
   const r = await fetch(API + path, {
     method,
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    headers: { 'Content-Type': 'application/json', ...(t ? { 'Authorization': 'Bearer ' + t } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
@@ -993,9 +1013,9 @@ async function downloadCsv() {
   const params = new URLSearchParams();
   if (mod) params.set('module', mod);
   if (stat) params.set('status', stat);
-  const t = localStorage.getItem('authToken') || '';
+  const t = await getFreshToken();
   const r = await fetch(API + '/wallet/transactions/export.csv?' + params.toString(), {
-    headers: t ? { 'Authorization': 'Token ' + t } : {},
+    headers: t ? { 'Authorization': 'Bearer ' + t } : {},
   });
   if (!r.ok) return msg('Download failed', 'error');
   const blob = await r.blob();

@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "irg-gdp-prod",
+    "default": "irggdp",
     "staging": "irg-gdp-staging"
   },
   "targets": {},

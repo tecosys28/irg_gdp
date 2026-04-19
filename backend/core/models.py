@@ -11,10 +11,11 @@ import uuid
 
 class User(AbstractUser):
     """Extended User model with multi-role support"""
-    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True, db_index=True)
     email = models.EmailField(unique=True)
-    mobile = models.CharField(max_length=15, unique=True, validators=[
+    mobile = models.CharField(max_length=15, blank=True, validators=[
         RegexValidator(r'^\+?[0-9]{10,14}$', 'Enter a valid mobile number')
     ])
     
@@ -43,7 +44,7 @@ class User(AbstractUser):
     blockchain_address = models.CharField(max_length=66, blank=True, null=True)
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'mobile']
+    REQUIRED_FIELDS = ['username']
     
     class Meta:
         db_table = 'core_user'

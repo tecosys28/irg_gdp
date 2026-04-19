@@ -388,7 +388,46 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { auth } from './firebase-init.js';
+        import {
+          createUserWithEmailAndPassword,
+          signInWithEmailAndPassword,
+          signOut as fbSignOut,
+          onAuthStateChanged,
+          sendPasswordResetEmail,
+          PhoneAuthProvider,
+          RecaptchaVerifier,
+          signInWithPhoneNumber,
+        } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+        // Expose auth to non-module inline handlers via window
+        window._auth = auth;
+        window._fbSignOut = fbSignOut;
+        window._sendPasswordResetEmail = sendPasswordResetEmail;
+        window._signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window._createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+
+        // Persist Firebase ID token so wallet.html can use it
+        async function refreshToken() {
+          const user = auth.currentUser;
+          if (!user) return;
+          const token = await user.getIdToken();
+          localStorage.setItem('authToken', token);
+        }
+
+        onAuthStateChanged(auth, async user => {
+          if (user) {
+            await refreshToken();
+            // Re-enter dashboard on page reload if already signed in
+            if (document.getElementById('dashboard-page').style.display !== 'flex') {
+              enterDashboard(localStorage.getItem('irgRole') || 'household');
+            }
+          } else {
+            localStorage.removeItem('authToken');
+          }
+        });
+
         // ═══════════════════════════════════════════════════════════════════════════════
         // ROLE DEFINITIONS WITH REGISTRATION FIELDS
         // ═══════════════════════════════════════════════════════════════════════════════
@@ -562,8 +601,15 @@
         function showHelp(){alert('Help Center');}
         function showFAQs(){alert('FAQs by topic and user type.');}
         function openChatbot(){alert('Chat Assistant');}
-        function showForgotPassword(){alert('Password reset link sent to email.');}
-        function resendOTP(){alert('OTP resent.');}
+        async function showForgotPassword(){
+          const email = document.getElementById('signin-email').value.trim();
+          if (!email) { alert('Enter your email address first.'); return; }
+          try {
+            await window._sendPasswordResetEmail(window._auth, email);
+            alert('Password reset email sent to ' + email);
+          } catch(e) { alert('Error: ' + (e.message || e.code)); }
+        }
+        function resendOTP(){ alert('OTP resent.'); }
 
         // ═══════════════════════════════════════════════════════════════════════════════
         // SIGN ON - MULTI-ROLE WITH CONSTRAINTS
@@ -688,7 +734,7 @@
             document.getElementById('signon-step2').style.display='block';
         }
 
-        function submitRegistration(){
+        async function submitRegistration(){
             if(!debounce())return;
             const pw=document.getElementById('reg-password').value;
             const pwc=document.getElementById('reg-password-confirm').value;
@@ -696,18 +742,34 @@
             if(pw.length<8){alert('Password must be at least 8 characters.');return;}
             if(pw!==pwc){alert('Passwords do not match.');return;}
             if(!terms){alert('Please accept the Terms & Conditions.');return;}
-            hideModal('signon');
-            showModal('otp');
+            const email=document.getElementById('reg-email').value.trim();
+            try {
+              const cred = await window._createUserWithEmailAndPassword(window._auth, email, pw);
+              const token = await cred.user.getIdToken();
+              localStorage.setItem('authToken', token);
+              localStorage.setItem('irgRole', selectedRoles[0] || 'household');
+              hideModal('signon');
+              enterDashboard(selectedRoles[0] || 'household');
+            } catch(e) {
+              alert('Registration failed: ' + (e.message || e.code));
+            }
         }
 
-        function processSignIn(){
+        async function processSignIn(){
             if(!debounce())return;
-            const e=document.getElementById('signin-email').value;
+            const e=document.getElementById('signin-email').value.trim();
             const p=document.getElementById('signin-password').value;
-            if(!e||!p){alert('Enter email/mobile and password.');return;}
-            pendingRole='household';
-            hideModal('signin');
-            showModal('otp');
+            if(!e||!p){alert('Enter email and password.');return;}
+            try {
+              const cred = await window._signInWithEmailAndPassword(window._auth, e, p);
+              const token = await cred.user.getIdToken();
+              localStorage.setItem('authToken', token);
+              pendingRole = localStorage.getItem('irgRole') || 'household';
+              hideModal('signin');
+              enterDashboard(pendingRole);
+            } catch(e) {
+              alert('Sign in failed: ' + (e.message || e.code));
+            }
         }
 
         function verifyOTP(){
@@ -730,7 +792,10 @@
             renderSidebar();renderPanel();
         }
 
-        function signOut(){
+        async function signOut(){
+            await window._fbSignOut(window._auth);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('irgRole');
             document.getElementById('landing-page').style.display='block';
             document.getElementById('dashboard-page').classList.remove('active');
         }
@@ -743,6 +808,15 @@
         function renderLBMA(){return'<div class="card"><h3 style="color:var(--gold);margin-bottom:20px;">📈 LBMA Rates</h3><table class="table"><thead><tr><th>Metal</th><th>Symbol</th><th style="text-align:right;">AM Fix</th><th style="text-align:right;">PM Fix</th></tr></thead><tbody>'+LBMA_METALS.map(m=>'<tr><td>'+m.name+'</td><td>'+m.symbol+'</td><td style="text-align:right;">—</td><td style="text-align:right;">—</td></tr>').join('')+'</tbody></table></div>';}
         function renderGeneric(){const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};return'<h2 class="panel-title">'+r.icon+' '+r.name+' Dashboard</h2><div class="card" style="text-align:center;padding:60px;"><div style="font-size:64px;margin-bottom:16px;">'+r.icon+'</div><h3 style="color:var(--white);">Welcome!</h3><p style="color:var(--text-muted);">Select an option from the menu</p></div>';}
         document.addEventListener('DOMContentLoaded',function(){LBMA_METALS.forEach(m=>{lbmaRates[m.id]={};});});
+
+        // Expose all functions used by inline onclick= handlers to window scope
+        // (required because this is a type="module" script)
+        Object.assign(window, {
+          showModal, hideModal, showSearch, showHelp, showFAQs, openChatbot,
+          showForgotPassword, resendOTP, selectProduct, signOut, changeRole,
+          selectPanel, goToStep1, goToStep2, goToStep3, goToStep2FromStep3,
+          toggleRole, submitRegistration, processSignIn, verifyOTP, enterDashboard,
+        });
     </script>
 <!-- ─── IRG Wallet integration (v2.7) ─── -->
 <style>
@@ -764,13 +838,15 @@
 </style>
 <div id="irg-wallet-banner"></div>
 <a id="irg-wallet-quick" href="wallet.html">💼 My Wallet</a>
-<script>
-(async function () {
+<script type="module">
+import { auth } from './firebase-init.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+onAuthStateChanged(auth, async user => {
+  if (!user) return;
   try {
-    const t = localStorage.getItem('authToken') || '';
-    if (!t) return;
+    const t = await user.getIdToken();
     const r = await fetch('/api/v1/wallet/status-banner/', {
-      headers: { 'Authorization': 'Token ' + t }
+      headers: { 'Authorization': 'Bearer ' + t }
     });
     if (!r.ok) return;
     const d = await r.json();
@@ -782,7 +858,7 @@
     b.style.display = 'flex';
     document.body.style.marginTop = '48px';
   } catch (e) { /* silent */ }
-})();
+});
 </script>
 </body>
 </html>

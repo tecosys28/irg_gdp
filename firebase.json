@@ -9,21 +9,29 @@
       "**/*.pyc"
     ],
     "rewrites": [
-      { "source": "/api/**",     "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/admin/**",   "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/static/**",  "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/media/**",   "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/",           "destination": "/index.html" },
+      { "source": "/healthz",    "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
+      { "source": "/api/**",     "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
+      { "source": "/admin/**",   "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
+      { "source": "/static/**",  "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
+      { "source": "/media/**",   "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
       { "source": "/wallet",     "destination": "/wallet.html" },
-      { "source": "/heir-guide", "destination": "/heir-guide.html" }
+      { "source": "/heir-guide", "destination": "/heir-guide.html" },
+      { "source": "/**",         "destination": "/index.html" }
     ],
     "headers": [
       {
         "source": "**/*.@(js|css|html)",
         "headers": [
-          { "key": "Cache-Control", "value": "max-age=3600" },
+          { "key": "Cache-Control", "value": "no-cache" },
           { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "X-Frame-Options", "value": "DENY" }
+        ]
+      },
+      {
+        "source": "**/*.@(js)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
         ]
       }
     ]

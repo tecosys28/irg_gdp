@@ -14,12 +14,13 @@ import { getFirestore }     from 'https://www.gstatic.com/firebasejs/10.8.0/fire
 import { getStorage }       from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
 
 const firebaseConfig = {
-  apiKey:            window.__FIREBASE_API_KEY__             || '__FIREBASE_API_KEY__',
-  authDomain:        window.__FIREBASE_AUTH_DOMAIN__         || 'irg-gdp-prod.firebaseapp.com',
-  projectId:         window.__FIREBASE_PROJECT_ID__          || 'irg-gdp-prod',
-  storageBucket:     window.__FIREBASE_STORAGE_BUCKET__      || 'irg-gdp-prod.appspot.com',
-  messagingSenderId: window.__FIREBASE_MESSAGING_SENDER_ID__ || '',
-  appId:             window.__FIREBASE_APP_ID__              || ''
+  apiKey:            window.__FIREBASE_API_KEY__             || 'AIzaSyAloxpaDMVcOimJfrDqWiXrTvijdmJSk20',
+  authDomain:        window.__FIREBASE_AUTH_DOMAIN__         || 'irggdp.firebaseapp.com',
+  projectId:         window.__FIREBASE_PROJECT_ID__          || 'irggdp',
+  storageBucket:     window.__FIREBASE_STORAGE_BUCKET__      || 'irggdp.firebasestorage.app',
+  messagingSenderId: window.__FIREBASE_MESSAGING_SENDER_ID__ || '128695548877',
+  appId:             window.__FIREBASE_APP_ID__              || '1:128695548877:web:a1b599fe72aa0dbad66284',
+  measurementId:     window.__FIREBASE_MEASUREMENT_ID__      || 'G-370M4K1XEX'
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);

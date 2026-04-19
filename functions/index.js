@@ -37,13 +37,17 @@ exports.licenceStatus = functions.https.onCall(async () => currentLicenceInfo())
 
 // CORS: explicit allowlist of origins that may call our digest endpoint
 const ALLOWED_ORIGINS = [
+  'https://irggdp.com',
+  'https://www.irggdp.com',
+  'https://irggdp.firebaseapp.com',
+  'https://irggdp.web.app',
   'https://gov.irgecosystem.com',
   'https://irg-gov-prod.web.app',
   'https://irg-gov-prod.firebaseapp.com',
   'https://irg-gov-staging.web.app',
   'https://gov-staging.irgecosystem.com',
-  'http://localhost:5173',    // Vite dev
-  'http://localhost:5000'     // Firebase hosting emulator
+  'http://localhost:5173',
+  'http://localhost:5000'
 ];
 
 const corsHandler = cors({

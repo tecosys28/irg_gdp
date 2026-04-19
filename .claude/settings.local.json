@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gcloud config *)",
+      "Bash(gcloud auth *)",
+      "Bash(gcloud iam *)",
+      "Bash(gcloud secrets *)",
+      "Bash(rm firebase-sa-key.json)",
+      "Bash(gcloud builds *)",
+      "Bash(gcloud run *)",
+      "Bash(gcloud logging *)",
+      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz)",
+      "Bash(curl -sv https://irggdp-api-128695548877.asia-south1.run.app/healthz)",
+      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/api/v1/wallet/heir-guide/)",
+      "Bash(curl -s \"https://irggdp-api-128695548877.asia-south1.run.app/healthz\" -H \"User-Agent: curl/8.6\")",
+      "Bash(firebase deploy *)",
+      "Bash(wait)",
+      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz/)",
+      "Bash(curl -s https://irggdp.web.app)",
+      "Bash(curl -s https://irggdp.web.app/api/v1/wallet/heir-guide/)",
+      "Bash(curl -s https://irggdp.com/api/v1/wallet/heir-guide/)"
+    ]
+  }
+}
