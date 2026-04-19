@@ -187,12 +187,12 @@
         // Replace the values below with your real config from Firebase console
         // (Project Settings → Your apps → SDK setup and configuration)
         const firebaseConfig = {
-            apiKey:            window.__FIREBASE_API_KEY__             || "REPLACE_WITH_API_KEY",
-            authDomain:        window.__FIREBASE_AUTH_DOMAIN__         || "irg-gdp-project.firebaseapp.com",
-            projectId:         window.__FIREBASE_PROJECT_ID__          || "irg-gdp-project",
-            storageBucket:     window.__FIREBASE_STORAGE_BUCKET__      || "irg-gdp-project.firebasestorage.app",
-            messagingSenderId: window.__FIREBASE_MESSAGING_SENDER_ID__ || "REPLACE_WITH_SENDER_ID",
-            appId:             window.__FIREBASE_APP_ID__              || "REPLACE_WITH_APP_ID",
+            apiKey:            'AIzaSyAloxpaDMVcOimJfrDqWiXrTvijdmJSk20',
+            authDomain:        'irggdp.firebaseapp.com',
+            projectId:         'irggdp',
+            storageBucket:     'irggdp.firebasestorage.app',
+            messagingSenderId: '128695548877',
+            appId:             '1:128695548877:web:a1b599fe72aa0dbad66284',
         };
         firebase.initializeApp(firebaseConfig);
     </script>
@@ -212,9 +212,16 @@
             </nav>
         </header>
         <nav class="menu-bar">
-            <button>Home</button><button>About</button><button>Products</button><button>How It Works</button><button>For Jewelers</button><button>For Households</button><button>Licensees</button><button onclick="showFAQs()">FAQs</button>
+            <button onclick="navScrollTo('section-home')">Home</button>
+            <button onclick="navScrollTo('section-about')">About</button>
+            <button onclick="navScrollTo('section-products')">Products</button>
+            <button onclick="showHowItWorks()">How It Works</button>
+            <button onclick="navScrollTo('section-for-jewelers')">For Jewelers</button>
+            <button onclick="navScrollTo('section-for-households')">For Households</button>
+            <button onclick="showLicensees()">Licensees</button>
+            <button onclick="showFAQs()">FAQs</button>
         </nav>
-        <section class="hero-section">
+        <section class="hero-section" id="section-home">
             <div class="hero-logo-title">
                 <div class="logo-container"><div class="quad"></div><div class="quad gold"></div><div class="quad"></div><div class="quad"></div></div>
                 <h1 class="hero-title">IRG_GDP</h1>
@@ -232,13 +239,13 @@
             </div>
             <button class="btn btn-gold" style="font-size:16px;padding:16px 48px;" onclick="showModal('signin')">Sign In to Explore More →</button>
         </section>
-        <section class="usps-section">
-            <h2>Benefits for You</h2>
+        <section class="usps-section" id="section-about">
+            <h2 id="section-products" style="scroll-margin-top:60px">Benefits for You</h2>
             <div class="usps-grid">
-                <div class="usp-card"><h3>🏠 For Households</h3><ul><li>Monetize idle gold without selling possession</li><li>Swap for 45+ FTR categories at locked rates</li><li>Resell anytime on the open marketplace</li><li>Earn bonus from Corpus Fund surplus</li></ul></div>
-                <div class="usp-card"><h3>💎 For Jewelers</h3><ul><li>Build lifetime customer relationships</li><li>No-loss buyback protects your margins</li><li>Access premium design bank</li><li>Corpus Fund as ready buyer at benchmark</li></ul></div>
+                <div class="usp-card" id="section-for-households"><h3>🏠 For Households</h3><ul><li>Monetize idle gold without selling possession</li><li>Swap for 45+ FTR categories at locked rates</li><li>Resell anytime on the open marketplace</li><li>Earn bonus from Corpus Fund surplus</li></ul></div>
+                <div class="usp-card" id="section-for-jewelers"><h3>💎 For Jewelers</h3><ul><li>Build lifetime customer relationships</li><li>No-loss buyback protects your margins</li><li>Access premium design bank</li><li>Corpus Fund as ready buyer at benchmark</li></ul></div>
                 <div class="usp-card"><h3>👗 For Design Seekers</h3><ul><li>Access thousands of verified designs</li><li>Connect directly with master designers</li><li>Custom design requests fulfilled</li><li>Transparent pricing</li></ul></div>
-                <div class="usp-card"><h3>📋 For Licensees</h3><ul><li>Exclusive territory rights</li><li>Revenue share from all 3 GIC streams</li><li>Training and support</li><li>Complete technology platform</li></ul></div>
+                <div class="usp-card" id="section-licensees"><h3>📋 For Licensees</h3><ul><li>Exclusive territory rights</li><li>Revenue share from all 3 GIC streams</li><li>Training and support</li><li>Complete technology platform</li></ul></div>
             </div>
         </section>
         <footer class="landing-footer">
@@ -388,20 +395,33 @@
         </div>
     </div>
 
-    <!-- OTP MODAL -->
+    <!-- PHONE OTP MODAL -->
     <div class="modal-overlay" id="otp-modal">
         <div class="modal">
-            <h2>OTP Verification</h2>
-            <p style="color:var(--text-muted);margin-bottom:20px;">Enter the 6-digit OTP sent to your registered mobile/email</p>
+            <h2>📱 Mobile Verification</h2>
+            <p style="color:var(--text-muted);margin-bottom:20px;">Enter the 6-digit OTP sent to your registered mobile number</p>
             <div class="form-group">
                 <label>OTP Code</label>
-                <input type="text" class="input" id="otp-input" maxlength="6" style="text-align:center;letter-spacing:8px;font-size:20px;">
+                <input type="text" class="input" id="otp-input" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="text-align:center;letter-spacing:8px;font-size:24px;font-weight:600;">
             </div>
             <p style="color:var(--text-muted);font-size:12px;">Didn't receive? <a href="#" onclick="resendOTP()" style="color:var(--gold);">Resend OTP</a></p>
             <div class="form-actions">
                 <button class="btn btn-outline" onclick="hideModal('otp')">Cancel</button>
-                <button class="btn btn-gold" onclick="verifyOTP()">Verify & Proceed</button>
+                <button class="btn btn-gold" onclick="verifyOTP()">Verify & Complete Registration</button>
             </div>
+        </div>
+    </div>
+    <!-- Invisible reCAPTCHA anchor for Firebase phone auth -->
+    <div id="recaptcha-container"></div>
+
+    <!-- SUCCESS MODAL (post-registration) -->
+    <div class="modal-overlay" id="success-modal">
+        <div class="modal" style="text-align:center;">
+            <div style="font-size:64px;margin-bottom:16px;">🎉</div>
+            <h2 style="color:var(--gold);margin-bottom:12px;">Registration Successful!</h2>
+            <p id="success-name" style="font-size:18px;font-weight:600;margin-bottom:8px;"></p>
+            <p style="color:var(--text-muted);margin-bottom:24px;">Welcome to IRG_GDP! Your account has been created and mobile number verified successfully.</p>
+            <button class="btn btn-gold" style="width:100%" onclick="hideModal('success');enterDashboard(window._regRole||'household')">Go to Dashboard →</button>
         </div>
     </div>
 
@@ -416,7 +436,7 @@
           PhoneAuthProvider,
           RecaptchaVerifier,
           signInWithPhoneNumber,
-        } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
         // Expose auth to non-module inline handlers via window
         window._auth = auth;
@@ -738,12 +758,78 @@
         function statusColor(s){const m={ACTIVE:'success',FINAL:'success',CONFIRMED:'success',ACTIVATED:'success',APPROVED:'success',PASSED:'success',RESOLVED:'success',PENDING:'warning',SUBMITTED:'warning',INITIATED:'warning',FILED:'warning',UNDER_REVIEW:'warning',VOTING:'warning',FAILED:'danger',REJECTED:'danger',RECALLED:'danger',LOCKED:'danger',SUSPENDED:'danger',FROZEN:'danger'};return m[s]||'info';}
 
         function debounce(d=300){const n=Date.now();if(n-lastClickTime<d)return false;lastClickTime=n;return true;}
+        // ─── Landing nav scroll helpers ───────────────────────────────────────
+        function navScrollTo(id){
+          const el=document.getElementById(id);
+          if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+        function showHowItWorks(){
+          const html=`<div style="max-width:700px;margin:0 auto;text-align:left">
+            <h2 style="color:var(--gold);margin-bottom:16px">How IRG_GDP Works</h2>
+            <ol style="color:var(--text-muted);line-height:2;padding-left:20px">
+              <li><strong style="color:var(--white)">Earmark Your Gold</strong> — A household earmarks physical jewellery with a registered IRG jeweler. The jeweler issues an <em>irg_jr</em> right certificate on-chain.</li>
+              <li><strong style="color:var(--white)">Receive IRG_GDP Units</strong> — Units are minted based on the LBMA 24-carat gold benchmark value of the earmarked jewellery.</li>
+              <li><strong style="color:var(--white)">Hold, Swap or Trade</strong> — Units retain gold-parity value. Swap them for any of 45+ FTR categories (healthcare, travel, education…) at locked rates, or trade them on the open marketplace.</li>
+              <li><strong style="color:var(--white)">Corpus Fund Backstop</strong> — The Super Corpus Fund acts as buyer of last resort at benchmark value, ensuring liquidity at all times.</li>
+              <li><strong style="color:var(--white)">Blockchain-Registered Rights</strong> — Every transaction is recorded on IRG Chain 888101 — immutable, auditable, and verifiable in real time.</li>
+            </ol>
+          </div>`;
+          _showInfoModal('How It Works', html);
+        }
+        function showLicensees(){
+          const html=`<div style="max-width:700px;margin:0 auto;text-align:left">
+            <h2 style="color:var(--gold);margin-bottom:16px">Become a Licensee</h2>
+            <p style="color:var(--text-muted);margin-bottom:16px">Licensees hold exclusive territorial rights to operate IRG_GDP services in their region.</p>
+            <ul style="color:var(--text-muted);line-height:2;padding-left:20px">
+              <li><strong style="color:var(--white)">Territory Exclusivity</strong> — One licensee per defined geographic territory</li>
+              <li><strong style="color:var(--white)">Revenue Share</strong> — Share in GIC corpus stream revenues from your territory</li>
+              <li><strong style="color:var(--white)">Technology Platform</strong> — Full access to IRG_GDP dashboard, onboarding tools, and training</li>
+              <li><strong style="color:var(--white)">Support</strong> — Dedicated account manager, compliance guidance, and marketing materials</li>
+            </ul>
+            <p style="color:var(--text-muted);margin-top:16px">To apply, <a href="#" onclick="hideModal('info');showModal('signon')" style="color:var(--gold)">register as a Licensee →</a></p>
+          </div>`;
+          _showInfoModal('Licensees', html);
+        }
+        function showFAQs(){
+          const faqs=[
+            ['What is IRG_GDP?','IRG_GDP is a blockchain-registered right to swap gold value at LBMA 24-carat rate for any FTRs, or resell it at any time from anywhere.'],
+            ['What is an FTR?','A Future Transaction Right (FTR) is your right to buy a service or goods at a pre-fixed rate any time in the future.'],
+            ['Is IRG_GDP a cryptocurrency?','No. IRG_GDP is not a digital asset or cryptocurrency. It is a platform right backed by physical gold earmarked with registered jewelers.'],
+            ['Is my gold safe?','Yes. Your jewellery stays physically with you. Earmarking is a legal record — the jeweler issues a buyback right, not custody.'],
+            ['Can I get my gold back?','Yes. Through the irg_jr buyback mechanism your jeweler is obligated to buy back at the no-loss benchmark value.'],
+            ['How are units valued?','Units are pegged to the LBMA 24-carat gold rate at time of minting. Value is updated on each LBMA rate feed.'],
+            ['Who can register?','Any individual (household, investor), jeweler, designer, consultant, licensee, or institutional entity can register with the appropriate role.'],
+            ['Is there a mobile app?','The IRG_GDP platform is fully web-responsive. Native mobile apps are on the roadmap.'],
+          ];
+          const html=faqs.map(([q,a])=>`<details style="margin-bottom:12px;border:1px solid var(--border);border-radius:8px;padding:12px 16px">
+            <summary style="cursor:pointer;color:var(--gold);font-weight:600">${q}</summary>
+            <p style="color:var(--text-muted);margin-top:8px;line-height:1.7">${a}</p>
+          </details>`).join('');
+          _showInfoModal('Frequently Asked Questions', html);
+        }
+        function _showInfoModal(title, bodyHtml){
+          let m=document.getElementById('info-modal');
+          if(!m){
+            m=document.createElement('div');m.id='info-modal';m.className='modal-overlay';
+            m.innerHTML=`<div class="modal" style="max-width:760px;max-height:80vh;overflow-y:auto">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <h2 id="info-modal-title" style="color:var(--gold)"></h2>
+                <button class="btn btn-outline btn-sm" onclick="hideModal('info')">✕ Close</button>
+              </div>
+              <div id="info-modal-body"></div>
+            </div>`;
+            document.body.appendChild(m);
+          }
+          document.getElementById('info-modal-title').textContent=title;
+          document.getElementById('info-modal-body').innerHTML=bodyHtml;
+          m.classList.add('active');
+        }
+
         function selectProduct(p){document.querySelectorAll('.product-tab').forEach(t=>t.classList.toggle('active',t.textContent.includes(p)));}
         function showModal(t){document.getElementById(t+'-modal').classList.add('active');if(t==='signon')initSignOnForm();}
-        function hideModal(t){document.getElementById(t+'-modal').classList.remove('active');}
+        function hideModal(t){const m=document.getElementById(t+'-modal');if(m)m.classList.remove('active');}
         function showSearch(){alert('Search across IRG_GDP products and FTRs.');}
         function showHelp(){alert('Help Center');}
-        function showFAQs(){alert('FAQs by topic and user type.');}
         function openChatbot(){alert('Chat Assistant');}
         async function showForgotPassword(){
           const email = document.getElementById('signin-email').value.trim();
@@ -753,7 +839,6 @@
             alert('Password reset email sent to ' + email);
           } catch(e) { alert('Error: ' + (e.message || e.code)); }
         }
-        function resendOTP(){ alert('OTP resent.'); }
 
         // ═══════════════════════════════════════════════════════════════════════════════
         // SIGN ON - MULTI-ROLE WITH CONSTRAINTS
@@ -878,25 +963,53 @@
             document.getElementById('signon-step2').style.display='block';
         }
 
+        // ─── Phone OTP state (registration) ──────────────────────────────────
+        let _pendingRegEmail = '';
+        let _pendingRegPw = '';
+        let _pendingRegName = '';
+        let _phoneConfirmResult = null;
+
         async function submitRegistration(){
             if(!debounce())return;
             const pw=document.getElementById('reg-password').value;
             const pwc=document.getElementById('reg-password-confirm').value;
             const terms=document.getElementById('reg-terms').checked;
             if(pw.length<8){alert('Password must be at least 8 characters.');return;}
+            if(!/[A-Z]/.test(pw)||!/[0-9]/.test(pw)||!/[^A-Za-z0-9]/.test(pw)){alert('Password must contain at least 1 uppercase letter, 1 number, and 1 special character.');return;}
             if(pw!==pwc){alert('Passwords do not match.');return;}
             if(!terms){alert('Please accept the Terms & Conditions.');return;}
             const email=document.getElementById('reg-email').value.trim();
+            const mobile=document.getElementById('reg-mobile').value.trim();
+            const name=document.getElementById('reg-fullname').value.trim();
+            if(!email){alert('Email is required.');return;}
+            if(!mobile){alert('Mobile number is required.');return;}
+            _pendingRegEmail=email; _pendingRegPw=pw; _pendingRegName=name;
+            // Send phone OTP via Firebase compat SDK
             try {
-              const cred = await window._createUserWithEmailAndPassword(window._auth, email, pw);
-              const token = await cred.user.getIdToken();
-              localStorage.setItem('authToken', token);
-              localStorage.setItem('irgRole', selectedRoles[0] || 'household');
+              if(!window._recaptchaVerifier){
+                window._recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {size:'invisible'});
+              }
+              const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile.replace(/\D/g,'');
+              _phoneConfirmResult = await firebase.auth().signInWithPhoneNumber(formatted, window._recaptchaVerifier);
               hideModal('signon');
-              enterDashboard(selectedRoles[0] || 'household');
-            } catch(e) {
-              alert('Registration failed: ' + (e.message || e.code));
+              document.getElementById('otp-input').value='';
+              document.getElementById('otp-modal').classList.add('active');
+            } catch(e){
+              alert('Failed to send OTP: ' + (e.message || e.code));
+              if(window._recaptchaVerifier){ window._recaptchaVerifier.clear(); window._recaptchaVerifier=null; }
             }
+        }
+
+        function resendOTP(){
+            if(!_pendingRegEmail){ alert('Start registration again.'); return; }
+            const mobile=document.getElementById('reg-mobile').value.trim();
+            if(!mobile){ alert('Mobile number missing.'); return; }
+            if(window._recaptchaVerifier){ window._recaptchaVerifier.clear(); window._recaptchaVerifier=null; }
+            window._recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container',{size:'invisible'});
+            const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile.replace(/\D/g,'');
+            firebase.auth().signInWithPhoneNumber(formatted, window._recaptchaVerifier)
+              .then(r=>{ _phoneConfirmResult=r; alert('OTP resent to ' + formatted); })
+              .catch(e=>{ alert('Resend failed: '+(e.message||e.code)); });
         }
 
         async function processSignIn(){
@@ -916,10 +1029,30 @@
             }
         }
 
-        function verifyOTP(){
+        async function verifyOTP(){
             if(!debounce())return;
-            const o=document.getElementById('otp-input').value;
+            const o=document.getElementById('otp-input').value.trim();
             if(o.length!==6){alert('Enter valid 6-digit OTP.');return;}
+            // Registration flow: phone OTP → then create email/password account
+            if(_phoneConfirmResult && _pendingRegEmail){
+              try {
+                await _phoneConfirmResult.confirm(o);
+                // Phone verified — now create the email+password account
+                const cred = await window._createUserWithEmailAndPassword(window._auth, _pendingRegEmail, _pendingRegPw);
+                const token = await cred.user.getIdToken();
+                localStorage.setItem('authToken', token);
+                window._regRole = selectedRoles[0] || 'household';
+                localStorage.setItem('irgRole', window._regRole);
+                _phoneConfirmResult = null; _pendingRegEmail=''; _pendingRegPw='';
+                hideModal('otp');
+                document.getElementById('success-name').textContent = 'Welcome, ' + (_pendingRegName || '') + '!';
+                document.getElementById('success-modal').classList.add('active');
+              } catch(e){
+                alert('Verification failed: '+(e.message||e.code));
+              }
+              return;
+            }
+            // Sign-in OTP flow (phone sign-in)
             hideModal('otp');
             enterDashboard(pendingRole||'household');
         }
@@ -1974,9 +2107,10 @@
         // Expose all functions used by inline onclick= handlers to window scope
         // (required because this is a type="module" script)
         Object.assign(window, {
-          showModal, hideModal, showSearch, showHelp, showFAQs, openChatbot,
+          showModal, hideModal, showSearch, showHelp, openChatbot,
           showForgotPassword, resendOTP, selectProduct, signOut, changeRole,
           selectPanel, goToStep1, goToStep2, goToStep3, goToStep2FromStep3,
+          navScrollTo, showHowItWorks, showLicensees, showFAQs,
           toggleRole, submitRegistration, processSignIn, verifyOTP, enterDashboard,
           // KYC
           submitKYC, reviewKYC,
@@ -2026,7 +2160,7 @@
 <a id="irg-wallet-quick" href="wallet.html">💼 My Wallet</a>
 <script type="module">
 import { auth } from './firebase-init.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 onAuthStateChanged(auth, async user => {
   if (!user) return;
   try {

@@ -413,7 +413,7 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
 const API = '/api/v1';
 
 import { auth } from './firebase-init.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
 async function getFreshToken() {
   const user = auth.currentUser;

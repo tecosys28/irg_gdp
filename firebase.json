@@ -10,6 +10,7 @@
     ],
     "rewrites": [
       { "source": "/healthz",    "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
+      { "source": "/healthz/",   "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
       { "source": "/api/**",     "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
       { "source": "/admin/**",   "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
       { "source": "/static/**",  "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
@@ -44,7 +45,7 @@
     {
       "source": "functions",
       "codebase": "default",
-      "runtime": "nodejs18",
+      "runtime": "nodejs22",
       "region": "asia-south1",
       "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
     }

@@ -20,7 +20,25 @@
       "Bash(curl -s https://irggdp.web.app/api/v1/wallet/heir-guide/)",
       "Bash(curl -s https://irggdp.com/api/v1/wallet/heir-guide/)",
       "Bash(python3)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(firebase --version)",
+      "Bash(firebase projects:list)",
+      "Bash(gcloud projects *)",
+      "Bash(firebase hosting:sites:list --project=irggdp)",
+      "Bash(curl -s \"https://irggdp-api-128695548877.asia-south1.run.app/healthz/\")",
+      "Bash(firebase apps:sdkconfig WEB --project=irggdp)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" https://irggdp.web.app/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" https://irggdp.web.app/api/v1/auth/users/me/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" https://irggdp.com/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" https://irggdp.com/api/v1/auth/users/me/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" https://www.irggdp.com/)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s https://irggdp.com/api/v1/auth/users/me/ -w \"\\\\nHTTP:%{http_code}\")",
+      "Bash(curl -s https://irggdp.com/api/v1/gdp/ -w \"\\\\nHTTP:%{http_code}\")",
+      "Bash(curl -s https://irggdp.com/api/v1/oracle/ -w \"\\\\nHTTP:%{http_code}\")",
+      "Bash(curl -s https://irggdp.com/healthz -w \"\\\\nHTTP:%{http_code}\")",
+      "Bash(curl -s https://irggdp.com/healthz/ -w \"\\\\nHTTP:%{http_code}\")",
+      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz/ -w \"\\\\nHTTP:%{http_code}\")"
     ]
   }
 }
