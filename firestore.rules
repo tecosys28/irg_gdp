@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthed()  { return request.auth != null; }
+    function userRole()  { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+    function isAdmin()   { return isAuthed() && userRole() in ['admin', 'intech_owner']; }
+    function isMinter()  { return isAuthed() && userRole() == 'minter'; }
+    function isTrustee() { return isAuthed() && userRole() in ['trustee', 'managing_trustee']; }
+    function isAuditor() { return isAuthed() && userRole() == 'auditor'; }
+
+    // ── Users ────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read:   if request.auth.uid == userId || isAdmin();
+      allow create: if false;
+      allow update: if request.auth.uid == userId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'kyc_status']);
+      allow delete: if false;
+    }
+
+    // ── GDP units (read own, admin all) ──────────────────────────────────
+    match /gdp_units/{unitId} {
+      allow read: if isAuthed() && (resource.data.holderId == request.auth.uid || isAdmin() || isAuditor());
+      allow write: if false;
+    }
+
+    // ── Minting records ──────────────────────────────────────────────────
+    match /minting_records/{recordId} {
+      allow read: if isAuthed() && (resource.data.jewelerId == request.auth.uid || isAdmin() || isAuditor());
+      allow write: if false;
+    }
+
+    // ── Corpus fund ──────────────────────────────────────────────────────
+    match /corpus/{docId} {
+      allow read: if isAuthed();
+      allow write: if false;
+    }
+
+    // ── Royalty distributions ────────────────────────────────────────────
+    match /royalty_distributions/{distId} {
+      allow read: if isAuthed() && (resource.data.beneficiaryId == request.auth.uid || isAdmin() || isTrustee());
+      allow write: if false;
+    }
+
+    // ── Disputes ─────────────────────────────────────────────────────────
+    match /disputes/{caseId} {
+      allow read: if isAuthed() && (
+        resource.data.filedBy == request.auth.uid ||
+        resource.data.respondent == request.auth.uid ||
+        resource.data.ombudsman == request.auth.uid ||
+        isAdmin() || isAuditor()
+      );
+      allow write: if false;
+    }
+
+    // ── Sub-products (JR, JDB, GIC) ──────────────────────────────────────
+    match /jr_holdings/{docId}    { allow read: if isAuthed() && (resource.data.holderId == request.auth.uid || isAdmin()); allow write: if false; }
+    match /jdb_records/{docId}    { allow read: if isAuthed() && (resource.data.designerId == request.auth.uid || isAdmin()); allow write: if false; }
+    match /gic_certificates/{docId} { allow read: if isAuthed() && (resource.data.holderId == request.auth.uid || isAdmin()); allow write: if false; }
+
+    // ── MICS digest cache (populated by getMICSDigest function) ──────────
+    match /mics_digest/{docId} {
+      allow read:  if true;   // Public aggregate; no PII
+      allow write: if false;
+    }
+
+    // ── LBMA oracle ──────────────────────────────────────────────────────
+    match /lbma_rates/{rateId} {
+      allow read:  if isAuthed();
+      allow write: if false;
+    }
+
+    // ── Platform config ──────────────────────────────────────────────────
+    match /platform_config/{configId} {
+      allow read:  if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    // ── Audit trail (admin + auditors only) ──────────────────────────────
+    match /audit_trail/{logId} {
+      allow read:   if isAdmin() || isAuditor();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read:  if false;
+      allow write: if false;
+    }
+  }
+}

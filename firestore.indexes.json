@@ -1,0 +1,36 @@
+{
+  "indexes": [
+    { "collectionGroup": "gdp_units", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",    "order": "ASCENDING" },
+        { "fieldPath": "mintedAt",  "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "minting_records", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "jewelerId", "order": "ASCENDING" },
+        { "fieldPath": "mintedAt",  "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "minting_records", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "region",   "order": "ASCENDING" },
+        { "fieldPath": "mintedAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "disputes", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "status",   "order": "ASCENDING" },
+        { "fieldPath": "filedAt",  "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "royalty_distributions", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category",       "order": "ASCENDING" },
+        { "fieldPath": "distributedAt",  "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "lbma_rates", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "source",   "order": "ASCENDING" },
+        { "fieldPath": "timestamp","order": "DESCENDING" }
+      ] }
+  ],
+  "fieldOverrides": []
+}

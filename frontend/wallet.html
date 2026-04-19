@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRG Wallet | Intech Research Group</title>
+<style>
+:root {
+  --navy-blue: #000052;
+  --navy-dark: #00003A;
+  --surface: #0A0A3A;
+  --surface-light: #14145A;
+  --gold: #E4B44A;
+  --gold-light: #F5D67A;
+  --white: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.7);
+  --border: rgba(228, 180, 74, 0.3);
+  --success: #4CAF7A;
+  --danger: #C05858;
+  --warning: #D4924A;
+  --info: #4A8AB0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+       background: var(--navy-blue); color: var(--white); min-height: 100vh;
+       padding: 20px; }
+h1, h2, h3 { color: var(--gold); }
+h1 { font-size: 1.8em; margin-bottom: 20px; }
+h2 { font-size: 1.3em; margin: 20px 0 10px; }
+h3 { font-size: 1.05em; margin: 12px 0 6px; }
+.page { max-width: 1100px; margin: 0 auto; }
+.card { background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.banner { padding: 14px 18px; border-radius: 6px; margin-bottom: 18px;
+          display: flex; justify-content: space-between; align-items: center;
+          font-weight: 500; }
+.banner.warning { background: rgba(212, 146, 74, 0.15); border: 1px solid var(--warning); color: var(--gold-light); }
+.banner.danger  { background: rgba(192, 88, 88, 0.15); border: 1px solid var(--danger); color: #FFB8B8; }
+.banner.info    { background: rgba(74, 138, 176, 0.15); border: 1px solid var(--info); }
+.banner button, .btn { background: var(--gold); color: var(--navy-dark);
+        border: none; padding: 9px 16px; border-radius: 5px; cursor: pointer;
+        font-weight: 600; }
+.btn-secondary { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+.btn-danger { background: var(--danger); color: white; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.row { display: flex; gap: 16px; flex-wrap: wrap; }
+.col { flex: 1; min-width: 280px; }
+.kv { display: flex; justify-content: space-between; padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); }
+.kv:last-child { border-bottom: none; }
+.kv span:first-child { color: var(--text-muted); }
+.address { font-family: 'Courier New', monospace; word-break: break-all;
+           background: var(--navy-dark); padding: 10px; border-radius: 5px;
+           border: 1px solid var(--border); font-size: 0.9em; }
+.state-badge { display: inline-block; padding: 4px 10px; border-radius: 12px;
+               font-size: 0.85em; font-weight: 600; }
+.state-CREATED    { background: rgba(212, 146, 74, 0.2); color: var(--warning); }
+.state-ACTIVATED  { background: rgba(76, 175, 122, 0.2); color: var(--success); }
+.state-LOCKED     { background: rgba(192, 88, 88, 0.2); color: var(--danger); }
+.state-RECOVERING { background: rgba(192, 88, 88, 0.2); color: var(--danger); }
+.state-SUSPENDED  { background: rgba(192, 88, 88, 0.2); color: var(--danger); }
+.state-RECOVERED  { background: rgba(74, 138, 176, 0.2); color: var(--info); }
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+th { color: var(--gold); font-weight: 600; }
+td.tx-hash { font-family: 'Courier New', monospace; font-size: 0.8em; }
+.tx-status-SUBMITTED { color: var(--info); }
+.tx-status-CONFIRMED, .tx-status-FINAL { color: var(--success); }
+.tx-status-SIMULATED { color: var(--warning); }
+.tx-status-FAILED    { color: var(--danger); }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab { padding: 8px 14px; background: var(--surface); cursor: pointer;
+       border: 1px solid var(--border); border-radius: 5px 5px 0 0;
+       color: var(--text-muted); }
+.tab.active { background: var(--surface-light); color: var(--gold); border-bottom-color: var(--surface-light); }
+.hidden { display: none; }
+input[type=text], input[type=password], input[type=email], input[type=tel], select, textarea {
+  width: 100%; padding: 8px 10px; margin: 4px 0 12px;
+  background: var(--navy-dark); color: white; border: 1px solid var(--border);
+  border-radius: 5px; font-family: inherit; font-size: 0.95em;
+}
+label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 8px; }
+.seed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+             gap: 8px; margin: 16px 0; }
+.seed-word { background: var(--navy-dark); padding: 10px; border-radius: 5px;
+             border: 1px solid var(--border); font-family: 'Courier New', monospace;
+             font-size: 1.05em; }
+.seed-word .num { color: var(--gold); margin-right: 6px; font-size: 0.8em; }
+.warning-box { background: rgba(212, 146, 74, 0.12); border: 1px solid var(--warning);
+               padding: 14px; border-radius: 6px; margin: 12px 0; }
+.warning-box strong { color: var(--warning); }
+.nav { margin-bottom: 20px; }
+.nav a { color: var(--text-muted); text-decoration: none; margin-right: 16px;
+         padding: 6px 10px; border-radius: 4px; }
+.nav a:hover, .nav a.active { color: var(--gold); background: var(--surface); }
+.nominee-row { display: grid; grid-template-columns: 2fr 1fr 2fr 1fr 0.8fr auto;
+               gap: 8px; margin-bottom: 6px; align-items: center; }
+.nominee-row input { margin: 0; }
+.text-muted { color: var(--text-muted); font-size: 0.88em; }
+.qr-placeholder { width: 180px; height: 180px; background: white; color: var(--navy-dark);
+                  display: flex; align-items: center; justify-content: center;
+                  text-align: center; padding: 10px; border-radius: 8px;
+                  font-size: 0.8em; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="nav">
+    <a href="index.html">← Dashboard</a>
+    <a href="#" class="active">Wallet</a>
+    <a href="heir-guide.html">For Family / Heirs</a>
+  </div>
+
+  <h1>Your IRG Wallet</h1>
+
+  <div id="banner-slot"></div>
+
+  <!-- ─── WALLET INFO ─── -->
+  <div class="card">
+    <div class="row">
+      <div class="col">
+        <h2>Wallet Details</h2>
+        <div class="kv"><span>State</span><span id="wallet-state" class="state-badge">—</span></div>
+        <div class="kv"><span>Chain</span><span>IRG Chain 888101</span></div>
+        <div class="kv"><span>Holder</span><span id="wallet-holder">—</span></div>
+        <div class="kv"><span>Created</span><span id="wallet-created">—</span></div>
+        <div class="kv"><span>Activated</span><span id="wallet-activated">—</span></div>
+        <div class="kv"><span>Last activity</span><span id="wallet-last-activity">—</span></div>
+        <div class="kv"><span>Nominees</span><span id="wallet-nominees">—</span></div>
+        <div class="kv"><span>Devices (active)</span><span id="wallet-devices-count">—</span></div>
+        <h3>Address</h3>
+        <div class="address" id="wallet-address">—</div>
+        <button class="btn btn-secondary" onclick="copyAddress()" style="margin-top:8px">Copy address</button>
+      </div>
+      <div class="col" style="max-width: 220px">
+        <div class="qr-placeholder">
+          QR code renders here<br><span class="text-muted">(wire in qrcode.js)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TABS ─── -->
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('tab-activation', event)">Activation</div>
+    <div class="tab" onclick="showTab('tab-nominees', event)">Nominees</div>
+    <div class="tab" onclick="showTab('tab-devices', event)">Devices</div>
+    <div class="tab" onclick="showTab('tab-history', event)">Transaction History</div>
+    <div class="tab" onclick="showTab('tab-liveness', event)">Activity</div>
+    <div class="tab" onclick="showTab('tab-recovery', event)">Recovery</div>
+    <div class="tab" id="tab-ownership-link" style="display:none" onclick="showTab('tab-ownership', event)">Ownership Transfer</div>
+    <div class="tab" onclick="showTab('tab-security', event)">Security</div>
+  </div>
+
+  <!-- ─── ACTIVATION TAB ─── -->
+  <section id="tab-activation" class="card">
+    <h2>Activate Your Wallet</h2>
+    <p class="text-muted">You cannot transact until your wallet is activated. Activation is a one-time process covering four things:</p>
+    <ol style="margin: 12px 0 16px 20px; color: var(--text-muted)">
+      <li>Write down your 15-word recovery phrase — the only way to recover your wallet if you lose your device.</li>
+      <li>Set a wallet password (different from your login password).</li>
+      <li>Register at least two nominees.</li>
+      <li>Declare the personal law that governs succession of your assets.</li>
+    </ol>
+
+    <!-- Step 1: seed -->
+    <div id="act-step-1">
+      <h3>Step 1: Your 15-word recovery phrase</h3>
+      <div class="warning-box">
+        <strong>IMPORTANT.</strong> These 15 words are the ONLY way to recover your wallet if you lose your phone or forget your password.
+        <ul style="margin: 8px 0 0 20px">
+          <li>Write them on paper. Do not screenshot them.</li>
+          <li>Store the paper somewhere safe and private.</li>
+          <li>Never type them into any website or share them with anyone — not even IRG staff.</li>
+        </ul>
+      </div>
+      <div class="seed-grid" id="seed-grid"></div>
+      <label><input type="checkbox" id="seed-written-chk"> I have written down all 15 words in the correct order.</label>
+      <button class="btn" onclick="goToStep(2)" id="seed-next-btn" disabled>Continue</button>
+    </div>
+
+    <!-- Step 2: confirmation -->
+    <div id="act-step-2" class="hidden">
+      <h3>Step 2: Confirm your recovery phrase</h3>
+      <p class="text-muted">To confirm you wrote it down, please enter words at these positions:</p>
+      <div id="seed-confirm-inputs"></div>
+      <button class="btn" onclick="goToStep(3)">Continue</button>
+      <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+    </div>
+
+    <!-- Step 3: wallet type, password, nominees -->
+    <div id="act-step-3" class="hidden">
+      <h3>Step 3: Wallet type</h3>
+      <select id="holder-type" onchange="toggleLegalFields()">
+        <option value="INDIVIDUAL">Individual — a natural person</option>
+        <option value="LEGAL_PERSON">Legal person — company, LLP, trust, firm, HUF, etc.</option>
+      </select>
+
+      <div id="legal-fields" class="hidden">
+        <label>Legal entity name (as registered)</label>
+        <input type="text" id="legal-entity-name" placeholder="E.g. IRG Private Limited">
+        <label>Entity type</label>
+        <select id="entity-type">
+          <option value="PRIVATE_LTD">Private limited company</option>
+          <option value="PUBLIC_LTD_LISTED">Public limited — listed</option>
+          <option value="PUBLIC_LTD_UNLISTED">Public limited — unlisted</option>
+          <option value="LLP">Limited liability partnership</option>
+          <option value="PARTNERSHIP">Partnership firm</option>
+          <option value="PROPRIETORSHIP">Proprietorship</option>
+          <option value="PUBLIC_TRUST">Public trust</option>
+          <option value="PRIVATE_TRUST">Private trust</option>
+          <option value="COOPERATIVE">Cooperative society</option>
+          <option value="HUF">Hindu Undivided Family</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+
+      <h3>Step 4: Wallet password</h3>
+      <p class="text-muted">Must be at least 8 characters with a letter and a digit — OR a 4-word passphrase of 20+ characters. Must be different from your login password.</p>
+      <label>Wallet password</label>
+      <input type="password" id="wallet-password">
+      <label>Confirm password</label>
+      <input type="password" id="wallet-password-confirm">
+
+      <h3 id="nominees-heading">Step 5: Register nominees (minimum 2, shares must total 100%)</h3>
+      <p class="text-muted" id="nominees-hint-individual">Required for individual wallets. Your nominees can help recover access if you lose your device and forget your password.</p>
+      <p class="text-muted hidden" id="nominees-hint-legal">Optional for legal-person wallets. If provided, they serve as the humans who can initiate recovery on behalf of the entity.</p>
+      <div id="nominee-list"></div>
+      <button class="btn btn-secondary" onclick="addNomineeRow()">+ Add nominee</button>
+
+      <h3>Step 6: Accept recovery terms</h3>
+      <div class="warning-box">
+        By activating, you confirm you understand:
+        <ul style="margin: 8px 0 0 20px">
+          <li>IRG stores only a hash of your password and recovery phrase. We cannot reset them.</li>
+          <li>If you lose access: self-recovery via seed phrase, or nominee-assisted recovery, or trustee-assisted recovery via the IRG Ombudsman.</li>
+          <li>For legal-person wallets, ownership transfer (acquisition, partnership change, trustee succession) runs through a dedicated Ombudsman-reviewed process.</li>
+          <li>In case of your death, your nominees and legal heirs can recover your assets through the documented process.</li>
+        </ul>
+      </div>
+      <label><input type="checkbox" id="terms-chk"> I have read and accept the recovery terms.</label>
+
+      <button class="btn" onclick="submitActivation()" id="activate-btn">Activate Wallet</button>
+      <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+    </div>
+  </section>
+
+  <!-- ─── NOMINEES TAB ─── -->
+  <section id="tab-nominees" class="card hidden">
+    <h2>Your Nominees</h2>
+    <p class="text-muted">In case of emergency, these nominees can initiate wallet recovery. Shares must total 100%.</p>
+    <table id="nominees-table">
+      <thead><tr><th>Name</th><th>Relationship</th><th>Contact</th><th>Share</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button class="btn btn-secondary" onclick="editNominees()" style="margin-top: 16px">Update nominees</button>
+    <div id="edit-nominees-panel" class="hidden" style="margin-top: 20px">
+      <h3>Edit nominees</h3>
+      <div id="edit-nominee-list"></div>
+      <button class="btn btn-secondary" onclick="addEditNomineeRow()">+ Add nominee</button>
+      <label>Wallet password</label>
+      <input type="password" id="edit-nominees-pw">
+      <button class="btn" onclick="submitNominees()">Save</button>
+    </div>
+  </section>
+
+  <!-- ─── DEVICES TAB ─── -->
+  <section id="tab-devices" class="card hidden">
+    <h2>Authorised Devices</h2>
+    <p class="text-muted">Only devices listed here can sign transactions from your wallet. New devices enter a 48-hour cooling-off period.</p>
+    <table id="devices-table">
+      <thead><tr><th>Label</th><th>Platform</th><th>State</th><th>Bound</th><th>Cooling off until</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- ─── TRANSACTION HISTORY ─── -->
+  <section id="tab-history" class="card hidden">
+    <h2>Transaction History</h2>
+    <p class="text-muted">All your activity on IRG Chain 888101.</p>
+    <div style="margin: 12px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+      <select id="history-module" onchange="loadHistory()">
+        <option value="">All modules</option>
+        <option value="irg_gdp">GDP</option>
+        <option value="irg_jr">JR</option>
+        <option value="irg_jdb">JDB</option>
+        <option value="corpus">Corpus</option>
+        <option value="governance">Governance</option>
+        <option value="oracle">Oracle</option>
+      </select>
+      <select id="history-status" onchange="loadHistory()">
+        <option value="">All statuses</option>
+        <option value="SUBMITTED">Submitted</option>
+        <option value="CONFIRMED">Confirmed</option>
+        <option value="FINAL">Finalised</option>
+        <option value="FAILED">Failed</option>
+        <option value="SIMULATED">Simulated</option>
+      </select>
+      <button class="btn btn-secondary" onclick="downloadCsv()">⬇ Download CSV</button>
+    </div>
+    <table id="history-table">
+      <thead><tr><th>When</th><th>Module</th><th>Action</th><th>Tx hash</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- ─── ACTIVITY TAB (inactivity watchdog) ─── -->
+  <section id="tab-liveness" class="card hidden">
+    <h2>Activity</h2>
+    <p class="text-muted">IRG tracks your activity so we never bother you unnecessarily. If your wallet sees no login, transaction, or confirmation for a full year, we send you a prompt; 2 days later a reminder; 2 days after that, your nominees are informed.</p>
+    <div id="liveness-status" style="margin: 16px 0; padding: 14px; background: var(--surface-light); border-radius: 6px"></div>
+    <button class="btn" onclick="confirmLiveness()">Confirm I am still active</button>
+    <h3 style="margin-top: 24px">Inactivity audit trail</h3>
+    <table id="liveness-table">
+      <thead><tr><th>When</th><th>Event</th><th>Detail</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- ─── RECOVERY TAB ─── -->
+  <section id="tab-recovery" class="card hidden">
+    <h2>Recovery</h2>
+    <div class="row">
+      <div class="col">
+        <h3>Self-recovery (device replacement)</h3>
+        <p class="text-muted">Got a new phone? Enter your 15 words to rebind.</p>
+        <button class="btn btn-secondary" onclick="showRecover('self')">Start self-recovery</button>
+      </div>
+      <div class="col">
+        <h3>Social recovery (nominees)</h3>
+        <p class="text-muted">You're a nominee helping someone regain access.</p>
+        <button class="btn btn-secondary" onclick="showRecover('social')">Start social recovery</button>
+      </div>
+      <div class="col">
+        <h3>Trustee / Ombudsman recovery</h3>
+        <p class="text-muted">For death, incapacity, or contested cases. Reviewed by the IRG Ombudsman.</p>
+        <button class="btn btn-secondary" onclick="showRecover('trustee')">Start Ombudsman case</button>
+      </div>
+    </div>
+
+    <div id="recover-panel" class="hidden" style="margin-top: 24px"></div>
+
+    <h3 style="margin-top: 32px">Your recovery cases</h3>
+    <table id="recovery-cases-table">
+      <thead><tr><th>Case ID</th><th>Path</th><th>Status</th><th>Filed</th><th>Notice ends</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- ─── OWNERSHIP TRANSFER TAB (legal-person wallets only) ─── -->
+  <section id="tab-ownership" class="card hidden">
+    <h2>Ownership Transfer</h2>
+    <p class="text-muted">
+      For legal-person wallets only. Use this when the ownership of the entity that holds
+      the wallet has changed — company acquisition, new partnership deed, trustee succession,
+      or the proprietorship has been sold as a going concern. The wallet address does not
+      change, but a new authorised operator takes over after Ombudsman review. Transactions
+      are paused during the process.
+    </p>
+
+    <h3>File a new ownership transfer</h3>
+    <label>Reason</label>
+    <select id="ot-reason">
+      <option value="ACQUISITION">Company acquired / shareholding changed</option>
+      <option value="PARTNERSHIP_CHANGE">Partnership reconstituted</option>
+      <option value="TRUSTEE_SUCCESSION">Trustee succession</option>
+      <option value="PROP_SALE">Proprietorship sold as going concern</option>
+      <option value="OPERATOR_DEPARTED">Authorised operator left the entity</option>
+      <option value="OTHER">Other — see grounds</option>
+    </select>
+    <label>Grounds</label>
+    <textarea id="ot-grounds" rows="3" placeholder="Brief description of what changed"></textarea>
+    <label>Evidence bundle hash (IPFS CID)</label>
+    <input type="text" id="ot-evidence" placeholder="0x...">
+    <label>Incoming operator user ID (optional — can be filled after Ombudsman review)</label>
+    <input type="number" id="ot-incoming" placeholder="e.g. 42">
+    <button class="btn" onclick="fileOwnershipTransfer()">File transfer case</button>
+
+    <h3 style="margin-top: 32px">Your transfer cases</h3>
+    <table id="ownership-cases-table">
+      <thead><tr><th>Case ID</th><th>Status</th><th>Reason</th><th>Filed</th><th>Notice ends</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- ─── SECURITY TAB ─── -->
+  <section id="tab-security" class="card hidden">
+    <h2>Security</h2>
+    <h3>Change wallet password</h3>
+    <label>Current wallet password</label>
+    <input type="password" id="pw-old">
+    <label>New wallet password</label>
+    <input type="password" id="pw-new">
+    <label>Confirm new wallet password</label>
+    <input type="password" id="pw-new-confirm">
+    <button class="btn" onclick="changePassword()">Change password</button>
+
+    <h3 style="margin-top: 32px">Emergency freeze</h3>
+    <div class="warning-box">
+      If you believe your wallet has been compromised, freeze it immediately.
+      You will not be able to transact while frozen; contact support to unfreeze.
+    </div>
+    <label>Reason</label>
+    <input type="text" id="freeze-reason" placeholder="E.g. phone stolen">
+    <button class="btn btn-danger" onclick="emergencyFreeze()">Freeze wallet</button>
+  </section>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// API base + auth. In production this is the same host; token is whatever
+// the existing dashboard uses (localStorage.authToken for this starter code).
+// ─────────────────────────────────────────────────────────────────────────────
+const API = '/api/v1';
+function authHeaders() {
+  const t = localStorage.getItem('authToken') || '';
+  return t ? { 'Authorization': 'Token ' + t } : {};
+}
+async function apiGet(path) {
+  const r = await fetch(API + path, { headers: authHeaders() });
+  if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
+  return r.json();
+}
+async function apiPost(path, body, method = 'POST') {
+  const r = await fetch(API + path, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
+  return r.json();
+}
+function msg(text, level = 'info') {
+  alert((level === 'error' ? '❌ ' : level === 'success' ? '✅ ' : '') + text);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Seed phrase generation — happens ENTIRELY CLIENT-SIDE. The server never sees
+// the plaintext words; it only receives a SHA-256 hash of them when the user
+// completes activation.
+//
+// For production, replace this with a real BIP-39 wordlist + CSPRNG entropy.
+// Here we use a 300-word starter list to keep the starter frontend standalone.
+// ─────────────────────────────────────────────────────────────────────────────
+const WORDLIST = [
+ 'abandon','ability','able','about','above','absent','absorb','abstract','absurd',
+ 'abuse','access','accident','account','accuse','achieve','acid','acoustic','acquire',
+ 'across','act','action','actor','actress','actual','adapt','add','addict','address',
+ 'adjust','admit','adult','advance','advice','aerobic','affair','afford','afraid',
+ 'again','age','agent','agree','ahead','aim','air','airport','aisle','alarm','album',
+ 'alcohol','alert','alien','all','alley','allow','almost','alone','alpha','already',
+ 'also','alter','always','amateur','amazing','among','amount','amused','analyst',
+ 'anchor','ancient','anger','angle','angry','animal','ankle','announce','annual',
+ 'another','answer','antenna','antique','anxiety','any','apart','apology','appear',
+ 'apple','approve','april','arch','arctic','area','arena','argue','arm','armed',
+ 'armor','army','around','arrange','arrest','arrive','arrow','art','artefact','artist',
+ 'artwork','ask','aspect','assault','asset','assist','assume','asthma','athlete','atom',
+ 'attack','attend','attitude','attract','auction','audit','august','aunt','author',
+ 'auto','autumn','average','avocado','avoid','awake','aware','away','awesome','awful',
+ 'awkward','axis','baby','bachelor','bacon','badge','bag','balance','balcony','ball',
+ 'bamboo','banana','banner','bar','barely','bargain','barrel','base','basic','basket',
+ 'battle','beach','bean','beauty','because','become','beef','before','begin','behave',
+ 'behind','believe','below','belt','bench','benefit','best','betray','better','between',
+ 'beyond','bicycle','bid','bike','bind','biology','bird','birth','bitter','black',
+ 'blade','blame','blanket','blast','bleak','bless','blind','blood','blossom','blow',
+ 'blue','blur','blush','board','boat','body','boil','bomb','bone','bonus','book','boost',
+ 'border','boring','borrow','boss','bottom','bounce','box','boy','bracket','brain',
+ 'brand','brass','brave','bread','breeze','brick','bridge','brief','bright','bring',
+ 'brisk','broccoli','broken','bronze','broom','brother','brown','brush','bubble','buddy',
+ 'budget','buffalo','build','bulb','bulk','bullet','bundle','bunker','burden','burger',
+ 'burst','bus','business','busy','butter','buyer','buzz','cabbage','cabin','cable',
+ 'cactus','cage','cake','call','calm','camera','camp','can','canal','cancel','candy',
+ 'cannon','canoe','canvas','canyon','capable','capital','captain','car','carbon','card',
+ 'cargo','carpet','carry','cart','case','cash','casino','castle','casual','cat','catalog',
+ 'catch','category','cattle','caught','cause','caution','cave','ceiling','celery','cement',
+ 'census','century','cereal','certain','chair','chalk','champion','change','chaos','chapter',
+ 'charge','chase','chat','cheap','check','cheese','chef','cherry','chest','chicken','chief',
+ 'child','chimney','choice'
+];
+let activationWords = [];  // generated on open, kept in memory only
+
+function generateSeed() {
+  const buf = new Uint32Array(15);
+  crypto.getRandomValues(buf);
+  return Array.from(buf).map(n => WORDLIST[n % WORDLIST.length]);
+}
+
+async function sha256Hex(s) {
+  const buf = new TextEncoder().encode(s);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return '0x' + Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wallet info + banner
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadWalletInfo() {
+  try {
+    const info = await apiGet('/wallet/info/');
+    document.getElementById('wallet-state').textContent = info.state_label;
+    document.getElementById('wallet-state').className = 'state-badge state-' + info.state;
+    document.getElementById('wallet-address').textContent = info.address;
+    document.getElementById('wallet-created').textContent = (info.created_at || '').slice(0, 16).replace('T', ' ');
+    document.getElementById('wallet-activated').textContent =
+      info.activated_at ? info.activated_at.slice(0, 16).replace('T', ' ') : '—';
+    document.getElementById('wallet-last-activity').textContent =
+      info.last_activity_at ? info.last_activity_at.slice(0, 16).replace('T', ' ') : '—';
+    document.getElementById('wallet-nominees').textContent =
+      `${info.nominee_count}${info.nominee_shares_total !== '0' ? ' (shares: ' + info.nominee_shares_total + '%)' : ''}`;
+    document.getElementById('wallet-devices-count').textContent = info.active_device_count;
+
+    const holderLabel = info.holder_type === 'LEGAL_PERSON'
+      ? (info.legal_entity_name || 'Legal entity') + (info.entity_type ? ' (' + info.entity_type + ')' : '')
+      : 'Individual';
+    document.getElementById('wallet-holder').textContent = holderLabel;
+
+    // Show/hide ownership-transfer tab for legal persons only
+    const ownershipTab = document.getElementById('tab-ownership-link');
+    if (ownershipTab) {
+      ownershipTab.style.display = info.holder_type === 'LEGAL_PERSON' ? '' : 'none';
+    }
+
+    if (info.state === 'ACTIVATED') {
+      document.getElementById('act-step-1').classList.add('hidden');
+      document.getElementById('act-step-2').classList.add('hidden');
+      document.getElementById('act-step-3').classList.add('hidden');
+      const tabAct = document.querySelector('#tab-activation');
+      if (!tabAct.dataset.notified) {
+        tabAct.insertAdjacentHTML('beforeend',
+          '<p class="text-muted">✓ Your wallet is activated. You can update nominees or change your password from the tabs above.</p>');
+        tabAct.dataset.notified = '1';
+      }
+    }
+  } catch (e) {
+    msg('Could not load wallet info: ' + (e.error || 'unknown'), 'error');
+  }
+}
+
+async function loadBanner() {
+  try {
+    const r = await apiGet('/wallet/status-banner/');
+    const slot = document.getElementById('banner-slot');
+    if (!r.banner) { slot.innerHTML = ''; return; }
+    const { level, message, cta_label, cta_route } = r.banner;
+    slot.innerHTML = `<div class="banner ${level}">
+      <div>${message}</div>
+      ${cta_label ? `<button onclick="window.location='${cta_route}'">${cta_label}</button>` : ''}
+    </div>`;
+  } catch (e) { /* banner is best-effort */ }
+}
+
+function copyAddress() {
+  navigator.clipboard.writeText(document.getElementById('wallet-address').textContent);
+  msg('Address copied', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tabs
+// ─────────────────────────────────────────────────────────────────────────────
+function showTab(id, ev) {
+  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.remove('hidden');
+  if (ev && ev.target) ev.target.classList.add('active');
+  if (id === 'tab-nominees') loadNominees();
+  if (id === 'tab-devices') loadDevices();
+  if (id === 'tab-history') loadHistory();
+  if (id === 'tab-liveness') loadLiveness();
+  if (id === 'tab-recovery') loadRecoveryCases();
+  if (id === 'tab-ownership') loadOwnershipCases();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Activation flow
+// ─────────────────────────────────────────────────────────────────────────────
+function renderSeed() {
+  activationWords = generateSeed();
+  const grid = document.getElementById('seed-grid');
+  grid.innerHTML = activationWords.map((w, i) =>
+    `<div class="seed-word"><span class="num">${i+1}.</span>${w}</div>`
+  ).join('');
+}
+document.getElementById('seed-written-chk').addEventListener('change', e => {
+  document.getElementById('seed-next-btn').disabled = !e.target.checked;
+});
+
+function goToStep(n) {
+  [1,2,3].forEach(i => document.getElementById(`act-step-${i}`).classList.add('hidden'));
+  document.getElementById(`act-step-${n}`).classList.remove('hidden');
+  if (n === 2) {
+    const positions = [];
+    while (positions.length < 3) {
+      const p = Math.floor(Math.random() * 15);
+      if (!positions.includes(p)) positions.push(p);
+    }
+    positions.sort((a,b) => a - b);
+    document.getElementById('seed-confirm-inputs').innerHTML = positions.map(p =>
+      `<label>Word #${p+1}</label><input type="text" data-idx="${p}" class="seed-confirm-input">`
+    ).join('');
+  }
+  if (n === 3) {
+    renderInitialNominees();
+  }
+}
+
+function renderInitialNominees() {
+  const list = document.getElementById('nominee-list');
+  if (list.children.length > 0) return;
+  addNomineeRow();
+  addNomineeRow();
+}
+function addNomineeRow(parent = 'nominee-list') {
+  const el = document.createElement('div');
+  el.className = 'nominee-row';
+  el.innerHTML = `
+    <input type="text" placeholder="Name" data-k="name">
+    <input type="text" placeholder="Relation" data-k="relationship">
+    <input type="email" placeholder="Email" data-k="email">
+    <input type="tel" placeholder="Mobile" data-k="mobile">
+    <input type="number" placeholder="Share %" data-k="share_percent" min="0" max="100" step="0.001">
+    <button class="btn btn-secondary" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById(parent).appendChild(el);
+}
+
+function collectNominees(parent) {
+  const rows = document.querySelectorAll(`#${parent} .nominee-row`);
+  return Array.from(rows).map(r => {
+    const obj = {};
+    r.querySelectorAll('input').forEach(inp => {
+      if (inp.dataset.k) obj[inp.dataset.k] = inp.value.trim();
+    });
+    obj.share_percent = parseFloat(obj.share_percent || '0');
+    return obj;
+  }).filter(n => n.name);
+}
+
+function toggleLegalFields() {
+  const t = document.getElementById('holder-type').value;
+  const legal = document.getElementById('legal-fields');
+  const indHint = document.getElementById('nominees-hint-individual');
+  const legalHint = document.getElementById('nominees-hint-legal');
+  if (t === 'LEGAL_PERSON') {
+    legal.classList.remove('hidden');
+    indHint.classList.add('hidden');
+    legalHint.classList.remove('hidden');
+    document.getElementById('nominees-heading').textContent = 'Step 5: Register nominees (optional for legal-person wallets)';
+  } else {
+    legal.classList.add('hidden');
+    indHint.classList.remove('hidden');
+    legalHint.classList.add('hidden');
+    document.getElementById('nominees-heading').textContent = 'Step 5: Register nominees (minimum 2, shares must total 100%)';
+  }
+}
+
+async function submitActivation() {
+  // Validate step 2 confirmation
+  const inputs = document.querySelectorAll('.seed-confirm-input');
+  for (const inp of inputs) {
+    const idx = parseInt(inp.dataset.idx, 10);
+    if (inp.value.trim().toLowerCase() !== activationWords[idx]) {
+      return msg('Recovery phrase confirmation failed at word #' + (idx+1), 'error');
+    }
+  }
+  const pw = document.getElementById('wallet-password').value;
+  const pw2 = document.getElementById('wallet-password-confirm').value;
+  if (pw !== pw2) return msg('Passwords do not match', 'error');
+  if (!document.getElementById('terms-chk').checked) return msg('You must accept the recovery terms', 'error');
+
+  const holderType = document.getElementById('holder-type').value;
+  const legalEntityName = document.getElementById('legal-entity-name').value.trim();
+  const entityType = document.getElementById('entity-type').value;
+  if (holderType === 'LEGAL_PERSON' && !legalEntityName) {
+    return msg('Legal entity name is required', 'error');
+  }
+
+  const nominees = collectNominees('nominee-list');
+  if (holderType === 'INDIVIDUAL') {
+    if (nominees.length < 2) return msg('At least two nominees required', 'error');
+    const total = nominees.reduce((s, n) => s + n.share_percent, 0);
+    if (Math.abs(total - 100) > 0.001) return msg('Shares must total 100 (got ' + total + ')', 'error');
+  } else if (nominees.length > 0) {
+    const total = nominees.reduce((s, n) => s + n.share_percent, 0);
+    if (Math.abs(total - 100) > 0.001) return msg('If you provide nominees, shares must total 100 (got ' + total + ')', 'error');
+  }
+
+  // Device identification (starter: random + stored)
+  let devId = localStorage.getItem('irgDeviceId');
+  if (!devId) {
+    const arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
+    devId = '0x' + Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem('irgDeviceId', devId);
+  }
+  const platform = navigator.platform || 'web';
+  const label = prompt('Give this device a name (e.g. "iPhone 14")') || 'This device';
+
+  try {
+    await apiPost('/wallet/activate/', {
+      wallet_password: pw,
+      seed_phrase_words: activationWords,
+      holder_type: holderType,
+      legal_entity_name: holderType === 'LEGAL_PERSON' ? legalEntityName : '',
+      entity_type: holderType === 'LEGAL_PERSON' ? entityType : '',
+      nominees: nominees,
+      device_id_hash: devId,
+      device_label: label,
+      platform: platform,
+      terms_accepted: true,
+    });
+    msg('Wallet activated!', 'success');
+    activationWords = [];                                    // clear from memory
+    document.getElementById('wallet-password').value = '';
+    document.getElementById('wallet-password-confirm').value = '';
+    await loadWalletInfo();
+    await loadBanner();
+  } catch (e) {
+    msg('Activation failed: ' + (e.error || 'unknown'), 'error');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Nominees tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadNominees() {
+  try {
+    const rows = await apiGet('/wallet/nominees/');
+    document.querySelector('#nominees-table tbody').innerHTML = rows.map(n => `
+      <tr>
+        <td>${n.name}</td><td>${n.relationship}</td>
+        <td>${n.email || n.mobile || '—'}</td>
+        <td>${n.share_percent}%</td>
+        <td>${n.active ? '✓ Active' : 'Inactive'}</td>
+      </tr>`).join('') || '<tr><td colspan="5">No nominees yet</td></tr>';
+  } catch (e) { /* unauth or no wallet */ }
+}
+function editNominees() {
+  document.getElementById('edit-nominees-panel').classList.remove('hidden');
+  const list = document.getElementById('edit-nominee-list');
+  list.innerHTML = '';
+  addEditNomineeRow(); addEditNomineeRow();
+}
+function addEditNomineeRow() { addNomineeRow('edit-nominee-list'); }
+async function submitNominees() {
+  const nominees = collectNominees('edit-nominee-list');
+  const pw = document.getElementById('edit-nominees-pw').value;
+  try {
+    await apiPost('/wallet/nominees/update/', { nominees, wallet_password: pw }, 'PUT');
+    msg('Nominees updated', 'success');
+    document.getElementById('edit-nominees-pw').value = '';
+    loadNominees();
+  } catch (e) { msg('Update failed: ' + (e.error || 'unknown'), 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Devices tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadDevices() {
+  try {
+    const rows = await apiGet('/wallet/devices/');
+    document.querySelector('#devices-table tbody').innerHTML = rows.map(d => `
+      <tr>
+        <td>${d.device_label || '—'}</td>
+        <td>${d.platform || '—'}</td>
+        <td><span class="state-badge state-${d.state === 'ACTIVE' ? 'ACTIVATED' : 'CREATED'}">${d.state}</span></td>
+        <td>${(d.bound_at || '').slice(0, 16).replace('T', ' ')}</td>
+        <td>${d.cooling_off_until ? d.cooling_off_until.slice(0, 16).replace('T', ' ') : '—'}</td>
+        <td>${d.state === 'ACTIVE' ? `<button class="btn btn-secondary" onclick="revokeDevice(${d.id})">Revoke</button>` : ''}</td>
+      </tr>`).join('') || '<tr><td colspan="6">No devices</td></tr>';
+  } catch (e) { /* silent */ }
+}
+async function revokeDevice(id) {
+  const pw = prompt('Enter wallet password to revoke device:');
+  if (!pw) return;
+  try {
+    await apiPost('/wallet/devices/revoke/', { device_id: id, wallet_password: pw });
+    msg('Device revoked', 'success');
+    loadDevices();
+  } catch (e) { msg('Revoke failed: ' + (e.error || ''), 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Transaction history tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const mod = document.getElementById('history-module').value;
+  const stat = document.getElementById('history-status').value;
+  const params = new URLSearchParams();
+  if (mod) params.set('module', mod);
+  if (stat) params.set('status', stat);
+  try {
+    const rows = await apiGet('/wallet/transactions/?' + params.toString());
+    document.querySelector('#history-table tbody').innerHTML = rows.map(r => `
+      <tr>
+        <td>${(r.created_at || '').slice(0, 16).replace('T', ' ')}</td>
+        <td>${r.module}</td>
+        <td>${r.action}</td>
+        <td class="tx-hash">${(r.tx_hash || '').slice(0, 14)}…</td>
+        <td class="tx-status-${r.status}">${r.status}</td>
+      </tr>`).join('') || '<tr><td colspan="5">No transactions yet</td></tr>';
+  } catch (e) { /* silent */ }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Liveness tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadLiveness() {
+  try {
+    const rows = await apiGet('/wallet/liveness/history/');
+    const slot = document.getElementById('liveness-status');
+    const latest = rows[0];
+    if (!latest) {
+      slot.innerHTML = 'No inactivity events yet — you will only hear from us if your wallet is silent for a full year.';
+    } else if (latest.kind === 'CONFIRMED') {
+      slot.innerHTML = `✓ Last confirmed ${(latest.occurred_at || '').slice(0, 10)}.`;
+    } else if (latest.kind === 'PROMPT_SENT') {
+      slot.innerHTML = `<strong>We noticed you have been quiet.</strong> Please tap "Confirm I am still active" to stop further reminders.`;
+    } else if (latest.kind === 'REMINDER_SENT') {
+      slot.innerHTML = `<strong>Second reminder.</strong> Your nominees will be informed shortly if we hear nothing.`;
+    } else if (latest.kind === 'NOMINEES_ALERTED') {
+      slot.innerHTML = `<strong>Your nominees have been informed.</strong> Please confirm activity to reset this.`;
+    }
+    document.querySelector('#liveness-table tbody').innerHTML = rows.map(e => `
+      <tr>
+        <td>${(e.occurred_at || '').slice(0, 16).replace('T', ' ')}</td>
+        <td>${e.kind}</td>
+        <td>${e.detail || ''}</td>
+      </tr>`).join('') || '<tr><td colspan="3">No events</td></tr>';
+  } catch (e) { /* silent */ }
+}
+async function confirmLiveness() {
+  try {
+    await apiPost('/wallet/liveness/confirm/');
+    msg('Activity confirmed. Thank you.', 'success');
+    loadLiveness();
+    loadWalletInfo();
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recovery tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadRecoveryCases() {
+  try {
+    const rows = await apiGet('/wallet/recovery/cases/');
+    document.querySelector('#recovery-cases-table tbody').innerHTML = rows.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.path}</td>
+        <td>${c.status}</td>
+        <td>${(c.created_at || '').slice(0, 16).replace('T', ' ')}</td>
+        <td>${c.public_notice_ends_at ? c.public_notice_ends_at.slice(0, 10) : (c.cooling_off_ends_at ? c.cooling_off_ends_at.slice(0, 10) : '—')}</td>
+        <td>${['NOTIFIED', 'AWAITING_OMBUDSMAN', 'AWAITING_SIGNATURES'].includes(c.status)
+               ? `<button class="btn btn-secondary" onclick="cancelCase(${c.id})">Cancel</button>` : ''}</td>
+      </tr>`).join('') || '<tr><td colspan="6">No cases</td></tr>';
+  } catch (e) { /* silent */ }
+}
+function showRecover(type) {
+  const panel = document.getElementById('recover-panel');
+  panel.classList.remove('hidden');
+  if (type === 'self') {
+    panel.innerHTML = `<h3>Self-recovery</h3>
+      <p class="text-muted">Enter all 15 words of your recovery phrase.</p>
+      <textarea id="rec-seed" rows="3" placeholder="word1 word2 ..."></textarea>
+      <button class="btn" onclick="doRecoverSelf()">Rebind this device</button>`;
+  } else if (type === 'social') {
+    panel.innerHTML = `<h3>Social recovery (you are a nominee)</h3>
+      <label>Original wallet address</label>
+      <input type="text" id="rec-orig">
+      <label>Your recovery wallet address</label>
+      <input type="text" id="rec-claim">
+      <label>Grounds / reason</label>
+      <textarea id="rec-grounds" rows="3"></textarea>
+      <button class="btn" onclick="doRecoverSocial()">File case</button>`;
+  } else if (type === 'trustee') {
+    panel.innerHTML = `<h3>Trustee / Ombudsman recovery</h3>
+      <p class="text-muted">For death, incapacity, or contested cases. The IRG Ombudsman will review.</p>
+      <label>Original wallet address</label>
+      <input type="text" id="rec-orig">
+      <label>Your recovery wallet address</label>
+      <input type="text" id="rec-claim">
+      <label>Grounds</label>
+      <textarea id="rec-grounds" rows="3"></textarea>
+      <label>Evidence bundle hash (IPFS CID)</label>
+      <input type="text" id="rec-ev" placeholder="0x…">
+      <button class="btn" onclick="doRecoverTrustee()">File Ombudsman case</button>`;
+  }
+}
+async function doRecoverSelf() {
+  const words = document.getElementById('rec-seed').value.trim().split(/\s+/);
+  let devId = localStorage.getItem('irgDeviceId');
+  if (!devId) {
+    const arr = new Uint8Array(32); crypto.getRandomValues(arr);
+    devId = '0x' + Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem('irgDeviceId', devId);
+  }
+  try {
+    const r = await apiPost('/wallet/recovery/self/', {
+      seed_phrase_words: words,
+      new_device_id_hash: devId,
+      new_device_label: 'Recovered device',
+      new_platform: navigator.platform || 'web',
+    });
+    msg('Self-recovery accepted. Case ' + r.case_id, 'success');
+    loadRecoveryCases();
+  } catch (e) { msg('Self-recovery failed: ' + (e.error || ''), 'error'); }
+}
+async function doRecoverSocial() {
+  try {
+    const r = await apiPost('/wallet/recovery/social/', {
+      original_wallet_address: document.getElementById('rec-orig').value.trim(),
+      claimant_wallet_address: document.getElementById('rec-claim').value.trim(),
+      grounds: document.getElementById('rec-grounds').value.trim(),
+    });
+    msg('Social recovery filed. Case ' + r.case_id, 'success');
+    loadRecoveryCases();
+  } catch (e) { msg('Filing failed: ' + (e.error || ''), 'error'); }
+}
+async function doRecoverTrustee() {
+  try {
+    const r = await apiPost('/wallet/recovery/trustee/', {
+      original_wallet_address: document.getElementById('rec-orig').value.trim(),
+      claimant_wallet_address: document.getElementById('rec-claim').value.trim(),
+      grounds: document.getElementById('rec-grounds').value.trim(),
+      evidence_bundle_hash: document.getElementById('rec-ev').value.trim(),
+    });
+    msg('Ombudsman case filed. Case ' + r.case_id, 'success');
+    loadRecoveryCases();
+  } catch (e) { msg('Filing failed: ' + (e.error || ''), 'error'); }
+}
+async function cancelCase(id) {
+  const reason = prompt('Cancellation reason:');
+  if (!reason) return;
+  try {
+    await apiPost('/wallet/recovery/cancel/', { case_id: id, reason });
+    msg('Case cancelled', 'success');
+    loadRecoveryCases();
+  } catch (e) { msg('Cancel failed: ' + (e.error || ''), 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ownership transfer (legal-person wallets)
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadOwnershipCases() {
+  try {
+    const rows = await apiGet('/wallet/ownership/cases/');
+    document.querySelector('#ownership-cases-table tbody').innerHTML = rows.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.status}</td>
+        <td>${c.reason}</td>
+        <td>${(c.created_at || '').slice(0, 16).replace('T', ' ')}</td>
+        <td>${c.public_notice_ends_at ? c.public_notice_ends_at.slice(0, 10) : '—'}</td>
+        <td>${['FILED', 'AWAITING_OMBUDSMAN'].includes(c.status)
+               ? `<button class="btn btn-secondary" onclick="cancelOwnership(${c.id})">Cancel</button>` : ''}</td>
+      </tr>`).join('') || '<tr><td colspan="6">No cases</td></tr>';
+  } catch (e) { /* silent */ }
+}
+async function fileOwnershipTransfer() {
+  const reason = document.getElementById('ot-reason').value;
+  const grounds = document.getElementById('ot-grounds').value.trim();
+  const ev = document.getElementById('ot-evidence').value.trim();
+  const incomingRaw = document.getElementById('ot-incoming').value.trim();
+  if (!ev) return msg('Evidence bundle hash is required', 'error');
+  try {
+    const r = await apiPost('/wallet/ownership/initiate/', {
+      reason,
+      grounds,
+      evidence_bundle_hash: ev,
+      incoming_user_id: incomingRaw ? parseInt(incomingRaw, 10) : null,
+    });
+    msg('Case filed. ID ' + r.case_id, 'success');
+    loadOwnershipCases();
+    loadWalletInfo();
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
+async function cancelOwnership(id) {
+  const reason = prompt('Cancellation reason:');
+  if (!reason) return;
+  try {
+    await apiPost('/wallet/ownership/cancel/', { case_id: id, reason });
+    msg('Case cancelled', 'success');
+    loadOwnershipCases();
+    loadWalletInfo();
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CSV download
+// ─────────────────────────────────────────────────────────────────────────────
+async function downloadCsv() {
+  const mod = document.getElementById('history-module').value;
+  const stat = document.getElementById('history-status').value;
+  const params = new URLSearchParams();
+  if (mod) params.set('module', mod);
+  if (stat) params.set('status', stat);
+  const t = localStorage.getItem('authToken') || '';
+  const r = await fetch(API + '/wallet/transactions/export.csv?' + params.toString(), {
+    headers: t ? { 'Authorization': 'Token ' + t } : {},
+  });
+  if (!r.ok) return msg('Download failed', 'error');
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'irg_transactions.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Security tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function changePassword() {
+  const oldP = document.getElementById('pw-old').value;
+  const newP = document.getElementById('pw-new').value;
+  const newP2 = document.getElementById('pw-new-confirm').value;
+  if (newP !== newP2) return msg('New passwords do not match', 'error');
+  try {
+    await apiPost('/wallet/password/change/', { old_password: oldP, new_password: newP });
+    msg('Password changed', 'success');
+    document.getElementById('pw-old').value = '';
+    document.getElementById('pw-new').value = '';
+    document.getElementById('pw-new-confirm').value = '';
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
+async function emergencyFreeze() {
+  const reason = document.getElementById('freeze-reason').value;
+  if (!reason) return msg('Please provide a reason', 'error');
+  if (!confirm('Freeze your wallet? You will not be able to transact.')) return;
+  try {
+    await apiPost('/wallet/freeze/', { reason });
+    msg('Wallet frozen', 'success');
+    loadWalletInfo();
+    loadBanner();
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+(async function init() {
+  renderSeed();
+  await loadWalletInfo();
+  await loadBanner();
+})();
+</script>
+</body>
+</html>

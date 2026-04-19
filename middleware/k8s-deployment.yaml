@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: irg-chain
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: irg-middleware-secrets
+  namespace: irg-chain
+type: Opaque
+stringData:
+  # Populate via: kubectl create secret ... --from-literal=...
+  MIDDLEWARE_SHARED_SECRET: "replace-me-openssl-rand-hex-32"
+  SYSTEM_SIGNER_KEY: "replace-me-load-from-aws-secrets-manager"
+  AUDIT_SINK_TOKEN: "replace-me"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: irg-middleware
+  namespace: irg-chain
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: irg-middleware }
+  template:
+    metadata:
+      labels: { app: irg-middleware }
+    spec:
+      containers:
+        - name: middleware
+          image: node:20-alpine
+          workingDir: /app
+          command: ["sh", "-c", "npm ci --omit=dev && node server.js"]
+          ports:
+            - containerPort: 3100
+          env:
+            - name: PORT
+              value: "3100"
+            - name: BESU_RPC
+              value: "http://irg-rpc-service.irg-chain.svc.cluster.local:8545"
+            - name: IRG_CHAIN_ID
+              value: "888101"
+            - name: AUDIT_SINK_URL
+              value: "http://irg-gdp-backend.irg-apps.svc.cluster.local:8000/api/v1/chain/audit/"
+          envFrom:
+            - secretRef: { name: irg-middleware-secrets }
+          readinessProbe:
+            httpGet: { path: /health, port: 3100 }
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 3100 }
+            initialDelaySeconds: 30
+          volumeMounts:
+            - name: src
+              mountPath: /app
+      volumes:
+        - name: src
+          configMap:
+            name: irg-middleware-src
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: irg-middleware
+  namespace: irg-chain
+spec:
+  type: ClusterIP
+  selector: { app: irg-middleware }
+  ports:
+    - port: 3100
+      targetPort: 3100

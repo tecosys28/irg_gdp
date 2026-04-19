@@ -1,0 +1,54 @@
+{
+  "hosting": {
+    "public": "frontend",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/*.py",
+      "**/*.pyc"
+    ],
+    "rewrites": [
+      { "source": "/api/**",     "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
+      { "source": "/admin/**",   "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
+      { "source": "/static/**",  "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
+      { "source": "/media/**",   "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
+      { "source": "/",           "destination": "/index.html" },
+      { "source": "/wallet",     "destination": "/wallet.html" },
+      { "source": "/heir-guide", "destination": "/heir-guide.html" }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|html)",
+        "headers": [
+          { "key": "Cache-Control", "value": "max-age=3600" },
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        ]
+      }
+    ]
+  },
+  "firestore": {
+    "rules":   "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs18",
+      "region": "asia-south1",
+      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
+    }
+  ],
+  "storage": { "rules": "storage.rules" },
+  "emulators": {
+    "auth":      { "port": 9099 },
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 },
+    "hosting":   { "port": 5000 },
+    "storage":   { "port": 9199 },
+    "ui":        { "enabled": true },
+    "singleProjectMode": true
+  }
+}

@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthed() { return request.auth != null; }
+
+    // Hallmarking photos / jeweller document uploads
+    match /minting/{mintId}/{allPaths=**} {
+      allow read:  if isAuthed();
+      allow write: if false;
+    }
+
+    // Dispute evidence
+    match /disputes/{caseId}/{allPaths=**} {
+      allow read:  if isAuthed();
+      allow write: if isAuthed() &&
+        firestore.get(/databases/(default)/documents/disputes/$(caseId)).data.filedBy == request.auth.uid;
+    }
+
+    match /{allPaths=**} {
+      allow read:  if false;
+      allow write: if false;
+    }
+  }
+}

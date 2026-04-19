@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "irg-gdp-prod",
+    "staging": "irg-gdp-staging"
+  },
+  "targets": {},
+  "etags": {}
+}

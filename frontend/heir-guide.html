@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to recover an IRG wallet for a family member</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+       background: #000052; color: white; margin: 0;
+       padding: 40px 20px; }
+.page { max-width: 780px; margin: 0 auto; line-height: 1.6; }
+h1 { color: #E4B44A; font-size: 2em; margin-bottom: 8px; }
+h2 { color: #E4B44A; font-size: 1.3em; margin: 28px 0 8px; }
+p { margin-bottom: 14px; color: rgba(255,255,255,0.85); }
+a { color: #E4B44A; }
+.step { background: #0A0A3A; border: 1px solid rgba(228, 180, 74, 0.3);
+        border-radius: 8px; padding: 18px 22px; margin-bottom: 14px; }
+.contact { background: rgba(228, 180, 74, 0.1); border-left: 3px solid #E4B44A;
+           padding: 16px 22px; margin-top: 32px; border-radius: 4px; }
+.nav { margin-bottom: 20px; }
+.nav a { color: rgba(255,255,255,0.7); text-decoration: none; margin-right: 16px; }
+.nav a:hover { color: #E4B44A; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="nav">
+    <a href="index.html">← Home</a>
+  </div>
+
+  <h1>How to recover an IRG wallet for a family member</h1>
+  <p style="color: rgba(255,255,255,0.7); font-style: italic; margin-bottom: 24px">
+    If someone you love held assets in an IRG wallet and has passed away,
+    become incapacitated, or lost access in a way that cannot be resolved,
+    this page explains how to claim those assets on their behalf.
+  </p>
+
+  <div id="steps"></div>
+
+  <div class="contact" id="contact-box"></div>
+
+  <p style="margin-top: 40px; font-size: 0.9em; color: rgba(255,255,255,0.5)">
+    You do not need to be logged in to read this page. IRG will never ask you
+    for the deceased person's seed phrase or password. If anyone asks, that is
+    a scam.
+  </p>
+</div>
+
+<script>
+(async function () {
+  try {
+    const r = await fetch('/api/v1/wallet/heir-guide/');
+    const d = await r.json();
+    document.querySelector('h1').textContent = d.title;
+    document.getElementById('steps').innerHTML = d.steps.map(s =>
+      `<div class="step"><h2>${s.heading}</h2><p>${s.body}</p></div>`
+    ).join('');
+    document.getElementById('contact-box').textContent = d.contact;
+  } catch (e) {
+    document.getElementById('steps').innerHTML =
+      '<p>We could not load the latest guide. Please contact the IRG Ombudsman office directly.</p>';
+  }
+})();
+</script>
+</body>
+</html>

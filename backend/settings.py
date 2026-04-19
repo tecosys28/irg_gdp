@@ -1,0 +1,238 @@
+"""
+IRG_GDP Master System - Django Settings
+IPR Owner: Rohit Tidke | Exclusively assigned to: Intech Research Group
+
+COMPLIANCE: No banned words used throughout the system.
+"""
+
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-secret-key-change-in-production')
+
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+ALLOWED_HOSTS = ['*']
+
+# Application definition
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    # IRG_GDP Apps
+    'core',
+    'irg_gdp',
+    'irg_jr',
+    'irg_jdb',
+    'irg_gic',
+    'oracle',
+    'corpus',
+    'governance',
+    'disputes',
+    'recall',
+    'chain',
+    'payment_bridge',
+    'wallet_access',
+]
+
+MIDDLEWARE = [
+    # Licence enforcement runs first so an unlicensed deployment cannot
+    # serve any response.
+    'chain.licence_middleware.LicenceEnforcementMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'wallet_access.middleware.WalletActivityMiddleware',
+]
+
+ROOT_URLCONF = 'urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'wsgi.application'
+
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'irg_gdp_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
+}
+
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# Custom User Model
+AUTH_USER_MODEL = 'core.User'
+
+# Internationalization
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'Asia/Kolkata'
+USE_I18N = True
+USE_TZ = True
+
+# Static files
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IRG_GDP SYSTEM CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+IRG_GDP_CONFIG = {
+    # Minting Parameters
+    'SALEABLE_PER_GRAM': 9,
+    'RESERVE_PER_GRAM': 1,
+    
+    # Corpus Fund
+    'CORPUS_CONTRIBUTION_PERCENT': 20,
+    'PHYSICAL_GOLD_PERCENT': 5,
+    'OTHER_INVESTMENTS_PERCENT': 95,
+    
+    # Bonus & Earmarking
+    'MINTER_SHARE_PERCENT': 6,
+    'EARMARKING_PERCENTAGE': 11,
+    
+    # Lock-in Periods (months)
+    'LOCK_IN_NEW_MONTHS': 0,
+    'LOCK_IN_OLD_MONTHS': 12,
+    'LOCK_IN_REMADE_MONTHS': 6,
+    
+    # Designer Royalties
+    'ROYALTY_EMERGING_PERCENT': 2,
+    'ROYALTY_ESTABLISHED_PERCENT': 3,
+    'ROYALTY_MASTER_PERCENT': 5,
+    
+    # SCF Facilitation
+    'SCF_FACILITATION_PERCENT': 7,
+    
+    # Gold Purity Factors
+    'PURITY_24K': 1.0,
+    'PURITY_22K': 0.9167,
+    'PURITY_18K': 0.75,
+    'PURITY_14K': 0.5833,
+}
+
+# Super CF Bank Account
+SUPER_CF_ACCOUNT = {
+    'ACCOUNT_NAME': 'Intech Research Group',
+    'ACCOUNT_NUMBER': '99620200000108',
+    'ACCOUNT_TYPE': 'Current Account',
+    'BANK_NAME': 'Bank of Baroda',
+    'BRANCH': 'Santacruz East',
+    'CITY': 'Mumbai',
+    'POSTAL_CODE': '400 055',
+    'COUNTRY': 'INDIA',
+    'SWIFT_CODE': 'BARB0DBSCRU',
+    'IFSC_CODE': 'BARB0DBSCRU',
+}
+
+# Blockchain Configuration
+BLOCKCHAIN_CONFIG = {
+    'CHAIN_ID': 888101,
+    'CHAIN_NAME': 'IRG Chain',
+    'CONSENSUS': 'PBFT+Raft',
+    'RPC_URL': os.environ.get('BLOCKCHAIN_RPC', 'http://localhost:8545'),
+
+    # ── Submission middleware (auto-links every transaction to IRG Chain 888101) ──
+    # URL of the Node.js middleware service that lives in /middleware/.
+    # Leave blank in local dev to use simulate-only mode.
+    'MIDDLEWARE_URL': os.environ.get('IRG_CHAIN_MIDDLEWARE_URL', ''),
+
+    # Shared HMAC secret — must match the middleware's MIDDLEWARE_SHARED_SECRET.
+    # Generate with: openssl rand -hex 32
+    'MIDDLEWARE_SHARED_SECRET': os.environ.get('IRG_CHAIN_MIDDLEWARE_SECRET', ''),
+
+    # Bearer token the middleware uses when POSTing audit callbacks back to
+    # Django's /api/v1/chain/audit/ endpoint.
+    'AUDIT_SINK_TOKEN': os.environ.get('IRG_CHAIN_AUDIT_TOKEN', ''),
+
+    # Safety valves.
+    'SUBMIT_TIMEOUT_SECONDS': float(os.environ.get('IRG_CHAIN_SUBMIT_TIMEOUT', '15')),
+    'SUBMIT_MAX_RETRIES': int(os.environ.get('IRG_CHAIN_SUBMIT_RETRIES', '3')),
+
+    # If True, fall back to deterministic simulated hashes when the middleware
+    # is unreachable. Defaults to DEBUG — flip to False in production envs
+    # that must never write a fake hash.
+    'ALLOW_SIMULATE': os.environ.get('IRG_CHAIN_ALLOW_SIMULATE', str(DEBUG)) == 'True',
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONTRACT ADDRESSES ON IRG CHAIN 888101
+# Populated after each deployment. Blank entries trigger simulate-mode audit
+# rows instead of real on-chain writes (useful in dev/CI).
+# ─────────────────────────────────────────────────────────────────────────────
+CONTRACT_ADDRESSES = {
+    'TGDPMinting':            os.environ.get('ADDR_TGDP_MINTING', ''),
+    'FTRRedemption':          os.environ.get('ADDR_FTR_REDEMPTION', ''),
+    'P2PGuaranteedSettlement': os.environ.get('ADDR_P2P_SETTLEMENT', ''),
+    'SuperCorpusFund':        os.environ.get('ADDR_SUPER_CORPUS', ''),
+    'Governance':             os.environ.get('ADDR_GOVERNANCE', ''),
+    'DisputeRegistry':        os.environ.get('ADDR_DISPUTE_REGISTRY', ''),
+    'LBMAOracle':             os.environ.get('ADDR_LBMA_ORACLE', ''),
+    'RecallRegistry':         os.environ.get('ADDR_RECALL_REGISTRY', ''),
+    'JRRegistry':             os.environ.get('ADDR_JR_REGISTRY', ''),
+    'JDBRegistry':            os.environ.get('ADDR_JDB_REGISTRY', ''),
+    'GICLedger':              os.environ.get('ADDR_GIC_LEDGER', ''),
+    'IdentityRegistry':       os.environ.get('ADDR_IDENTITY_REGISTRY', ''),
+    'IPRLicense':             os.environ.get('ADDR_IPR_LICENSE', ''),
+    'DeviceP2PRegistry':      os.environ.get('ADDR_DEVICE_P2P', ''),
+    'WalletRecoveryEvents':   os.environ.get('ADDR_WALLET_RECOVERY_EVENTS', ''),
+}

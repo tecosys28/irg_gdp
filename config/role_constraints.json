@@ -1,0 +1,139 @@
+{
+  "roleConstraintMatrix": {
+    "description": "User Multi-Role Constraint Matrix - YES=Compatible, NO=Incompatible",
+    "matrix": {
+      "JEWELER": {
+        "HOUSEHOLD": false,
+        "INVESTOR": true,
+        "RETURNEE": false,
+        "DESIGNER": false,
+        "OMBUDSMAN": false,
+        "CONSULTANT": false,
+        "MARKETMAKER": true,
+        "LICENSEE": false,
+        "MINTER": false,
+        "TRUSTEE": false
+      },
+      "HOUSEHOLD": {
+        "JEWELER": false,
+        "INVESTOR": true,
+        "RETURNEE": true,
+        "DESIGNER": true,
+        "OMBUDSMAN": false,
+        "CONSULTANT": false,
+        "MARKETMAKER": true,
+        "LICENSEE": true,
+        "MINTER": true,
+        "TRUSTEE": true
+      },
+      "INVESTOR": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "RETURNEE": true,
+        "DESIGNER": true,
+        "OMBUDSMAN": true,
+        "CONSULTANT": true,
+        "MARKETMAKER": true,
+        "LICENSEE": true,
+        "MINTER": true,
+        "TRUSTEE": true
+      },
+      "RETURNEE": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "INVESTOR": true,
+        "DESIGNER": true,
+        "OMBUDSMAN": false,
+        "CONSULTANT": true,
+        "MARKETMAKER": true,
+        "LICENSEE": true,
+        "MINTER": true,
+        "TRUSTEE": true
+      },
+      "DESIGNER": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "INVESTOR": true,
+        "RETURNEE": true,
+        "OMBUDSMAN": false,
+        "CONSULTANT": false,
+        "MARKETMAKER": true,
+        "LICENSEE": true,
+        "MINTER": true,
+        "TRUSTEE": false
+      },
+      "OMBUDSMAN": {
+        "JEWELER": false,
+        "HOUSEHOLD": false,
+        "INVESTOR": true,
+        "RETURNEE": false,
+        "DESIGNER": false,
+        "CONSULTANT": false,
+        "MARKETMAKER": false,
+        "LICENSEE": false,
+        "MINTER": false,
+        "TRUSTEE": false
+      },
+      "CONSULTANT": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "INVESTOR": true,
+        "RETURNEE": true,
+        "DESIGNER": false,
+        "OMBUDSMAN": false,
+        "MARKETMAKER": false,
+        "LICENSEE": false,
+        "MINTER": false,
+        "TRUSTEE": false
+      },
+      "MARKETMAKER": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "INVESTOR": true,
+        "RETURNEE": true,
+        "DESIGNER": true,
+        "OMBUDSMAN": false,
+        "CONSULTANT": false,
+        "LICENSEE": true,
+        "MINTER": false,
+        "TRUSTEE": false
+      },
+      "LICENSEE": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "INVESTOR": true,
+        "RETURNEE": false,
+        "DESIGNER": false,
+        "OMBUDSMAN": false,
+        "CONSULTANT": false,
+        "MARKETMAKER": true,
+        "MINTER": false,
+        "TRUSTEE": false
+      },
+      "MINTER": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "INVESTOR": true,
+        "RETURNEE": true,
+        "DESIGNER": false,
+        "OMBUDSMAN": false,
+        "CONSULTANT": false,
+        "MARKETMAKER": false,
+        "LICENSEE": false,
+        "TRUSTEE": false
+      },
+      "TRUSTEE": {
+        "JEWELER": false,
+        "HOUSEHOLD": true,
+        "INVESTOR": true,
+        "RETURNEE": true,
+        "DESIGNER": false,
+        "OMBUDSMAN": false,
+        "CONSULTANT": false,
+        "MARKETMAKER": false,
+        "LICENSEE": false,
+        "MINTER": false
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+Django>=4.2,<5.0
+djangorestframework>=3.14
+django-cors-headers>=4.0
+psycopg2-binary>=2.9
+python-dotenv>=1.0
+gunicorn>=21.0
+celery>=5.3
+redis>=4.5
+web3>=6.0
+Pillow>=10.0
+boto3>=1.28
+django-storages>=1.14
+django-filter>=23.0
+drf-spectacular>=0.26
+whitenoise>=6.5
+python-dateutil>=2.8
+requests>=2.31
+
+# ─── Firebase integration (irg-gdp-prod) ───
+firebase-admin>=6.5.0
+google-cloud-firestore>=2.16.0
