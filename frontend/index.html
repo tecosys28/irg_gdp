@@ -179,6 +179,23 @@
         @media (max-width: 1200px) { .usps-grid, .website-info-grid { grid-template-columns: repeat(2, 1fr); } .stats-grid { grid-template-columns: repeat(2, 1fr); } .two-col-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .sidebar { width: 100%; position: relative; height: auto; } .main-content { margin-left: 0; } .usps-grid, .website-info-grid { grid-template-columns: 1fr; } .contact-section { flex-direction: column; gap: 15px; align-items: center; } .hero-title { font-size: 32px; } .form-row { grid-template-columns: 1fr; } }
     </style>
+    <!-- Firebase compat SDK — required for compat-style usage alongside modular SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script>
+        // Firebase project: irg-gdp-project
+        // Replace the values below with your real config from Firebase console
+        // (Project Settings → Your apps → SDK setup and configuration)
+        const firebaseConfig = {
+            apiKey:            window.__FIREBASE_API_KEY__             || "REPLACE_WITH_API_KEY",
+            authDomain:        window.__FIREBASE_AUTH_DOMAIN__         || "irg-gdp-project.firebaseapp.com",
+            projectId:         window.__FIREBASE_PROJECT_ID__          || "irg-gdp-project",
+            storageBucket:     window.__FIREBASE_STORAGE_BUCKET__      || "irg-gdp-project.firebasestorage.app",
+            messagingSenderId: window.__FIREBASE_MESSAGING_SENDER_ID__ || "REPLACE_WITH_SENDER_ID",
+            appId:             window.__FIREBASE_APP_ID__              || "REPLACE_WITH_APP_ID",
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </head>
 <body>
     <div id="landing-page">
@@ -581,17 +598,144 @@
         let pendingRole = null;
 
         const DASHBOARD_MENUS = {
-            household:[{group:'My Account',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'wallet',label:'My IRG_GDP',icon:'👛'},{id:'swap',label:'Swap for FTRs',icon:'🔄'}]}],
-            jeweler:[{group:'Operations',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'issuance',label:'Issue irg_jr',icon:'📝'}]}],
-            designer:[{group:'Studio',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'designs',label:'My Designs',icon:'🎨'}]}],
-            licensee:[{group:'License',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'territory',label:'Territory',icon:'🗺️'}]}],
-            ombudsman:[{group:'Disputes',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'disputes',label:'Active',icon:'⚖️'}]}],
-            admin:[{group:'System',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'users',label:'Users',icon:'👥'}]},{group:'Financial',items:[{id:'scf',label:'Super CF',icon:'💳'},{id:'lbma',label:'LBMA Rates',icon:'📈'}]}]
+            household:[
+                {group:'My Account',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'gdp_portfolio',label:'My IRG_GDP Units',icon:'👛'},
+                    {id:'gdp_mint',label:'Request Minting',icon:'⛏️'},
+                    {id:'gdp_earmark',label:'Earmarking',icon:'🔒'},
+                    {id:'gdp_swap',label:'Swap for FTRs',icon:'🔄'},
+                    {id:'gdp_trade',label:'Trade',icon:'📊'},
+                    {id:'gdp_transfer',label:'Transfer Units',icon:'📤'},
+                    {id:'gdp_bonus',label:'Bonus Allocations',icon:'🎁'},
+                    {id:'gic_invest',label:'GIC Certificates',icon:'📜'},
+                ]},
+                {group:'Disputes & Help',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                    {id:'disputes_file',label:'File a Dispute',icon:'📋'},
+                    {id:'governance_active',label:'Active Proposals',icon:'🗳️'},
+                ]}
+            ],
+            investor:[
+                {group:'Portfolio',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'gdp_portfolio',label:'My IRG_GDP Units',icon:'👛'},
+                    {id:'gdp_trade',label:'Trade',icon:'📊'},
+                    {id:'gdp_swap',label:'Swap for FTRs',icon:'🔄'},
+                    {id:'gdp_transfer',label:'Transfer Units',icon:'📤'},
+                    {id:'gdp_bonus',label:'Bonus Allocations',icon:'🎁'},
+                    {id:'gic_invest',label:'GIC Certificates',icon:'📜'},
+                ]},
+                {group:'Community',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                    {id:'governance_active',label:'Vote on Proposals',icon:'🗳️'},
+                ]}
+            ],
+            jeweler:[
+                {group:'Operations',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'jr_issuance',label:'Issue irg_jr',icon:'📝'},
+                    {id:'jr_buyback',label:'Buyback Requests',icon:'↩️'},
+                    {id:'jdb_orders',label:'Design Orders',icon:'🎨'},
+                ]},
+                {group:'Support',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                    {id:'disputes_file',label:'File a Dispute',icon:'📋'},
+                ]}
+            ],
+            designer:[
+                {group:'Studio',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'jdb_designs',label:'My Designs',icon:'🎨'},
+                    {id:'jdb_orders',label:'Orders',icon:'📦'},
+                    {id:'jdb_royalties',label:'Royalties',icon:'💰'},
+                ]},
+                {group:'Community',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                ]}
+            ],
+            licensee:[
+                {group:'License',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'gic_invest',label:'GIC Certificates',icon:'📜'},
+                    {id:'corpus_funds',label:'Corpus Fund',icon:'🏦'},
+                ]},
+                {group:'Community',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                    {id:'governance_active',label:'Governance',icon:'🗳️'},
+                ]}
+            ],
+            ombudsman:[
+                {group:'Disputes',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'disputes_active',label:'Active Cases',icon:'⚖️'},
+                    {id:'disputes_mine',label:'All Assigned',icon:'📋'},
+                ]},
+                {group:'Platform',items:[
+                    {id:'governance_active',label:'Governance',icon:'🗳️'},
+                ]}
+            ],
+            admin:[
+                {group:'System',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'users',label:'Users',icon:'👥'},
+                    {id:'kyc_review',label:'KYC Review',icon:'🪪'},
+                ]},
+                {group:'Financial',items:[
+                    {id:'scf',label:'Super CF',icon:'💳'},
+                    {id:'lbma',label:'LBMA Rates',icon:'📈'},
+                    {id:'oracle_benchmarks',label:'Benchmarks',icon:'🎯'},
+                    {id:'corpus_funds',label:'Corpus Funds',icon:'🏦'},
+                    {id:'corpus_settlements',label:'Settlements',icon:'💸'},
+                    {id:'paa_dashboard',label:'PAA Bridge',icon:'🌉'},
+                ]},
+                {group:'Governance & Safety',items:[
+                    {id:'governance_proposals',label:'Proposals',icon:'🗳️'},
+                    {id:'governance_params',label:'Parameters',icon:'⚙️'},
+                    {id:'disputes_all',label:'All Disputes',icon:'⚖️'},
+                    {id:'recall_orders',label:'Recall Orders',icon:'🚨'},
+                ]}
+            ]
         };
         const USER_ROLES_DISPLAY = {household:{name:'Household',icon:'🏠',color:'#E4B44A'},jeweler:{name:'Jeweler',icon:'💎',color:'#9B7AB0'},designer:{name:'Designer',icon:'🎨',color:'#4CAF7A'},licensee:{name:'Licensee',icon:'📋',color:'#ED93B1'},ombudsman:{name:'Ombudsman',icon:'⚖️',color:'#C05858'},admin:{name:'Administrator',icon:'🔧',color:'#7F77DD'}};
         const SUPER_CF={accountName:'Intech Research Group',accountNumber:'99620200000108',bankName:'Bank of Baroda',branch:'Santacruz East',city:'Mumbai 400 055',swiftCode:'BARB0DBSCRU'};
         const LBMA_METALS=[{id:'XAU',name:'Gold',symbol:'Au'},{id:'XAG',name:'Silver',symbol:'Ag'},{id:'XPT',name:'Platinum',symbol:'Pt'},{id:'XPD',name:'Palladium',symbol:'Pd'}];
         let lbmaRates={},lbmaEditMode=false;
+
+        // ─── API helpers ──────────────────────────────────────────────────────
+        const API = '/api/v1';
+        async function _freshToken(){
+          const u=window._auth&&window._auth.currentUser;
+          if(u){const t=await u.getIdToken();localStorage.setItem('authToken',t);return t;}
+          return localStorage.getItem('authToken')||'';
+        }
+        async function apiGet(path){
+          const t=await _freshToken();
+          const r=await fetch(API+path,{headers:t?{'Authorization':'Bearer '+t}:{}});
+          if(!r.ok)throw await r.json().catch(()=>({error:'request_failed'}));
+          return r.json();
+        }
+        async function apiPost(path,body,method='POST'){
+          const t=await _freshToken();
+          const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(t?{'Authorization':'Bearer '+t}:{})},body:body?JSON.stringify(body):undefined});
+          if(!r.ok)throw await r.json().catch(()=>({error:'request_failed'}));
+          return r.json();
+        }
+        function fmtDate(s){return s?(s+'').slice(0,16).replace('T',' '):'—';}
+        function fmtAmt(v){return v!=null?parseFloat(v).toLocaleString('en-IN',{maximumFractionDigits:4}):'—';}
+        function badge(label,cls){return`<span class="badge badge-${cls||'warning'}">${label}</span>`;}
+        function tbl(heads,rows){
+          if(!rows||!rows.length)return'<p style="color:var(--text-muted);padding:12px 0">No records found.</p>';
+          return`<div style="overflow-x:auto"><table class="table"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+        }
+        function panelCard(title,content){return`<div class="card" style="margin-bottom:20px"><h3 style="color:var(--gold);margin-bottom:16px">${title}</h3>${content}</div>`;}
+        function errCard(msg){return`<div class="card"><p style="color:var(--danger)">${msg}</p></div>`;}
+        function statusColor(s){const m={ACTIVE:'success',FINAL:'success',CONFIRMED:'success',ACTIVATED:'success',APPROVED:'success',PASSED:'success',RESOLVED:'success',PENDING:'warning',SUBMITTED:'warning',INITIATED:'warning',FILED:'warning',UNDER_REVIEW:'warning',VOTING:'warning',FAILED:'danger',REJECTED:'danger',RECALLED:'danger',LOCKED:'danger',SUSPENDED:'danger',FROZEN:'danger'};return m[s]||'info';}
 
         function debounce(d=300){const n=Date.now();if(n-lastClickTime<d)return false;lastClickTime=n;return true;}
         function selectProduct(p){document.querySelectorAll('.product-tab').forEach(t=>t.classList.toggle('active',t.textContent.includes(p)));}
@@ -803,10 +947,1028 @@
         function changeRole(r){currentRole=r;currentPanel='dashboard';const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};document.getElementById('role-icon').textContent=i.icon;document.getElementById('role-icon').style.background=i.color;document.getElementById('role-name').textContent=i.name;renderSidebar();renderPanel();}
         function renderSidebar(){const n=document.getElementById('sidebar-nav'),m=DASHBOARD_MENUS[currentRole]||[];n.innerHTML=m.map(g=>'<div class="nav-group"><div class="nav-group-title">'+g.group+'</div>'+g.items.map(i=>'<button class="nav-item '+(currentPanel===i.id?'active':'')+'" onclick="selectPanel(\''+i.id+'\')"><span>'+i.icon+'</span><span>'+i.label+'</span></button>').join('')+'</div>').join('');}
         function selectPanel(p){currentPanel=p;renderSidebar();renderPanel();}
-        function renderPanel(){const c=document.getElementById('panel-content');if(currentRole==='admin'){if(currentPanel==='scf'){c.innerHTML=renderSCF();return;}if(currentPanel==='lbma'){c.innerHTML=renderLBMA();return;}}c.innerHTML=renderGeneric();}
-        function renderSCF(){return'<div class="card"><h3 style="color:var(--gold);margin-bottom:20px;">🏦 Super CF Account</h3><div class="bank-details-grid"><div class="bank-detail-box"><div class="bank-detail-label">Account Name</div><div class="bank-detail-value">'+SUPER_CF.accountName+'</div></div><div class="bank-detail-box"><div class="bank-detail-label">Account Number</div><div class="bank-detail-value highlight">'+SUPER_CF.accountNumber+'</div></div><div class="bank-detail-box"><div class="bank-detail-label">Bank</div><div class="bank-detail-value">'+SUPER_CF.bankName+'</div><div class="bank-detail-sub">'+SUPER_CF.branch+', '+SUPER_CF.city+'</div></div><div class="bank-detail-box"><div class="bank-detail-label">SWIFT/IFSC</div><div class="bank-detail-value highlight">'+SUPER_CF.swiftCode+'</div></div></div></div>';}
-        function renderLBMA(){return'<div class="card"><h3 style="color:var(--gold);margin-bottom:20px;">📈 LBMA Rates</h3><table class="table"><thead><tr><th>Metal</th><th>Symbol</th><th style="text-align:right;">AM Fix</th><th style="text-align:right;">PM Fix</th></tr></thead><tbody>'+LBMA_METALS.map(m=>'<tr><td>'+m.name+'</td><td>'+m.symbol+'</td><td style="text-align:right;">—</td><td style="text-align:right;">—</td></tr>').join('')+'</tbody></table></div>';}
-        function renderGeneric(){const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};return'<h2 class="panel-title">'+r.icon+' '+r.name+' Dashboard</h2><div class="card" style="text-align:center;padding:60px;"><div style="font-size:64px;margin-bottom:16px;">'+r.icon+'</div><h3 style="color:var(--white);">Welcome!</h3><p style="color:var(--text-muted);">Select an option from the menu</p></div>';}
+
+        function renderPanel(){
+          const c=document.getElementById('panel-content');
+          c.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading…</div>';
+          const panels={
+            dashboard:renderDashboard, profile:renderProfile, kyc_review:renderKYCReview,
+            gdp_portfolio:renderGDPPortfolio, gdp_mint:renderGDPMint, gdp_earmark:renderGDPEarmark,
+            gdp_swap:renderGDPSwap, gdp_trade:renderGDPTrade, gdp_transfer:renderGDPTransfer,
+            gdp_bonus:renderGDPBonus,
+            jr_issuance:renderJRIssuance, jr_buyback:renderJRBuyback,
+            jdb_designs:renderJDBDesigns, jdb_orders:renderJDBOrders, jdb_royalties:renderJDBRoyalties,
+            gic_invest:renderGICInvest,
+            scf:renderSCF, lbma:renderLBMA, oracle_benchmarks:renderOracleBenchmarks,
+            corpus_funds:renderCorpusFunds, corpus_settlements:renderCorpusSettlements,
+            paa_dashboard:renderPAADashboard,
+            governance_proposals:renderGovernanceProposals, governance_active:renderGovernanceActive,
+            governance_params:renderGovernanceParams,
+            disputes_file:renderDisputeFile, disputes_mine:renderDisputesMine,
+            disputes_active:renderDisputesActive, disputes_all:renderDisputesAll,
+            recall_orders:renderRecallOrders,
+            users:renderUsers,
+          };
+          const fn=panels[currentPanel]||renderGeneric;
+          Promise.resolve(fn()).then(html=>{c.innerHTML=html||'';}).catch(e=>{c.innerHTML=errCard('Failed to load panel: '+(e.error||e.message||'unknown'));});
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // DASHBOARD (role-specific summary)
+        // ═══════════════════════════════════════════════════════
+        async function renderDashboard(){
+          try{
+            const d=await apiGet('/auth/users/dashboard/');
+            const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};
+            let stats='';
+            if(d.gdp_summary){
+              const s=d.gdp_summary;
+              stats+=`<div class="stat-box"><div class="stat-icon">👛</div><div class="stat-value">${fmtAmt(s.total_units)}</div><div class="stat-label">Total GDP Units</div></div>`;
+              stats+=`<div class="stat-box"><div class="stat-icon">✅</div><div class="stat-value">${s.active_count||0}</div><div class="stat-label">Active Units</div></div>`;
+            }
+            if(d.design_count!=null) stats+=`<div class="stat-box"><div class="stat-icon">🎨</div><div class="stat-value">${d.design_count}</div><div class="stat-label">Designs</div></div>`;
+            if(d.corpus_balance!=null) stats+=`<div class="stat-box"><div class="stat-icon">🏦</div><div class="stat-value">₹${fmtAmt(d.corpus_balance)}</div><div class="stat-label">Corpus Balance</div></div>`;
+            const name=d.user?`${d.user.first_name||''} ${d.user.last_name||''}`.trim()||d.user.email:'';
+            return`<h2 class="panel-title">${r.icon} ${r.name} Dashboard</h2>
+              ${name?`<p style="color:var(--text-muted);margin-bottom:16px">Welcome back, <strong style="color:var(--white)">${name}</strong></p>`:''}
+              ${stats?`<div class="stats-grid">${stats}</div>`:''}
+              ${panelCard('Quick Links','<div style="display:flex;gap:12px;flex-wrap:wrap">'+(DASHBOARD_MENUS[currentRole]||[]).flatMap(g=>g.items).filter(i=>i.id!=='dashboard').slice(0,6).map(i=>`<button class="btn btn-outline" onclick="selectPanel('${i.id}')">${i.icon} ${i.label}</button>`).join('')+'</div>')}`;
+          }catch(e){
+            const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};
+            return`<h2 class="panel-title">${r.icon} ${r.name} Dashboard</h2>${errCard('Could not load dashboard data.')}`;
+          }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // PROFILE & KYC
+        // ═══════════════════════════════════════════════════════
+        async function renderProfile(){
+          try{
+            const u=await apiGet('/auth/users/me/');
+            const kycs=await apiGet('/auth/kyc/').catch(()=>({results:[]}));
+            const kycList=(kycs.results||kycs||[]);
+            const kycRows=kycList.map(k=>`<tr><td>${k.document_type}</td><td>${fmtDate(k.uploaded_at)}</td><td>${badge(k.verification_status,statusColor(k.verification_status))}</td><td>${k.rejection_reason||'—'}</td></tr>`);
+            return panelCard('👤 My Profile',`
+              <div class="form-row">
+                <div><div class="bank-detail-label">Name</div><div class="bank-detail-value">${(u.first_name||'')+' '+(u.last_name||'')}</div></div>
+                <div><div class="bank-detail-label">Email</div><div class="bank-detail-value">${u.email||'—'}</div></div>
+                <div><div class="bank-detail-label">Mobile</div><div class="bank-detail-value">${u.mobile||'—'}</div></div>
+                <div><div class="bank-detail-label">KYC Tier</div><div class="bank-detail-value">${badge(u.kyc_tier||'NONE',u.kyc_tier==='FULL'?'success':u.kyc_tier==='NONE'?'warning':'info')}</div></div>
+              </div>`)
+            +panelCard('🪪 KYC Documents',tbl(['Type','Uploaded','Status','Notes'],kycRows)
+              +`<div style="margin-top:16px">
+                <h4 style="color:var(--gold);margin-bottom:8px">Upload New Document</h4>
+                <div class="form-row">
+                  <div class="form-group"><label>Document Type</label>
+                    <select class="select" id="kyc-type">
+                      <option value="AADHAAR">Aadhaar</option><option value="PAN">PAN</option>
+                      <option value="PASSPORT">Passport</option><option value="VOTER_ID">Voter ID</option>
+                      <option value="DRIVING_LICENSE">Driving Licence</option><option value="GST">GST Certificate</option>
+                      <option value="BUSINESS_REG">Business Registration</option><option value="BANK_STATEMENT">Bank Statement</option>
+                      <option value="PHOTO">Photo</option><option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label>Document Number</label><input type="text" class="input" id="kyc-number" placeholder="e.g. AADHAAR-1234-5678-9012"></div>
+                </div>
+                <button class="btn btn-gold btn-sm" onclick="submitKYC()">Submit Document</button>
+              </div>`);
+          }catch(e){return errCard('Could not load profile.');}
+        }
+        async function submitKYC(){
+          const dt=document.getElementById('kyc-type')?.value;
+          const dn=document.getElementById('kyc-number')?.value.trim();
+          if(!dn){alert('Enter document number.');return;}
+          try{await apiPost('/auth/kyc/',{document_type:dt,document_number:dn});alert('Document submitted for verification.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // KYC REVIEW (admin)
+        // ═══════════════════════════════════════════════════════
+        async function renderKYCReview(){
+          try{
+            const data=await apiGet('/auth/kyc/?verification_status=UNDER_REVIEW');
+            const rows=(data.results||data||[]).map(k=>`<tr>
+              <td>${k.id}</td><td>${k.user||'—'}</td><td>${k.document_type}</td><td>${k.document_number}</td>
+              <td>${badge(k.verification_status,statusColor(k.verification_status))}</td>
+              <td>
+                <button class="btn btn-success btn-sm" onclick="reviewKYC(${k.id},'approve')">Approve</button>
+                <button class="btn btn-sm" style="background:var(--danger)" onclick="reviewKYC(${k.id},'reject')">Reject</button>
+              </td></tr>`);
+            return panelCard('🪪 KYC Review Queue',tbl(['ID','User','Type','Number','Status','Action'],rows));
+          }catch(e){return errCard('Could not load KYC queue.');}
+        }
+        async function reviewKYC(id,action){
+          const reason=action==='reject'?prompt('Rejection reason:'):'';
+          try{await apiPost(`/auth/kyc/${id}/verify/`,{action,reason:reason||''});alert('Done.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GDP PORTFOLIO
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPPortfolio(){
+          try{
+            const port=await apiGet('/gdp/units/portfolio/');
+            const s=port.summary||{};
+            const stats=`<div class="stats-grid">
+              <div class="stat-box"><div class="stat-icon">👛</div><div class="stat-value">${fmtAmt(s.total_units)}</div><div class="stat-label">Total Units</div></div>
+              <div class="stat-box"><div class="stat-icon">✅</div><div class="stat-value">${s.active_count||0}</div><div class="stat-label">Active</div></div>
+              <div class="stat-box"><div class="stat-icon">🔒</div><div class="stat-value">${s.earmarked_count||0}</div><div class="stat-label">Earmarked</div></div>
+              <div class="stat-box"><div class="stat-icon">💰</div><div class="stat-value">₹${fmtAmt(s.total_value_inr)}</div><div class="stat-label">Est. Value (INR)</div></div>
+            </div>`;
+            const units=(port.units||[]);
+            const rows=units.map(u=>`<tr>
+              <td>${u.unit_id||u.id}</td>
+              <td>${u.gold_weight_grams}g ${u.purity||''}</td>
+              <td>${fmtAmt(u.pure_gold_equivalent)}g</td>
+              <td>${fmtAmt(u.units_issued)}</td>
+              <td>${badge(u.status,statusColor(u.status))}</td>
+              <td>${fmtDate(u.created_at)}</td>
+            </tr>`);
+            return stats+panelCard('📋 My GDP Units',tbl(['Unit ID','Gold Weight','Pure Gold Equiv.','Units','Status','Created'],rows));
+          }catch(e){return errCard('Could not load portfolio: '+(e.error||''));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GDP MINTING
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPMint(){
+          const records=await apiGet('/gdp/minting/').catch(()=>({results:[]}));
+          const rows=(records.results||records||[]).map(m=>`<tr>
+            <td>${m.id}</td><td>${m.gold_weight_grams}g ${m.purity}</td>
+            <td>${m.invoice_hash||'—'}</td>
+            <td>${badge(m.status,statusColor(m.status))}</td>
+            <td>${fmtDate(m.created_at)}</td>
+            <td>${m.status==='CHECKLIST_PENDING'?`<button class="btn btn-sm btn-gold" onclick="showMintChecklist(${m.id})">Checklist</button>`:'—'}</td>
+          </tr>`);
+          return panelCard('⛏️ Request Minting',`
+            <div class="form-row">
+              <div class="form-group"><label>Gold Weight (grams)</label><input type="number" class="input" id="mint-grams" placeholder="e.g. 10" min="0.1" max="500" step="0.001"></div>
+              <div class="form-group"><label>Purity</label>
+                <select class="select" id="mint-purity">
+                  <option value="24K">24K (Pure)</option><option value="22K">22K</option><option value="18K">18K</option><option value="14K">14K</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group"><label>Invoice Hash (SHA-256 of invoice document)</label><input type="text" class="input" id="mint-invoice" placeholder="0x..."></div>
+            <button class="btn btn-gold" onclick="submitMintRequest()">Submit Minting Request</button>
+          `)
+          +panelCard('📋 Minting Records',tbl(['ID','Weight & Purity','Invoice Hash','Status','Date','Action'],rows));
+        }
+        async function submitMintRequest(){
+          const grams=parseFloat(document.getElementById('mint-grams')?.value);
+          const purity=document.getElementById('mint-purity')?.value;
+          const invoice=document.getElementById('mint-invoice')?.value.trim();
+          if(!grams||grams<=0||grams>500){alert('Enter valid gold weight (0.1–500g).');return;}
+          if(!invoice){alert('Enter invoice hash.');return;}
+          try{
+            await apiPost('/gdp/minting/',{gold_weight_grams:grams,purity,invoice_hash:invoice});
+            alert('Minting request submitted. Complete the 5-point checklist to proceed.');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function showMintChecklist(id){
+          const checks=['invoice_verified','jeweler_certified','nw_certified','within_cap','undertaking_signed'];
+          const labels=['Invoice Verified','Jeweler Certified','NW Certificate','Within 500g Cap','Undertaking Signed'];
+          const body=checks.map((k,i)=>`<label style="display:flex;gap:8px;margin:6px 0;cursor:pointer"><input type="checkbox" id="chk-${k}"><span>${labels[i]}</span></label>`).join('');
+          const ok=confirm('Verify checklist for minting record #'+id+'?\n\nAll 5 points must be confirmed by the certifying jeweler.');
+          if(!ok)return;
+          const payload={};checks.forEach(k=>{payload[k]=true;});
+          try{
+            await apiPost(`/gdp/minting/${id}/verify_checklist/`,payload);
+            await apiPost(`/gdp/minting/${id}/execute_mint/`,{});
+            alert('Minting executed! GDP units created.');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GDP EARMARKING
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPEarmark(){
+          const data=await apiGet('/gdp/earmarking/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(e=>`<tr>
+            <td>${e.id}</td><td>${e.gdp_unit||'—'}</td><td>${fmtAmt(e.percentage)}%</td>
+            <td>${fmtAmt(e.earmarked_amount)}</td>
+            <td>${fmtDate(e.release_date)}</td>
+            <td>${badge(e.status,statusColor(e.status))}</td>
+            <td>${e.status==='ACTIVE'?`<button class="btn btn-sm btn-outline" onclick="releaseEarmark(${e.id})">Release</button>`:'—'}</td>
+          </tr>`);
+          return panelCard('🔒 Earmarking',tbl(['ID','Unit','Percentage','Amount','Release Date','Status','Action'],rows));
+        }
+        async function releaseEarmark(id){
+          if(!confirm('Release earmarking #'+id+'?'))return;
+          try{await apiPost(`/gdp/earmarking/${id}/release/`,{});alert('Released.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GDP SWAP
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPSwap(){
+          const data=await apiGet('/gdp/swap/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(s=>`<tr>
+            <td>${s.id}</td><td>${(s.gdp_units||[]).join(', ')||'—'}</td>
+            <td>${s.ftr_category||'—'}</td><td>${badge(s.status,statusColor(s.status))}</td>
+            <td>${fmtDate(s.created_at)}</td>
+            <td>${s.status==='INITIATED'?`<button class="btn btn-sm btn-gold" onclick="confirmSwap(${s.id})">Confirm</button>`:'—'}</td>
+          </tr>`);
+          const port=await apiGet('/gdp/units/portfolio/').catch(()=>({units:[]}));
+          const unitOpts=(port.units||[]).filter(u=>u.status==='ACTIVE').map(u=>`<option value="${u.id}">${u.unit_id||u.id} — ${u.gold_weight_grams}g ${u.purity}</option>`).join('');
+          return panelCard('🔄 Swap GDP → FTR',`
+            <div class="form-row">
+              <div class="form-group"><label>GDP Unit</label><select class="select" id="swap-unit">${unitOpts||'<option>No active units</option>'}</select></div>
+              <div class="form-group"><label>FTR Category</label>
+                <select class="select" id="swap-ftr">
+                  <option value="HEALTHCARE">Healthcare</option><option value="EDUCATION">Education</option>
+                  <option value="TRAVEL">Travel</option><option value="HOSPITALITY">Hospitality</option>
+                  <option value="REAL_ESTATE">Real Estate Services</option><option value="RETAIL">Retail</option>
+                  <option value="DINING">Dining</option><option value="WELLNESS">Wellness</option>
+                  <option value="TECHNOLOGY">Technology</option><option value="OTHER">Other</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-gold" onclick="initiateSwap()">Initiate Swap</button>
+          `)
+          +panelCard('📋 Swap Records',tbl(['ID','Units','FTR Category','Status','Date','Action'],rows));
+        }
+        async function initiateSwap(){
+          const unitId=document.getElementById('swap-unit')?.value;
+          const ftr=document.getElementById('swap-ftr')?.value;
+          if(!unitId){alert('No active units available.');return;}
+          try{
+            await apiPost('/gdp/swap/initiate/',{gdp_unit_ids:[parseInt(unitId)],ftr_category:ftr});
+            alert('Swap initiated. Confirm to execute on-chain.');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function confirmSwap(id){
+          if(!confirm('Confirm swap #'+id+'? This will execute on IRG Chain.'))return;
+          try{await apiPost(`/gdp/swap/${id}/confirm/`,{});alert('Swap confirmed and executed.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GDP TRADE
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPTrade(){
+          const [ob,myTrades]=await Promise.all([
+            apiGet('/gdp/trade/orderbook/').catch(()=>({buy_orders:[],sell_orders:[]})),
+            apiGet('/gdp/trade/').catch(()=>({results:[]})),
+          ]);
+          const buyRows=(ob.buy_orders||[]).slice(0,10).map(o=>`<tr><td>${fmtAmt(o.units)}</td><td style="color:var(--success)">₹${fmtAmt(o.price_per_unit)}</td><td>${fmtDate(o.created_at)}</td></tr>`);
+          const sellRows=(ob.sell_orders||[]).slice(0,10).map(o=>`<tr><td>${fmtAmt(o.units)}</td><td style="color:var(--danger)">₹${fmtAmt(o.price_per_unit)}</td><td>${fmtDate(o.created_at)}</td></tr>`);
+          const myRows=(myTrades.results||myTrades||[]).map(t=>`<tr>
+            <td>${t.id}</td><td>${badge(t.trade_type,t.trade_type==='BUY'?'success':'warning')}</td>
+            <td>${fmtAmt(t.units)}</td><td>₹${fmtAmt(t.price_per_unit)}</td>
+            <td>${badge(t.status,statusColor(t.status))}</td><td>${fmtDate(t.created_at)}</td>
+          </tr>`);
+          return`<div class="two-col-grid">
+            ${panelCard('📗 Buy Orders (Top 10)',tbl(['Units','Price/Unit','Date'],buyRows))}
+            ${panelCard('📕 Sell Orders (Top 10)',tbl(['Units','Price/Unit','Date'],sellRows))}
+          </div>`
+          +panelCard('📊 Place Order',`
+            <div class="form-row">
+              <div class="form-group"><label>Order Type</label>
+                <select class="select" id="trade-type"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+              </div>
+              <div class="form-group"><label>Units</label><input type="number" class="input" id="trade-units" placeholder="e.g. 5" min="1"></div>
+              <div class="form-group"><label>Price per Unit (₹)</label><input type="number" class="input" id="trade-price" placeholder="e.g. 5000" min="1"></div>
+            </div>
+            <button class="btn btn-gold" onclick="placeOrder()">Place Order</button>
+          `)
+          +panelCard('📋 My Orders',tbl(['ID','Type','Units','Price/Unit','Status','Date'],myRows));
+        }
+        async function placeOrder(){
+          const type=document.getElementById('trade-type')?.value;
+          const units=parseInt(document.getElementById('trade-units')?.value);
+          const price=parseFloat(document.getElementById('trade-price')?.value);
+          if(!units||units<1){alert('Enter valid unit count.');return;}
+          if(!price||price<1){alert('Enter valid price.');return;}
+          try{
+            const r=await apiPost('/gdp/trade/place_order/',{trade_type:type,units,price_per_unit:price});
+            alert(`Order placed! Status: ${r.status}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GDP TRANSFER
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPTransfer(){
+          const data=await apiGet('/gdp/transfer/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(t=>`<tr>
+            <td>${t.id}</td><td>${t.gdp_unit||'—'}</td><td>${t.to_user||'—'}</td>
+            <td>${t.transfer_type||'—'}</td><td>${badge(t.status,statusColor(t.status))}</td>
+            <td>${fmtDate(t.created_at)}</td>
+          </tr>`);
+          const port=await apiGet('/gdp/units/portfolio/').catch(()=>({units:[]}));
+          const unitOpts=(port.units||[]).filter(u=>u.status==='ACTIVE').map(u=>`<option value="${u.id}">${u.unit_id||u.id} — ${u.gold_weight_grams}g ${u.purity}</option>`).join('');
+          return panelCard('📤 Transfer GDP Unit',`
+            <div class="form-row">
+              <div class="form-group"><label>GDP Unit</label><select class="select" id="xfer-unit">${unitOpts||'<option>No active units</option>'}</select></div>
+              <div class="form-group"><label>Recipient Email</label><input type="email" class="input" id="xfer-email" placeholder="recipient@email.com"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Transfer Type</label>
+                <select class="select" id="xfer-type">
+                  <option value="GIFT">Gift</option><option value="SALE">Sale</option>
+                  <option value="INHERITANCE">Inheritance</option><option value="SPONSOR">Sponsor</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Message (optional)</label><input type="text" class="input" id="xfer-msg" placeholder="Optional note"></div>
+            </div>
+            <button class="btn btn-gold" onclick="initiateTransfer()">Transfer</button>
+          `)
+          +panelCard('📋 Transfer History',tbl(['ID','Unit','To','Type','Status','Date'],rows));
+        }
+        async function initiateTransfer(){
+          const unit=document.getElementById('xfer-unit')?.value;
+          const email=document.getElementById('xfer-email')?.value.trim();
+          const type=document.getElementById('xfer-type')?.value;
+          const msg=document.getElementById('xfer-msg')?.value.trim();
+          if(!unit){alert('No active units.');return;}
+          if(!email){alert('Enter recipient email.');return;}
+          try{
+            await apiPost('/gdp/transfer/initiate/',{gdp_unit_id:parseInt(unit),to_email:email,transfer_type:type,message:msg});
+            alert('Transfer initiated on-chain.');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GDP BONUS
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPBonus(){
+          const data=await apiGet('/gdp/bonus/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(b=>`<tr>
+            <td>${b.id}</td><td>${b.source||'—'}</td><td>${fmtAmt(b.amount)}</td>
+            <td>${badge(b.status,statusColor(b.status))}</td><td>${fmtDate(b.allocated_at||b.created_at)}</td>
+          </tr>`);
+          return panelCard('🎁 Bonus Allocations',tbl(['ID','Source','Amount','Status','Date'],rows));
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // JR ISSUANCE
+        // ═══════════════════════════════════════════════════════
+        async function renderJRIssuance(){
+          const data=await apiGet('/jr/issuance/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(r=>`<tr>
+            <td>${r.id}</td><td>${r.customer||'—'}</td><td>${r.gold_weight}g ${r.purity}</td>
+            <td>₹${fmtAmt(r.making_charges)}</td>
+            <td>${fmtDate(r.created_at)}</td><td>${badge(r.jr_unit_status||'—',statusColor(r.jr_unit_status))}</td>
+          </tr>`);
+          return panelCard('📝 Issue irg_jr — New Issuance',`
+            <div class="form-row">
+              <div class="form-group"><label>Customer Email</label><input type="email" class="input" id="jr-email" placeholder="customer@email.com"></div>
+              <div class="form-group"><label>Invoice Number</label><input type="text" class="input" id="jr-invoice" placeholder="INV-2026-001"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Gold Weight (g)</label><input type="number" class="input" id="jr-grams" placeholder="e.g. 20" min="0.1" step="0.001"></div>
+              <div class="form-group"><label>Purity</label>
+                <select class="select" id="jr-purity">
+                  <option value="24K">24K</option><option value="22K">22K</option><option value="18K">18K</option><option value="14K">14K</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Making Charges (₹)</label><input type="number" class="input" id="jr-making" placeholder="e.g. 5000" min="0"></div>
+              <div class="form-group"><label>Stone Value (₹)</label><input type="number" class="input" id="jr-stone" placeholder="e.g. 0" min="0"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Jewellery Type</label><input type="text" class="input" id="jr-type" placeholder="e.g. Necklace, Ring"></div>
+              <div class="form-group"><label>Description</label><input type="text" class="input" id="jr-desc" placeholder="Brief description"></div>
+            </div>
+            <button class="btn btn-gold" onclick="submitJRIssuance()">Issue irg_jr</button>
+          `)
+          +panelCard('📋 Issuance Records',tbl(['ID','Customer','Weight & Purity','Making Charges','Date','Unit Status'],rows));
+        }
+        async function submitJRIssuance(){
+          const body={
+            customer_email:document.getElementById('jr-email')?.value.trim(),
+            invoice_number:document.getElementById('jr-invoice')?.value.trim(),
+            gold_weight:parseFloat(document.getElementById('jr-grams')?.value),
+            purity:document.getElementById('jr-purity')?.value,
+            making_charges:parseFloat(document.getElementById('jr-making')?.value||'0'),
+            stone_value:parseFloat(document.getElementById('jr-stone')?.value||'0'),
+            jewelry_type:document.getElementById('jr-type')?.value.trim(),
+            description:document.getElementById('jr-desc')?.value.trim(),
+          };
+          if(!body.customer_email||!body.gold_weight){alert('Fill in required fields.');return;}
+          try{
+            const r=await apiPost('/jr/issuance/issue/',body);
+            alert(`irg_jr issued! Unit ID: ${r.jr_unit?.id||'OK'}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // JR BUYBACK
+        // ═══════════════════════════════════════════════════════
+        async function renderJRBuyback(){
+          const [units,buybacks]=await Promise.all([
+            apiGet('/jr/units/').catch(()=>({results:[]})),
+            apiGet('/jr/buyback/').catch(()=>({results:[]})),
+          ]);
+          const unitRows=(units.results||units||[]).map(u=>`<tr>
+            <td>${u.id}</td><td>${u.owner||'—'}</td><td>${u.gold_weight}g ${u.purity}</td>
+            <td>₹${fmtAmt(u.buyback_guarantee_value)}</td>
+            <td>${badge(u.status,statusColor(u.status))}</td>
+            <td>${u.status==='ACTIVE'?`<button class="btn btn-sm btn-gold" onclick="requestBuyback(${u.id})">Request Buyback</button>`:'—'}</td>
+          </tr>`);
+          const bbRows=(buybacks.results||buybacks||[]).map(b=>`<tr>
+            <td>${b.id}</td><td>${b.jr_unit||'—'}</td><td>₹${fmtAmt(b.buyback_value)}</td>
+            <td>${badge(b.status,statusColor(b.status))}</td><td>${fmtDate(b.created_at)}</td>
+            <td>${b.status==='REQUESTED'?`<button class="btn btn-sm btn-gold" onclick="approveBuyback(${b.id})">Approve</button>`:'—'}</td>
+          </tr>`);
+          return panelCard('↩️ JR Units',tbl(['ID','Owner','Weight & Purity','Buyback Value','Status','Action'],unitRows))
+            +panelCard('📋 Buyback Requests',tbl(['ID','JR Unit','Value','Status','Date','Action'],bbRows));
+        }
+        async function requestBuyback(unitId){
+          if(!confirm('Request buyback for JR unit #'+unitId+'?'))return;
+          try{await apiPost('/jr/buyback/request_buyback/',{jr_unit_id:unitId});alert('Buyback requested.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function approveBuyback(id){
+          if(!confirm('Approve buyback #'+id+'?'))return;
+          try{await apiPost(`/jr/buyback/${id}/approve/`,{});alert('Buyback approved and executed.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // JDB DESIGNS
+        // ═══════════════════════════════════════════════════════
+        async function renderJDBDesigns(){
+          const data=await apiGet('/jdb/designs/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(d=>`<tr>
+            <td>${d.id}</td><td>${d.title||'—'}</td><td>${d.category||'—'}</td>
+            <td>${badge(d.status,statusColor(d.status))}</td>
+            <td>${d.orders_count||0}</td><td>${fmtDate(d.created_at)}</td>
+            <td>
+              ${d.status==='DRAFT'?`<button class="btn btn-sm btn-gold" onclick="submitDesign(${d.id})">Submit</button>`:''}
+              ${d.status==='APPROVED'&&!d.copyright_hash?`<button class="btn btn-sm btn-info" onclick="registerCopyright(${d.id})">Register Copyright</button>`:''}
+              ${d.copyright_hash?`<span class="badge badge-success">© Registered</span>`:''}
+            </td>
+          </tr>`);
+          return panelCard('🎨 Upload New Design',`
+            <div class="form-row">
+              <div class="form-group"><label>Title</label><input type="text" class="input" id="design-title" placeholder="Design name"></div>
+              <div class="form-group"><label>Category</label>
+                <select class="select" id="design-cat">
+                  <option value="NECKLACE">Necklace</option><option value="RING">Ring</option><option value="BRACELET">Bracelet</option>
+                  <option value="EARRING">Earring</option><option value="PENDANT">Pendant</option><option value="BANGLE">Bangle</option>
+                  <option value="SET">Set</option><option value="OTHER">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea class="textarea" id="design-desc" placeholder="Describe your design, materials, techniques…"></textarea></div>
+            <div class="form-row">
+              <div class="form-group"><label>IPFS CID (design file)</label><input type="text" class="input" id="design-ipfs" placeholder="Qm..."></div>
+              <div class="form-group"><label>Royalty Rate (%)</label><input type="number" class="input" id="design-royalty" placeholder="e.g. 3" min="1" max="10"></div>
+            </div>
+            <button class="btn btn-gold" onclick="uploadDesign()">Upload Design</button>
+          `)
+          +panelCard('📋 My Designs',tbl(['ID','Title','Category','Status','Orders','Created','Actions'],rows));
+        }
+        async function uploadDesign(){
+          const body={
+            title:document.getElementById('design-title')?.value.trim(),
+            category:document.getElementById('design-cat')?.value,
+            description:document.getElementById('design-desc')?.value.trim(),
+            ipfs_cid:document.getElementById('design-ipfs')?.value.trim(),
+            royalty_rate:parseFloat(document.getElementById('design-royalty')?.value||'3'),
+          };
+          if(!body.title){alert('Enter design title.');return;}
+          try{await apiPost('/jdb/designs/',body);alert('Design uploaded as draft.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function submitDesign(id){
+          try{await apiPost(`/jdb/designs/${id}/submit_for_approval/`,{});alert('Submitted for approval.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function registerCopyright(id){
+          if(!confirm('Register copyright for design #'+id+' on IRG Chain?'))return;
+          try{
+            const r=await apiPost(`/jdb/designs/${id}/register_copyright/`,{});
+            alert('Copyright registered! Hash: '+(r.copyright_hash||'OK'));
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // JDB ORDERS
+        // ═══════════════════════════════════════════════════════
+        async function renderJDBOrders(){
+          const [orders,designs]=await Promise.all([
+            apiGet('/jdb/orders/').catch(()=>({results:[]})),
+            apiGet('/jdb/designs/browse/').catch(()=>({results:[]})),
+          ]);
+          const rows=(orders.results||orders||[]).map(o=>`<tr>
+            <td>${o.id}</td><td>${o.design_title||o.design||'—'}</td><td>${o.quantity}</td>
+            <td>${o.customization_notes||'—'}</td>
+            <td>${badge(o.status,statusColor(o.status))}</td><td>${fmtDate(o.created_at)}</td>
+            <td>${o.status==='PLACED'?`<button class="btn btn-sm btn-gold" onclick="completeOrder(${o.id})">Mark Complete</button>`:'—'}</td>
+          </tr>`);
+          const designOpts=(designs.results||designs||[]).map(d=>`<option value="${d.id}">${d.title} (${d.category})</option>`).join('');
+          return panelCard('📦 Place Design Order',`
+            <div class="form-row">
+              <div class="form-group"><label>Design</label><select class="select" id="order-design">${designOpts||'<option>No approved designs</option>'}</select></div>
+              <div class="form-group"><label>Quantity</label><input type="number" class="input" id="order-qty" placeholder="1" min="1"></div>
+            </div>
+            <div class="form-group"><label>Customization Notes</label><textarea class="textarea" id="order-notes" placeholder="Any specific requirements…"></textarea></div>
+            <button class="btn btn-gold" onclick="placeDesignOrder()">Place Order</button>
+          `)
+          +panelCard('📋 Design Orders',tbl(['ID','Design','Qty','Notes','Status','Date','Action'],rows));
+        }
+        async function placeDesignOrder(){
+          const design=document.getElementById('order-design')?.value;
+          const qty=parseInt(document.getElementById('order-qty')?.value||'1');
+          const notes=document.getElementById('order-notes')?.value.trim();
+          if(!design){alert('No designs available.');return;}
+          try{await apiPost('/jdb/orders/place/',{design_id:parseInt(design),quantity:qty,customization_notes:notes});alert('Order placed.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function completeOrder(id){
+          if(!confirm('Mark order #'+id+' as complete and distribute royalty?'))return;
+          try{await apiPost(`/jdb/orders/${id}/complete/`,{});alert('Order completed. Royalty distributed.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // JDB ROYALTIES
+        // ═══════════════════════════════════════════════════════
+        async function renderJDBRoyalties(){
+          const data=await apiGet('/jdb/royalties/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(r=>`<tr>
+            <td>${r.id}</td><td>${r.design_title||r.design||'—'}</td><td>₹${fmtAmt(r.amount)}</td>
+            <td>${badge(r.status,statusColor(r.status))}</td><td>${fmtDate(r.paid_at||r.created_at)}</td>
+          </tr>`);
+          return panelCard('💰 Royalty Payments',tbl(['ID','Design','Amount','Status','Date'],rows));
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GIC CERTIFICATES
+        // ═══════════════════════════════════════════════════════
+        async function renderGICInvest(){
+          const data=await apiGet('/gic/certificates/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(c=>`<tr>
+            <td>${c.id}</td><td>₹${fmtAmt(c.amount)}</td><td>${c.gold_equivalent}g</td>
+            <td>${c.maturity_months}m</td>
+            <td>${badge(c.status,statusColor(c.status))}</td><td>${fmtDate(c.created_at)}</td>
+            <td><button class="btn btn-sm btn-outline" onclick="showGICRevenue(${c.id})">Revenue</button></td>
+          </tr>`);
+          return panelCard('📜 Invest in GIC',`
+            <div class="form-row">
+              <div class="form-group"><label>Investment Amount (₹, min ₹10,000)</label><input type="number" class="input" id="gic-amount" placeholder="e.g. 50000" min="10000"></div>
+              <div class="form-group"><label>Maturity Period (months)</label>
+                <select class="select" id="gic-months">
+                  <option value="12">12 months</option><option value="24">24 months</option><option value="36">36 months</option><option value="60">60 months</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-gold" onclick="investGIC()">Invest</button>
+          `)
+          +panelCard('📋 My GIC Certificates',tbl(['ID','Amount','Gold Equiv.','Maturity','Status','Date',''],rows));
+        }
+        async function investGIC(){
+          const amount=parseFloat(document.getElementById('gic-amount')?.value);
+          const months=parseInt(document.getElementById('gic-months')?.value);
+          if(!amount||amount<10000){alert('Minimum investment is ₹10,000.');return;}
+          try{
+            const r=await apiPost('/gic/certificates/invest/',{amount,maturity_months:months});
+            alert(`GIC Certificate created! ID: ${r.id}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function showGICRevenue(id){
+          try{
+            const r=await apiGet(`/gic/certificates/${id}/revenue_breakdown/`);
+            const s=r.streams||{};
+            alert(`Revenue Breakdown for GIC #${id}\n\nCorpus Returns: ₹${fmtAmt(s.corpus_returns)}\nTrading Fees: ₹${fmtAmt(s.trading_fees)}\nGold Appreciation: ₹${fmtAmt(s.gold_appreciation)}\nTotal: ₹${fmtAmt(s.total)}`);
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // SCF
+        // ═══════════════════════════════════════════════════════
+        function renderSCF(){return panelCard('🏦 Super CF Bank Account',`
+          <div class="bank-details-grid">
+            <div class="bank-detail-box"><div class="bank-detail-label">Account Name</div><div class="bank-detail-value">${SUPER_CF.accountName}</div></div>
+            <div class="bank-detail-box"><div class="bank-detail-label">Account Number</div><div class="bank-detail-value highlight">${SUPER_CF.accountNumber}</div></div>
+            <div class="bank-detail-box"><div class="bank-detail-label">Bank</div><div class="bank-detail-value">${SUPER_CF.bankName}</div><div class="bank-detail-sub">${SUPER_CF.branch}, ${SUPER_CF.city}</div></div>
+            <div class="bank-detail-box"><div class="bank-detail-label">SWIFT / IFSC</div><div class="bank-detail-value highlight">${SUPER_CF.swiftCode}</div></div>
+          </div>`);}
+
+        // ═══════════════════════════════════════════════════════
+        // LBMA RATES (live from API)
+        // ═══════════════════════════════════════════════════════
+        async function renderLBMA(){
+          const latest=await apiGet('/oracle/lbma/latest/').catch(()=>({}));
+          const hist=await apiGet('/oracle/lbma/history/?metal=XAU&days=7').catch(()=>({results:[]}));
+          const histRows=(hist.results||hist||[]).slice(0,7).map(r=>`<tr>
+            <td>${fmtDate(r.date||r.created_at)}</td><td>$${fmtAmt(r.am_fix_usd)}</td>
+            <td>$${fmtAmt(r.pm_fix_usd)}</td><td>₹${fmtAmt(r.inr_per_gram)}/g</td>
+          </tr>`);
+          const metalsHtml=LBMA_METALS.map(m=>{
+            const d=latest[m.id]||{};
+            return`<div class="stat-box">
+              <div class="stat-icon">${m.symbol}</div>
+              <div class="stat-value">₹${fmtAmt(d.inr_per_gram)}<span style="font-size:12px">/g</span></div>
+              <div class="stat-label">${m.name} (${m.id})</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">AM: $${fmtAmt(d.am_fix_usd)} | PM: $${fmtAmt(d.pm_fix_usd)}</div>
+            </div>`;
+          }).join('');
+          const adminForm=currentRole==='admin'?`
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+              <h4 style="color:var(--gold);margin-bottom:12px">Update Gold Rate</h4>
+              <div class="form-row">
+                <div class="form-group"><label>Metal</label>
+                  <select class="select" id="lbma-metal">
+                    ${LBMA_METALS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group"><label>AM Fix (USD/troy oz)</label><input type="number" class="input" id="lbma-am" placeholder="e.g. 2350.50" step="0.01"></div>
+                <div class="form-group"><label>PM Fix (USD/troy oz)</label><input type="number" class="input" id="lbma-pm" placeholder="e.g. 2355.00" step="0.01"></div>
+                <div class="form-group"><label>INR per gram</label><input type="number" class="input" id="lbma-inr" placeholder="e.g. 6250.00" step="0.01"></div>
+              </div>
+              <button class="btn btn-gold" onclick="updateLBMA()">Update Rate</button>
+            </div>`:'';
+          return`<div class="stats-grid">${metalsHtml}</div>`
+            +panelCard('📅 Gold (XAU) — Last 7 Days',tbl(['Date','AM Fix (USD)','PM Fix (USD)','INR/gram'],histRows)+adminForm);
+        }
+        async function updateLBMA(){
+          const body={
+            metal:document.getElementById('lbma-metal')?.value,
+            am_fix_usd:parseFloat(document.getElementById('lbma-am')?.value)||null,
+            pm_fix_usd:parseFloat(document.getElementById('lbma-pm')?.value)||null,
+            inr_per_gram:parseFloat(document.getElementById('lbma-inr')?.value),
+            date:new Date().toISOString().slice(0,10),
+          };
+          if(!body.inr_per_gram){alert('Enter INR per gram.');return;}
+          try{await apiPost('/oracle/lbma/update_rate/',body);alert('Rate updated.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // ORACLE BENCHMARKS
+        // ═══════════════════════════════════════════════════════
+        async function renderOracleBenchmarks(){
+          const data=await apiGet('/oracle/benchmark/by_category/').catch(()=>({}));
+          const entries=Object.entries(data);
+          const rows=entries.map(([cat,b])=>`<tr>
+            <td>${cat}</td><td>₹${fmtAmt(b.value)}</td><td>${b.currency||'INR'}</td>
+            <td>${fmtDate(b.updated_at||b.created_at)}</td>
+          </tr>`);
+          return panelCard('🎯 FTR Benchmark Values by Category',tbl(['Category','Value','Currency','Updated'],rows)
+            +`<div style="margin-top:16px">
+              <h4 style="color:var(--gold);margin-bottom:8px">Add / Update Benchmark</h4>
+              <div class="form-row">
+                <div class="form-group"><label>Category</label><input type="text" class="input" id="bm-cat" placeholder="e.g. HEALTHCARE"></div>
+                <div class="form-group"><label>Value (₹)</label><input type="number" class="input" id="bm-val" placeholder="e.g. 1000" min="0" step="0.01"></div>
+              </div>
+              <button class="btn btn-gold btn-sm" onclick="updateBenchmark()">Save</button>
+            </div>`);
+        }
+        async function updateBenchmark(){
+          const cat=document.getElementById('bm-cat')?.value.trim().toUpperCase();
+          const val=parseFloat(document.getElementById('bm-val')?.value);
+          if(!cat||!val){alert('Fill in category and value.');return;}
+          try{await apiPost('/oracle/benchmark/',{category:cat,value:val,currency:'INR'});alert('Benchmark saved.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // CORPUS FUNDS
+        // ═══════════════════════════════════════════════════════
+        async function renderCorpusFunds(){
+          const data=await apiGet('/corpus/funds/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(f=>`<tr>
+            <td>${f.id}</td><td>${f.name||'—'}</td><td>${f.fund_type||'—'}</td>
+            <td>₹${fmtAmt(f.balance)}</td><td>${badge(f.status||'ACTIVE',statusColor(f.status||'ACTIVE'))}</td>
+            <td><button class="btn btn-sm btn-outline" onclick="showFundDeposit(${f.id},'${f.name||f.id}')">Deposit</button></td>
+          </tr>`);
+          return panelCard('🏦 Corpus Funds',tbl(['ID','Name','Type','Balance','Status','Action'],rows));
+        }
+        async function showFundDeposit(fundId,name){
+          const amount=parseFloat(prompt(`Deposit amount (₹) to "${name}":`)||'0');
+          if(!amount||amount<=0){alert('Invalid amount.');return;}
+          const ref=prompt('Reference / description:')||'Manual deposit';
+          try{
+            const d=await apiPost('/corpus/deposits/',{fund:fundId,amount,description:ref});
+            await apiPost(`/corpus/deposits/${d.id}/confirm/`,{});
+            alert('Deposit confirmed.');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // CORPUS SETTLEMENTS
+        // ═══════════════════════════════════════════════════════
+        async function renderCorpusSettlements(){
+          const data=await apiGet('/corpus/settlements/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(s=>`<tr>
+            <td>${s.id}</td><td>${s.fund||'—'}</td><td>${s.settlement_type||'—'}</td>
+            <td>₹${fmtAmt(s.amount)}</td><td>${badge(s.status,statusColor(s.status))}</td>
+            <td>${fmtDate(s.created_at)}</td>
+          </tr>`);
+          const fundsData=await apiGet('/corpus/funds/').catch(()=>({results:[]}));
+          const fundOpts=(fundsData.results||fundsData||[]).map(f=>`<option value="${f.id}">${f.name||f.id}</option>`).join('');
+          return panelCard('💸 Process Settlement',`
+            <div class="form-row">
+              <div class="form-group"><label>Fund</label><select class="select" id="settle-fund">${fundOpts||'<option>No funds</option>'}</select></div>
+              <div class="form-group"><label>Beneficiary User ID</label><input type="number" class="input" id="settle-user" placeholder="User ID"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Amount (₹)</label><input type="number" class="input" id="settle-amount" placeholder="e.g. 10000" min="1"></div>
+              <div class="form-group"><label>Type</label>
+                <select class="select" id="settle-type">
+                  <option value="BUYBACK">Buyback</option><option value="BONUS">Bonus</option><option value="WITHDRAWAL">Withdrawal</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-gold" onclick="processSettlement()">Process Settlement</button>
+          `)
+          +panelCard('📋 Settlement History',tbl(['ID','Fund','Type','Amount','Status','Date'],rows));
+        }
+        async function processSettlement(){
+          const body={
+            fund_id:parseInt(document.getElementById('settle-fund')?.value),
+            beneficiary_id:parseInt(document.getElementById('settle-user')?.value),
+            amount:parseFloat(document.getElementById('settle-amount')?.value),
+            settlement_type:document.getElementById('settle-type')?.value,
+          };
+          if(!body.amount||!body.beneficiary_id){alert('Fill in all fields.');return;}
+          try{await apiPost('/corpus/settlements/process_settlement/',body);alert('Settlement processed via PAA bridge.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // PAA DASHBOARD
+        // ═══════════════════════════════════════════════════════
+        async function renderPAADashboard(){
+          try{
+            const [dash,health]=await Promise.all([
+              apiGet('/../../api/paa/dashboard/').catch(()=>({})),
+              apiGet('/../../api/paa/health/').catch(()=>({status:'unknown'})),
+            ]);
+            const txs=await apiGet('/../../api/paa/transactions/?status=pending').catch(()=>({results:[]}));
+            const txRows=(txs.results||txs||[]).slice(0,10).map(t=>`<tr>
+              <td>${t.id}</td><td>${t.category||'—'}</td><td>₹${fmtAmt(t.amount)}</td>
+              <td>${badge(t.status,statusColor(t.status))}</td><td>${fmtDate(t.created_at)}</td>
+              <td>
+                ${t.status==='pending'?`<button class="btn btn-sm btn-gold" onclick="approvePayment('${t.id}')">Approve</button>`:''}
+                ${t.status==='approved'?`<button class="btn btn-sm btn-success" onclick="executePayment('${t.id}')">Execute</button>`:''}
+              </td>
+            </tr>`);
+            return`<div class="stats-grid">
+                <div class="stat-box"><div class="stat-icon">🌉</div><div class="stat-value">${health.status||'—'}</div><div class="stat-label">Bridge Status</div></div>
+              </div>`
+              +panelCard('🌉 PAA Bridge — Pending Transactions',tbl(['ID','Category','Amount','Status','Date','Action'],txRows));
+          }catch(e){return errCard('PAA bridge not available: '+(e.error||''));}
+        }
+        async function approvePayment(id){
+          try{await apiPost(`/../../api/paa/transactions/${id}/approve/`,{role:'AdvisoryBoardMember'});alert('Approved.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function executePayment(id){
+          if(!confirm('Execute payment #'+id+'?'))return;
+          try{await apiPost(`/../../api/paa/transactions/${id}/execute/`,{});alert('Executed.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GOVERNANCE
+        // ═══════════════════════════════════════════════════════
+        async function renderGovernanceActive(){
+          const data=await apiGet('/governance/proposals/active/').catch(()=>[]);
+          const rows=(data||[]).map(p=>`<tr>
+            <td>${p.id}</td><td>${p.title||'—'}</td>
+            <td>${p.votes_for||0} / ${p.votes_against||0}</td>
+            <td>${fmtDate(p.voting_ends)}</td>
+            <td>
+              <button class="btn btn-sm btn-success" onclick="castVote(${p.id},true)">✓ For</button>
+              <button class="btn btn-sm" style="background:var(--danger)" onclick="castVote(${p.id},false)">✗ Against</button>
+            </td>
+          </tr>`);
+          return panelCard('🗳️ Active Governance Proposals',
+            rows.length?tbl(['ID','Title','For / Against','Voting Ends','Your Vote'],rows)
+            :'<p style="color:var(--text-muted);padding:12px 0">No active proposals at this time.</p>');
+        }
+        async function renderGovernanceProposals(){
+          const data=await apiGet('/governance/proposals/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(p=>`<tr>
+            <td>${p.id}</td><td>${p.title||'—'}</td><td>${badge(p.status,statusColor(p.status))}</td>
+            <td>${fmtDate(p.created_at)}</td>
+            <td>
+              ${p.status==='DRAFT'?`<button class="btn btn-sm btn-gold" onclick="submitProposal(${p.id})">Submit</button>`:''}
+              ${p.status==='PASSED'?`<button class="btn btn-sm btn-success" onclick="executeProposal(${p.id})">Execute</button>`:''}
+            </td>
+          </tr>`);
+          return panelCard('📝 Create Proposal',`
+            <div class="form-group"><label>Title</label><input type="text" class="input" id="prop-title" placeholder="Proposal title"></div>
+            <div class="form-group"><label>Description</label><textarea class="textarea" id="prop-desc" placeholder="Describe the proposed change…"></textarea></div>
+            <div class="form-row">
+              <div class="form-group"><label>Voting Starts</label><input type="datetime-local" class="input" id="prop-start"></div>
+              <div class="form-group"><label>Voting Ends</label><input type="datetime-local" class="input" id="prop-end"></div>
+            </div>
+            <button class="btn btn-gold" onclick="createProposal()">Create Proposal</button>
+          `)
+          +panelCard('📋 All Proposals',tbl(['ID','Title','Status','Created','Action'],rows));
+        }
+        async function renderGovernanceParams(){
+          const data=await apiGet('/governance/parameters/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(p=>`<tr>
+            <td>${p.key||p.name}</td><td>${p.value}</td><td>${p.description||'—'}</td>
+            <td>${fmtDate(p.updated_at||p.created_at)}</td>
+          </tr>`);
+          return panelCard('⚙️ Governance Parameters',tbl(['Key','Value','Description','Updated'],rows));
+        }
+        async function createProposal(){
+          const body={
+            title:document.getElementById('prop-title')?.value.trim(),
+            description:document.getElementById('prop-desc')?.value.trim(),
+            voting_starts:document.getElementById('prop-start')?.value,
+            voting_ends:document.getElementById('prop-end')?.value,
+          };
+          if(!body.title){alert('Enter proposal title.');return;}
+          try{await apiPost('/governance/proposals/',body);alert('Proposal created as draft.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function submitProposal(id){
+          try{await apiPost(`/governance/proposals/${id}/submit/`,{});alert('Proposal submitted and now active for voting.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function executeProposal(id){
+          if(!confirm('Execute passed proposal #'+id+'?'))return;
+          try{await apiPost(`/governance/proposals/${id}/execute/`,{});alert('Proposal executed on-chain.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function castVote(proposalId,voteFor){
+          try{
+            const r=await apiPost('/governance/votes/cast/',{proposal_id:proposalId,vote_for:voteFor});
+            alert(`Vote cast! Proposal status: ${r.proposal?.status||'updated'}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // DISPUTES
+        // ═══════════════════════════════════════════════════════
+        async function renderDisputeFile(){
+          return panelCard('📋 File a Dispute',`
+            <div class="form-group"><label>Against (email of respondent)</label><input type="email" class="input" id="disp-against" placeholder="respondent@email.com"></div>
+            <div class="form-row">
+              <div class="form-group"><label>Category</label>
+                <select class="select" id="disp-cat">
+                  <option value="MINTING">Minting</option><option value="TRADE">Trade</option><option value="SWAP">Swap</option>
+                  <option value="TRANSFER">Transfer</option><option value="BUYBACK">Buyback</option><option value="ROYALTY">Royalty</option>
+                  <option value="CORPUS">Corpus</option><option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Amount in Dispute (₹)</label><input type="number" class="input" id="disp-amount" placeholder="e.g. 50000" min="0"></div>
+            </div>
+            <div class="form-group"><label>Subject</label><input type="text" class="input" id="disp-subject" placeholder="Brief subject line"></div>
+            <div class="form-group"><label>Description</label><textarea class="textarea" id="disp-desc" placeholder="Describe the dispute in detail…"></textarea></div>
+            <button class="btn btn-gold" onclick="fileDispute()">File Dispute</button>
+          `);
+        }
+        async function fileDispute(){
+          const body={
+            against_email:document.getElementById('disp-against')?.value.trim(),
+            category:document.getElementById('disp-cat')?.value,
+            amount_in_dispute:parseFloat(document.getElementById('disp-amount')?.value||'0'),
+            subject:document.getElementById('disp-subject')?.value.trim(),
+            description:document.getElementById('disp-desc')?.value.trim(),
+          };
+          if(!body.against_email||!body.subject||!body.description){alert('Fill in all required fields.');return;}
+          try{
+            const r=await apiPost('/disputes/cases/file/',body);
+            alert(`Dispute filed! Case number: ${r.case_number||r.id}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function renderDisputesMine(){
+          const data=await apiGet('/disputes/cases/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(d=>`<tr>
+            <td>${d.case_number||d.id}</td><td>${d.subject||'—'}</td><td>${d.category||'—'}</td>
+            <td>₹${fmtAmt(d.amount_in_dispute)}</td>
+            <td>${badge(d.status,statusColor(d.status))}</td><td>${fmtDate(d.created_at)}</td>
+          </tr>`);
+          return panelCard('⚖️ My Disputes',tbl(['Case No.','Subject','Category','Amount','Status','Filed'],rows));
+        }
+        async function renderDisputesActive(){
+          const data=await apiGet('/disputes/cases/?status=FILED').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(d=>`<tr>
+            <td>${d.case_number||d.id}</td><td>${d.subject||'—'}</td><td>${d.category||'—'}</td>
+            <td>₹${fmtAmt(d.amount_in_dispute)}</td>
+            <td>${badge(d.status,statusColor(d.status))}</td>
+            <td>
+              ${d.status==='FILED'?`<button class="btn btn-sm btn-gold" onclick="startReview(${d.id})">Start Review</button>`:''}
+              ${d.status==='UNDER_REVIEW'?`<button class="btn btn-sm btn-success" onclick="resolveDispute(${d.id})">Resolve</button>`:''}
+            </td>
+          </tr>`);
+          return panelCard('⚖️ Active Dispute Cases',tbl(['Case No.','Subject','Category','Amount','Status','Action'],rows));
+        }
+        async function renderDisputesAll(){
+          const data=await apiGet('/disputes/cases/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(d=>`<tr>
+            <td>${d.case_number||d.id}</td><td>${d.subject||'—'}</td>
+            <td>${d.filer||'—'}</td><td>${d.respondent||'—'}</td>
+            <td>₹${fmtAmt(d.amount_in_dispute)}</td>
+            <td>${badge(d.status,statusColor(d.status))}</td><td>${fmtDate(d.created_at)}</td>
+            <td>
+              ${d.status==='FILED'?`<button class="btn btn-sm btn-gold" onclick="startReview(${d.id})">Start Review</button>`:''}
+              ${d.status==='UNDER_REVIEW'?`<button class="btn btn-sm btn-success" onclick="resolveDispute(${d.id})">Resolve</button>`:''}
+            </td>
+          </tr>`);
+          return panelCard('⚖️ All Disputes',tbl(['Case No.','Subject','Filer','Respondent','Amount','Status','Filed','Action'],rows));
+        }
+        async function startReview(id){
+          try{await apiPost(`/disputes/cases/${id}/start_review/`,{});alert('Case now under review.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function resolveDispute(id){
+          const outcome=prompt('Outcome (FAVOR_FILER, FAVOR_RESPONDENT, PARTIAL, SETTLED, WITHDRAWN):');
+          if(!outcome)return;
+          const ruling=prompt('Ruling / reasoning:')||'';
+          const compAmt=parseFloat(prompt('Compensation amount (₹, 0 if none):')||'0');
+          const body={outcome:outcome.toUpperCase(),ruling,compensation_amount:compAmt||undefined};
+          try{await apiPost(`/disputes/cases/${id}/resolve/`,body);alert('Dispute resolved.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // RECALL ORDERS (admin)
+        // ═══════════════════════════════════════════════════════
+        async function renderRecallOrders(){
+          const data=await apiGet('/recall/orders/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(r=>`<tr>
+            <td>${r.id}</td><td>${r.reason||'—'}</td><td>${r.description||'—'}</td>
+            <td>${badge(r.status,statusColor(r.status))}</td><td>${fmtDate(r.created_at)}</td>
+            <td>
+              ${r.status==='INITIATED'?`<button class="btn btn-sm btn-gold" onclick="approveRecall(${r.id})">Approve</button>`:''}
+              ${r.status==='APPROVED'?`<button class="btn btn-sm" style="background:var(--danger)" onclick="executeRecall(${r.id})">Execute</button>`:''}
+            </td>
+          </tr>`);
+          return panelCard('🚨 Initiate Recall Order',`
+            <div class="form-row">
+              <div class="form-group"><label>Reason</label>
+                <select class="select" id="recall-reason">
+                  <option value="FRAUD">Fraud</option><option value="COMPLIANCE">Compliance</option>
+                  <option value="LEGAL">Legal</option><option value="SECURITY">Security</option><option value="EMERGENCY">Emergency</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Target User Email (leave blank for all)</label><input type="email" class="input" id="recall-user" placeholder="Optional"></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea class="textarea" id="recall-desc" placeholder="Describe the recall reason in detail…"></textarea></div>
+            <button class="btn btn-sm" style="background:var(--danger)" onclick="initiateRecall()">Initiate Recall</button>
+          `)
+          +panelCard('📋 Recall Orders',tbl(['ID','Reason','Description','Status','Created','Action'],rows));
+        }
+        async function initiateRecall(){
+          if(!confirm('⚠️ This will initiate an emergency recall. Proceed?'))return;
+          const body={
+            reason:document.getElementById('recall-reason')?.value,
+            description:document.getElementById('recall-desc')?.value.trim(),
+            target_user_email:document.getElementById('recall-user')?.value.trim()||undefined,
+          };
+          if(!body.description){alert('Enter description.');return;}
+          try{await apiPost('/recall/orders/initiate/',body);alert('Recall initiated.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function approveRecall(id){
+          if(!confirm('Approve recall #'+id+'?'))return;
+          try{await apiPost(`/recall/orders/${id}/approve/`,{});alert('Approved.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function executeRecall(id){
+          if(!confirm('⚠️ EXECUTE recall #'+id+'? This will BURN all targeted units on-chain.'))return;
+          try{await apiPost(`/recall/orders/${id}/execute/`,{});alert('Executed.');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // USERS (admin)
+        // ═══════════════════════════════════════════════════════
+        async function renderUsers(){
+          const data=await apiGet('/auth/users/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(u=>`<tr>
+            <td>${u.id}</td>
+            <td>${u.first_name||''} ${u.last_name||''}</td>
+            <td>${u.email||'—'}</td>
+            <td>${u.mobile||'—'}</td>
+            <td>${badge(u.kyc_tier||'NONE',u.kyc_tier==='FULL'?'success':u.kyc_tier==='NONE'?'warning':'info')}</td>
+            <td>${u.is_active?'<span style="color:var(--success)">Active</span>':'<span style="color:var(--danger)">Inactive</span>'}</td>
+            <td>${fmtDate(u.date_joined)}</td>
+          </tr>`);
+          return panelCard('👥 All Users',tbl(['ID','Name','Email','Mobile','KYC Tier','Status','Joined'],rows));
+        }
+
+        function renderGeneric(){
+          const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};
+          return`<h2 class="panel-title">${r.icon} ${r.name} Dashboard</h2><div class="card" style="text-align:center;padding:60px;"><div style="font-size:64px;margin-bottom:16px;">${r.icon}</div><h3 style="color:var(--white);">Welcome!</h3><p style="color:var(--text-muted);">Select an option from the menu.</p></div>`;
+        }
         document.addEventListener('DOMContentLoaded',function(){LBMA_METALS.forEach(m=>{lbmaRates[m.id]={};});});
 
         // Expose all functions used by inline onclick= handlers to window scope
@@ -816,6 +1978,30 @@
           showForgotPassword, resendOTP, selectProduct, signOut, changeRole,
           selectPanel, goToStep1, goToStep2, goToStep3, goToStep2FromStep3,
           toggleRole, submitRegistration, processSignIn, verifyOTP, enterDashboard,
+          // KYC
+          submitKYC, reviewKYC,
+          // GDP
+          submitMintRequest, showMintChecklist, releaseEarmark,
+          initiateSwap, confirmSwap, placeOrder,
+          initiateTransfer,
+          // JR
+          submitJRIssuance, requestBuyback, approveBuyback,
+          // JDB
+          uploadDesign, submitDesign, registerCopyright, placeDesignOrder, completeOrder,
+          // GIC
+          investGIC, showGICRevenue,
+          // Oracle
+          updateLBMA, updateBenchmark,
+          // Corpus
+          showFundDeposit, processSettlement,
+          // PAA
+          approvePayment, executePayment,
+          // Governance
+          createProposal, submitProposal, executeProposal, castVote,
+          // Disputes
+          fileDispute, startReview, resolveDispute,
+          // Recall
+          initiateRecall, approveRecall, executeRecall,
         });
     </script>
 <!-- ─── IRG Wallet integration (v2.7) ─── -->

@@ -6,21 +6,20 @@
  * are injected at build time by replacing the __PLACEHOLDER__ strings —
  * see scripts/inject-firebase-config.sh in the deploy pipeline.
  *
- * Project: irg-gdp-prod (sovereign; do not share with sibling projects)
+ * Project: irg-gdp-project (sovereign; do not share with sibling projects)
  */
-import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getAuth }          from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import { getFirestore }     from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-import { getStorage }       from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
+import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getAuth }          from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getFirestore }     from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { getStorage }       from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js';
 
 const firebaseConfig = {
-  apiKey:            window.__FIREBASE_API_KEY__             || 'AIzaSyAloxpaDMVcOimJfrDqWiXrTvijdmJSk20',
-  authDomain:        window.__FIREBASE_AUTH_DOMAIN__         || 'irggdp.firebaseapp.com',
-  projectId:         window.__FIREBASE_PROJECT_ID__          || 'irggdp',
-  storageBucket:     window.__FIREBASE_STORAGE_BUCKET__      || 'irggdp.firebasestorage.app',
-  messagingSenderId: window.__FIREBASE_MESSAGING_SENDER_ID__ || '128695548877',
-  appId:             window.__FIREBASE_APP_ID__              || '1:128695548877:web:a1b599fe72aa0dbad66284',
-  measurementId:     window.__FIREBASE_MEASUREMENT_ID__      || 'G-370M4K1XEX'
+  apiKey:            window.__FIREBASE_API_KEY__             || 'REPLACE_WITH_API_KEY',
+  authDomain:        window.__FIREBASE_AUTH_DOMAIN__         || 'irg-gdp-project.firebaseapp.com',
+  projectId:         window.__FIREBASE_PROJECT_ID__          || 'irg-gdp-project',
+  storageBucket:     window.__FIREBASE_STORAGE_BUCKET__      || 'irg-gdp-project.firebasestorage.app',
+  messagingSenderId: window.__FIREBASE_MESSAGING_SENDER_ID__ || 'REPLACE_WITH_SENDER_ID',
+  appId:             window.__FIREBASE_APP_ID__              || 'REPLACE_WITH_APP_ID',
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);

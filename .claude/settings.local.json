@@ -18,7 +18,9 @@
       "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz/)",
       "Bash(curl -s https://irggdp.web.app)",
       "Bash(curl -s https://irggdp.web.app/api/v1/wallet/heir-guide/)",
-      "Bash(curl -s https://irggdp.com/api/v1/wallet/heir-guide/)"
+      "Bash(curl -s https://irggdp.com/api/v1/wallet/heir-guide/)",
+      "Bash(python3)",
+      "Bash(npm install *)"
     ]
   }
 }

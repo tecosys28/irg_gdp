@@ -1,4 +1,40 @@
 DJANGO_DEBUG: "False"
 FIREBASE_PROJECT_ID: "irggdp"
 DJANGO_ALLOWED_HOSTS: "*"
+
+# ── IRG Chain 888101 ──────────────────────────────────────────────────────────
+# URL of the Node.js middleware service that relays transactions to Besu.
+# Leave blank to stay in simulate-only mode (safe for demo deployments).
+IRG_CHAIN_MIDDLEWARE_URL: ""
+
+# Shared HMAC secret — must match MIDDLEWARE_SHARED_SECRET in middleware/.env.
+# Generate: openssl rand -hex 32  then store in GCP Secret Manager.
+# Reference it here as: "sm://irggdp/irg-chain-middleware-secret"  (Cloud Run syntax)
+IRG_CHAIN_MIDDLEWARE_SECRET: ""
+
+# Bearer token the middleware uses when POSTing audit callbacks to /api/v1/chain/audit/
+# Must match AUDIT_SINK_TOKEN in middleware/.env.
+IRG_CHAIN_AUDIT_TOKEN: ""
+
+# Set to "False" in production once the middleware is live and keys are set.
+# "True" means every tx records a deterministic simulated hash — safe for demo.
 IRG_CHAIN_ALLOW_SIMULATE: "True"
+
+# ── Contract addresses on IRG Chain 888101 ────────────────────────────────────
+# Populate these after deploying the Solidity contracts.
+# Blank entries trigger simulate-mode for that contract (no real on-chain write).
+ADDR_TGDP_MINTING: ""
+ADDR_FTR_REDEMPTION: ""
+ADDR_P2P_SETTLEMENT: ""
+ADDR_SUPER_CORPUS: ""
+ADDR_GOVERNANCE: ""
+ADDR_DISPUTE_REGISTRY: ""
+ADDR_LBMA_ORACLE: ""
+ADDR_RECALL_REGISTRY: ""
+ADDR_JR_REGISTRY: ""
+ADDR_JDB_REGISTRY: ""
+ADDR_GIC_LEDGER: ""
+ADDR_IDENTITY_REGISTRY: ""
+ADDR_IPR_LICENSE: ""
+ADDR_DEVICE_P2P: ""
+ADDR_WALLET_RECOVERY_EVENTS: ""
