@@ -18,17 +18,30 @@ User = get_user_model()
 class RegisterView(generics.CreateAPIView):
     """
     Register a new user profile after Firebase sign-up.
-    The frontend creates the Firebase account first, then calls this endpoint
-    with the Firebase ID token (Authorization: Bearer <token>) to persist
-    the profile and role data in the Django database.
+    FirebaseAuthentication auto-creates a bare User on the first request.
+    This endpoint fills in the profile fields and creates the requested roles.
+    Idempotent: calling again updates profile, skips duplicate roles.
     """
     serializer_class = UserRegistrationSerializer
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save(firebase_user=request.user)
+        user = request.user  # already created by FirebaseAuthentication
+        data = request.data
+        # Update profile fields on the existing user
+        for field in ('first_name', 'last_name', 'mobile', 'city'):
+            val = data.get(field, '').strip()
+            if val:
+                setattr(user, field, val)
+        user.save(update_fields=['first_name', 'last_name', 'mobile', 'city'])
+        # Create roles (skip duplicates)
+        roles = data.get('roles', [])
+        for role in roles:
+            role_upper = role.upper()
+            UserRole.objects.get_or_create(
+                user=user, role=role_upper,
+                defaults={'status': 'PENDING'}
+            )
         return Response({
             'message': 'Profile registered successfully.',
             'user': UserSerializer(user).data,

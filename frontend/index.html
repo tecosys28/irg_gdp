@@ -273,7 +273,7 @@
     <div id="dashboard-page">
         <aside class="sidebar">
             <div class="sidebar-header"><div class="role-icon" id="role-icon">🔧</div><div><div class="role-name" id="role-name">Administrator</div><div class="role-label">Dashboard</div></div></div>
-            <div class="role-selector"><select class="select" id="role-select" onchange="changeRole(this.value)"><option value="household">🏠 Household</option><option value="jeweler">💎 Jeweler</option><option value="designer">🎨 Designer</option><option value="licensee">📋 Licensee</option><option value="ombudsman">⚖️ Ombudsman</option><option value="admin" selected>🔧 Administrator</option></select></div>
+            <div class="role-selector"><select class="select" id="role-select" onchange="changeRole(this.value)"></select></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
         </aside>
         <main class="main-content">
@@ -456,9 +456,9 @@
         onAuthStateChanged(auth, async user => {
           if (user) {
             await refreshToken();
-            // Re-enter dashboard on page reload if already signed in
-            if (document.getElementById('dashboard-page').style.display !== 'flex') {
-              enterDashboard(localStorage.getItem('irgRole') || 'household');
+            // Re-enter dashboard on page reload if not already showing it
+            if (!document.getElementById('dashboard-page').classList.contains('active')) {
+              await enterDashboard(localStorage.getItem('irgRole') || 'household');
             }
           } else {
             localStorage.removeItem('authToken');
@@ -613,9 +613,10 @@
         let selectedRoles = [];
         let currentStep = 1;
         let lastClickTime = 0;
-        let currentRole = 'admin';
+        let currentRole = 'household';
         let currentPanel = 'dashboard';
         let pendingRole = null;
+        let _userRoles = []; // roles fetched from backend for the signed-in user
 
         const DASHBOARD_MENUS = {
             household:[
@@ -984,13 +985,13 @@
             if(!email){alert('Email is required.');return;}
             if(!mobile){alert('Mobile number is required.');return;}
             _pendingRegEmail=email; _pendingRegPw=pw; _pendingRegName=name;
-            // Send phone OTP via Firebase compat SDK
+            // Send phone OTP via Firebase modular SDK (same auth instance as the rest of the app)
             try {
               if(!window._recaptchaVerifier){
-                window._recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {size:'invisible'});
+                window._recaptchaVerifier = new RecaptchaVerifier(window._auth, 'recaptcha-container', {size:'invisible'});
               }
               const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile.replace(/\D/g,'');
-              _phoneConfirmResult = await firebase.auth().signInWithPhoneNumber(formatted, window._recaptchaVerifier);
+              _phoneConfirmResult = await signInWithPhoneNumber(window._auth, formatted, window._recaptchaVerifier);
               hideModal('signon');
               document.getElementById('otp-input').value='';
               document.getElementById('otp-modal').classList.add('active');
@@ -1005,9 +1006,9 @@
             const mobile=document.getElementById('reg-mobile').value.trim();
             if(!mobile){ alert('Mobile number missing.'); return; }
             if(window._recaptchaVerifier){ window._recaptchaVerifier.clear(); window._recaptchaVerifier=null; }
-            window._recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container',{size:'invisible'});
+            window._recaptchaVerifier = new RecaptchaVerifier(window._auth, 'recaptcha-container', {size:'invisible'});
             const formatted = mobile.startsWith('+') ? mobile : '+91' + mobile.replace(/\D/g,'');
-            firebase.auth().signInWithPhoneNumber(formatted, window._recaptchaVerifier)
+            signInWithPhoneNumber(window._auth, formatted, window._recaptchaVerifier)
               .then(r=>{ _phoneConfirmResult=r; alert('OTP resent to ' + formatted); })
               .catch(e=>{ alert('Resend failed: '+(e.message||e.code)); });
         }
@@ -1023,7 +1024,7 @@
               localStorage.setItem('authToken', token);
               pendingRole = localStorage.getItem('irgRole') || 'household';
               hideModal('signin');
-              enterDashboard(pendingRole);
+              await enterDashboard(pendingRole);
             } catch(e) {
               alert('Sign in failed: ' + (e.message || e.code));
             }
@@ -1036,16 +1037,36 @@
             // Registration flow: phone OTP → then create email/password account
             if(_phoneConfirmResult && _pendingRegEmail){
               try {
+                // Confirm phone OTP — this signs in as phone user temporarily
                 await _phoneConfirmResult.confirm(o);
-                // Phone verified — now create the email+password account
+                // Sign out phone user, then create the real email+password account
+                await window._fbSignOut(window._auth);
                 const cred = await window._createUserWithEmailAndPassword(window._auth, _pendingRegEmail, _pendingRegPw);
                 const token = await cred.user.getIdToken();
                 localStorage.setItem('authToken', token);
-                window._regRole = selectedRoles[0] || 'household';
-                localStorage.setItem('irgRole', window._regRole);
-                _phoneConfirmResult = null; _pendingRegEmail=''; _pendingRegPw='';
+                const regRole = selectedRoles[0] || 'household';
+                window._regRole = regRole;
+                localStorage.setItem('irgRole', regRole);
+                // Persist profile in Django backend
+                const nameParts = (_pendingRegName||'').trim().split(/\s+/);
+                const firstName = nameParts[0]||'';
+                const lastName = nameParts.slice(1).join(' ')||'';
+                const mobile = document.getElementById('reg-mobile')?.value?.trim()||'';
+                try {
+                  await apiPost('/auth/register/', {
+                    email: _pendingRegEmail,
+                    password: _pendingRegPw,
+                    confirm_password: _pendingRegPw,
+                    first_name: firstName,
+                    last_name: lastName,
+                    mobile: mobile.startsWith('+') ? mobile : '+91' + mobile.replace(/\D/g,''),
+                    roles: selectedRoles.map(r=>r.toUpperCase()),
+                  });
+                } catch(regErr){ /* profile saved later; auth still works */ }
+                const savedName = _pendingRegName;
+                _phoneConfirmResult = null; _pendingRegEmail=''; _pendingRegPw=''; _pendingRegName='';
                 hideModal('otp');
-                document.getElementById('success-name').textContent = 'Welcome, ' + (_pendingRegName || '') + '!';
+                document.getElementById('success-name').textContent = 'Welcome, ' + (savedName || '') + '!';
                 document.getElementById('success-modal').classList.add('active');
               } catch(e){
                 alert('Verification failed: '+(e.message||e.code));
@@ -1057,11 +1078,20 @@
             enterDashboard(pendingRole||'household');
         }
 
-        function enterDashboard(r='admin'){
-            currentRole=r;
+        async function enterDashboard(r='household'){
             document.getElementById('landing-page').style.display='none';
             document.getElementById('dashboard-page').classList.add('active');
-            document.getElementById('role-select').value=r;
+            // Fetch the user's actual roles from backend to populate dropdown
+            try {
+              const me = await apiGet('/auth/users/me/');
+              _userRoles = (me.roles||[]).map(ro=>ro.role.toLowerCase()).filter(ro=>DASHBOARD_MENUS[ro]);
+              if(_userRoles.length===0) _userRoles=['household'];
+            } catch(e){ _userRoles=[r||'household']; }
+            // Honour requested role only if user actually has it
+            if(!_userRoles.includes(r)) r=_userRoles[0];
+            currentRole=r;
+            localStorage.setItem('irgRole',r);
+            _rebuildRoleSelect();
             const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};
             document.getElementById('role-icon').textContent=i.icon;
             document.getElementById('role-icon').style.background=i.color;
@@ -1069,15 +1099,34 @@
             renderSidebar();renderPanel();
         }
 
+        function _rebuildRoleSelect(){
+            const sel=document.getElementById('role-select');
+            const roleLabels={household:'🏠 Household',jeweler:'💎 Jeweler',designer:'🎨 Designer',
+              investor:'📈 Investor',returnee:'↩️ Returnee',licensee:'📋 Licensee',
+              ombudsman:'⚖️ Ombudsman',consultant:'💼 Consultant',marketmaker:'📊 Market Maker',
+              minter:'🪙 Minter',trustee:'🏦 Trustee',admin:'🔧 Administrator'};
+            sel.innerHTML=_userRoles.map(r=>`<option value="${r}"${r===currentRole?' selected':''}>${roleLabels[r]||r}</option>`).join('');
+        }
+
         async function signOut(){
             await window._fbSignOut(window._auth);
             localStorage.removeItem('authToken');
             localStorage.removeItem('irgRole');
+            _userRoles=[];
             document.getElementById('landing-page').style.display='block';
             document.getElementById('dashboard-page').classList.remove('active');
         }
 
-        function changeRole(r){currentRole=r;currentPanel='dashboard';const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};document.getElementById('role-icon').textContent=i.icon;document.getElementById('role-icon').style.background=i.color;document.getElementById('role-name').textContent=i.name;renderSidebar();renderPanel();}
+        function changeRole(r){
+            if(_userRoles.length&&!_userRoles.includes(r))return; // block unauthorized role switch
+            currentRole=r;currentPanel='dashboard';
+            localStorage.setItem('irgRole',r);
+            const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};
+            document.getElementById('role-icon').textContent=i.icon;
+            document.getElementById('role-icon').style.background=i.color;
+            document.getElementById('role-name').textContent=i.name;
+            renderSidebar();renderPanel();
+        }
         function renderSidebar(){const n=document.getElementById('sidebar-nav'),m=DASHBOARD_MENUS[currentRole]||[];n.innerHTML=m.map(g=>'<div class="nav-group"><div class="nav-group-title">'+g.group+'</div>'+g.items.map(i=>'<button class="nav-item '+(currentPanel===i.id?'active':'')+'" onclick="selectPanel(\''+i.id+'\')"><span>'+i.icon+'</span><span>'+i.label+'</span></button>').join('')+'</div>').join('');}
         function selectPanel(p){currentPanel=p;renderSidebar();renderPanel();}
 
@@ -1113,14 +1162,12 @@
           try{
             const d=await apiGet('/auth/users/dashboard/');
             const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};
+            const s=d.stats||{};
             let stats='';
-            if(d.gdp_summary){
-              const s=d.gdp_summary;
-              stats+=`<div class="stat-box"><div class="stat-icon">👛</div><div class="stat-value">${fmtAmt(s.total_units)}</div><div class="stat-label">Total GDP Units</div></div>`;
-              stats+=`<div class="stat-box"><div class="stat-icon">✅</div><div class="stat-value">${s.active_count||0}</div><div class="stat-label">Active Units</div></div>`;
-            }
-            if(d.design_count!=null) stats+=`<div class="stat-box"><div class="stat-icon">🎨</div><div class="stat-value">${d.design_count}</div><div class="stat-label">Designs</div></div>`;
-            if(d.corpus_balance!=null) stats+=`<div class="stat-box"><div class="stat-icon">🏦</div><div class="stat-value">₹${fmtAmt(d.corpus_balance)}</div><div class="stat-label">Corpus Balance</div></div>`;
+            if(s.gdp_units!=null) stats+=`<div class="stat-box"><div class="stat-icon">👛</div><div class="stat-value">${fmtAmt(s.gdp_units)}</div><div class="stat-label">Active GDP Units</div></div>`;
+            if(s.corpus_balance!=null) stats+=`<div class="stat-box"><div class="stat-icon">🏦</div><div class="stat-value">₹${fmtAmt(s.corpus_balance)}</div><div class="stat-label">Corpus Balance</div></div>`;
+            if(s.rating!=null) stats+=`<div class="stat-box"><div class="stat-icon">⭐</div><div class="stat-value">${s.rating}</div><div class="stat-label">Rating</div></div>`;
+            if(s.total_designs!=null) stats+=`<div class="stat-box"><div class="stat-icon">🎨</div><div class="stat-value">${s.total_designs}</div><div class="stat-label">Designs</div></div>`;
             const name=d.user?`${d.user.first_name||''} ${d.user.last_name||''}`.trim()||d.user.email:'';
             return`<h2 class="panel-title">${r.icon} ${r.name} Dashboard</h2>
               ${name?`<p style="color:var(--text-muted);margin-bottom:16px">Welcome back, <strong style="color:var(--white)">${name}</strong></p>`:''}

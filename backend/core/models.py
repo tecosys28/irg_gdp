@@ -178,7 +178,7 @@ class KYCDocument(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='kyc_documents')
     document_type = models.CharField(max_length=20, choices=DOC_TYPES)
     document_number = models.CharField(max_length=50)
-    document_file = models.FileField(upload_to='kyc_documents/')
+    document_file = models.FileField(upload_to='kyc_documents/', null=True, blank=True)
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='UPLOADED')
     verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_documents')

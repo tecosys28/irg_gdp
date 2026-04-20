@@ -61,9 +61,11 @@ class UserRoleSerializer(serializers.ModelSerializer):
         fields = ['id', 'role', 'status', 'created_at', 'approved_at']
 
 class KYCDocumentSerializer(serializers.ModelSerializer):
+    document_file = serializers.FileField(required=False, allow_null=True)
+
     class Meta:
         model = KYCDocument
-        fields = ['id', 'document_type', 'document_number', 'document_file', 'status', 
+        fields = ['id', 'document_type', 'document_number', 'document_file', 'status',
                   'uploaded_at', 'verified_at', 'rejection_reason']
         read_only_fields = ['status', 'verified_at', 'rejection_reason']
 
