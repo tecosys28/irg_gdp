@@ -179,6 +179,7 @@
         @media (max-width: 1200px) { .usps-grid, .website-info-grid { grid-template-columns: repeat(2, 1fr); } .stats-grid { grid-template-columns: repeat(2, 1fr); } .two-col-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .sidebar { width: 100%; position: relative; height: auto; } .main-content { margin-left: 0; } .usps-grid, .website-info-grid { grid-template-columns: 1fr; } .contact-section { flex-direction: column; gap: 15px; align-items: center; } .hero-title { font-size: 32px; } .form-row { grid-template-columns: 1fr; } }
     </style>
+<<<<<<< HEAD
     <!-- Firebase compat SDK — required for compat-style usage alongside modular SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -196,6 +197,8 @@
         };
         firebase.initializeApp(firebaseConfig);
     </script>
+=======
+>>>>>>> 6f5e39f (changhes05)
 </head>
 <body>
     <div id="landing-page">
@@ -212,6 +215,7 @@
             </nav>
         </header>
         <nav class="menu-bar">
+<<<<<<< HEAD
             <button onclick="navScrollTo('section-home')">Home</button>
             <button onclick="navScrollTo('section-about')">About</button>
             <button onclick="navScrollTo('section-products')">Products</button>
@@ -222,6 +226,11 @@
             <button onclick="showFAQs()">FAQs</button>
         </nav>
         <section class="hero-section" id="section-home">
+=======
+            <button>Home</button><button>About</button><button>Products</button><button>How It Works</button><button>For Jewelers</button><button>For Households</button><button>Licensees</button><button onclick="showFAQs()">FAQs</button>
+        </nav>
+        <section class="hero-section">
+>>>>>>> 6f5e39f (changhes05)
             <div class="hero-logo-title">
                 <div class="logo-container"><div class="quad"></div><div class="quad gold"></div><div class="quad"></div><div class="quad"></div></div>
                 <h1 class="hero-title">IRG_GDP</h1>
@@ -239,6 +248,7 @@
             </div>
             <button class="btn btn-gold" style="font-size:16px;padding:16px 48px;" onclick="showModal('signin')">Sign In to Explore More →</button>
         </section>
+<<<<<<< HEAD
         <section class="usps-section" id="section-about">
             <h2 id="section-products" style="scroll-margin-top:60px">Benefits for You</h2>
             <div class="usps-grid">
@@ -246,6 +256,15 @@
                 <div class="usp-card" id="section-for-jewelers"><h3>💎 For Jewelers</h3><ul><li>Build lifetime customer relationships</li><li>No-loss buyback protects your margins</li><li>Access premium design bank</li><li>Corpus Fund as ready buyer at benchmark</li></ul></div>
                 <div class="usp-card"><h3>👗 For Design Seekers</h3><ul><li>Access thousands of verified designs</li><li>Connect directly with master designers</li><li>Custom design requests fulfilled</li><li>Transparent pricing</li></ul></div>
                 <div class="usp-card" id="section-licensees"><h3>📋 For Licensees</h3><ul><li>Exclusive territory rights</li><li>Revenue share from all 3 GIC streams</li><li>Training and support</li><li>Complete technology platform</li></ul></div>
+=======
+        <section class="usps-section">
+            <h2>Benefits for You</h2>
+            <div class="usps-grid">
+                <div class="usp-card"><h3>🏠 For Households</h3><ul><li>Monetize idle gold without selling possession</li><li>Swap for 45+ FTR categories at locked rates</li><li>Resell anytime on the open marketplace</li><li>Earn bonus from Corpus Fund surplus</li></ul></div>
+                <div class="usp-card"><h3>💎 For Jewelers</h3><ul><li>Build lifetime customer relationships</li><li>No-loss buyback protects your margins</li><li>Access premium design bank</li><li>Corpus Fund as ready buyer at benchmark</li></ul></div>
+                <div class="usp-card"><h3>👗 For Design Seekers</h3><ul><li>Access thousands of verified designs</li><li>Connect directly with master designers</li><li>Custom design requests fulfilled</li><li>Transparent pricing</li></ul></div>
+                <div class="usp-card"><h3>📋 For Licensees</h3><ul><li>Exclusive territory rights</li><li>Revenue share from all 3 GIC streams</li><li>Training and support</li><li>Complete technology platform</li></ul></div>
+>>>>>>> 6f5e39f (changhes05)
             </div>
         </section>
         <footer class="landing-footer">
@@ -395,6 +414,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- PHONE OTP MODAL -->
     <div class="modal-overlay" id="otp-modal">
         <div class="modal">
@@ -403,10 +423,21 @@
             <div class="form-group">
                 <label>OTP Code</label>
                 <input type="text" class="input" id="otp-input" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="text-align:center;letter-spacing:8px;font-size:24px;font-weight:600;">
+=======
+    <!-- OTP MODAL -->
+    <div class="modal-overlay" id="otp-modal">
+        <div class="modal">
+            <h2>OTP Verification</h2>
+            <p style="color:var(--text-muted);margin-bottom:20px;">Enter the 6-digit OTP sent to your registered mobile/email</p>
+            <div class="form-group">
+                <label>OTP Code</label>
+                <input type="text" class="input" id="otp-input" maxlength="6" style="text-align:center;letter-spacing:8px;font-size:20px;">
+>>>>>>> 6f5e39f (changhes05)
             </div>
             <p style="color:var(--text-muted);font-size:12px;">Didn't receive? <a href="#" onclick="resendOTP()" style="color:var(--gold);">Resend OTP</a></p>
             <div class="form-actions">
                 <button class="btn btn-outline" onclick="hideModal('otp')">Cancel</button>
+<<<<<<< HEAD
                 <button class="btn btn-gold" onclick="verifyOTP()">Verify & Complete Registration</button>
             </div>
         </div>
@@ -465,6 +496,14 @@
           }
         });
 
+=======
+                <button class="btn btn-gold" onclick="verifyOTP()">Verify & Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+>>>>>>> 6f5e39f (changhes05)
         // ═══════════════════════════════════════════════════════════════════════════════
         // ROLE DEFINITIONS WITH REGISTRATION FIELDS
         // ═══════════════════════════════════════════════════════════════════════════════
@@ -618,6 +657,7 @@
         let pendingRole = null;
 
         const DASHBOARD_MENUS = {
+<<<<<<< HEAD
             household:[
                 {group:'My Account',items:[
                     {id:'dashboard',label:'Dashboard',icon:'🏠'},
@@ -721,12 +761,21 @@
                     {id:'recall_orders',label:'Recall Orders',icon:'🚨'},
                 ]}
             ]
+=======
+            household:[{group:'My Account',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'wallet',label:'My IRG_GDP',icon:'👛'},{id:'swap',label:'Swap for FTRs',icon:'🔄'}]}],
+            jeweler:[{group:'Operations',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'issuance',label:'Issue irg_jr',icon:'📝'}]}],
+            designer:[{group:'Studio',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'designs',label:'My Designs',icon:'🎨'}]}],
+            licensee:[{group:'License',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'territory',label:'Territory',icon:'🗺️'}]}],
+            ombudsman:[{group:'Disputes',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'disputes',label:'Active',icon:'⚖️'}]}],
+            admin:[{group:'System',items:[{id:'dashboard',label:'Dashboard',icon:'🏠'},{id:'users',label:'Users',icon:'👥'}]},{group:'Financial',items:[{id:'scf',label:'Super CF',icon:'💳'},{id:'lbma',label:'LBMA Rates',icon:'📈'}]}]
+>>>>>>> 6f5e39f (changhes05)
         };
         const USER_ROLES_DISPLAY = {household:{name:'Household',icon:'🏠',color:'#E4B44A'},jeweler:{name:'Jeweler',icon:'💎',color:'#9B7AB0'},designer:{name:'Designer',icon:'🎨',color:'#4CAF7A'},licensee:{name:'Licensee',icon:'📋',color:'#ED93B1'},ombudsman:{name:'Ombudsman',icon:'⚖️',color:'#C05858'},admin:{name:'Administrator',icon:'🔧',color:'#7F77DD'}};
         const SUPER_CF={accountName:'Intech Research Group',accountNumber:'99620200000108',bankName:'Bank of Baroda',branch:'Santacruz East',city:'Mumbai 400 055',swiftCode:'BARB0DBSCRU'};
         const LBMA_METALS=[{id:'XAU',name:'Gold',symbol:'Au'},{id:'XAG',name:'Silver',symbol:'Ag'},{id:'XPT',name:'Platinum',symbol:'Pt'},{id:'XPD',name:'Palladium',symbol:'Pd'}];
         let lbmaRates={},lbmaEditMode=false;
 
+<<<<<<< HEAD
         // ─── API helpers ──────────────────────────────────────────────────────
         const API = '/api/v1';
         async function _freshToken(){
@@ -839,6 +888,18 @@
             alert('Password reset email sent to ' + email);
           } catch(e) { alert('Error: ' + (e.message || e.code)); }
         }
+=======
+        function debounce(d=300){const n=Date.now();if(n-lastClickTime<d)return false;lastClickTime=n;return true;}
+        function selectProduct(p){document.querySelectorAll('.product-tab').forEach(t=>t.classList.toggle('active',t.textContent.includes(p)));}
+        function showModal(t){document.getElementById(t+'-modal').classList.add('active');if(t==='signon')initSignOnForm();}
+        function hideModal(t){document.getElementById(t+'-modal').classList.remove('active');}
+        function showSearch(){alert('Search across IRG_GDP products and FTRs.');}
+        function showHelp(){alert('Help Center');}
+        function showFAQs(){alert('FAQs by topic and user type.');}
+        function openChatbot(){alert('Chat Assistant');}
+        function showForgotPassword(){alert('Password reset link sent to email.');}
+        function resendOTP(){alert('OTP resent.');}
+>>>>>>> 6f5e39f (changhes05)
 
         // ═══════════════════════════════════════════════════════════════════════════════
         // SIGN ON - MULTI-ROLE WITH CONSTRAINTS
@@ -963,6 +1024,7 @@
             document.getElementById('signon-step2').style.display='block';
         }
 
+<<<<<<< HEAD
         // ─── Phone OTP state (registration) ──────────────────────────────────
         let _pendingRegEmail = '';
         let _pendingRegPw = '';
@@ -970,11 +1032,15 @@
         let _phoneConfirmResult = null;
 
         async function submitRegistration(){
+=======
+        function submitRegistration(){
+>>>>>>> 6f5e39f (changhes05)
             if(!debounce())return;
             const pw=document.getElementById('reg-password').value;
             const pwc=document.getElementById('reg-password-confirm').value;
             const terms=document.getElementById('reg-terms').checked;
             if(pw.length<8){alert('Password must be at least 8 characters.');return;}
+<<<<<<< HEAD
             if(!/[A-Z]/.test(pw)||!/[0-9]/.test(pw)||!/[^A-Za-z0-9]/.test(pw)){alert('Password must contain at least 1 uppercase letter, 1 number, and 1 special character.');return;}
             if(pw!==pwc){alert('Passwords do not match.');return;}
             if(!terms){alert('Please accept the Terms & Conditions.');return;}
@@ -1053,6 +1119,28 @@
               return;
             }
             // Sign-in OTP flow (phone sign-in)
+=======
+            if(pw!==pwc){alert('Passwords do not match.');return;}
+            if(!terms){alert('Please accept the Terms & Conditions.');return;}
+            hideModal('signon');
+            showModal('otp');
+        }
+
+        function processSignIn(){
+            if(!debounce())return;
+            const e=document.getElementById('signin-email').value;
+            const p=document.getElementById('signin-password').value;
+            if(!e||!p){alert('Enter email/mobile and password.');return;}
+            pendingRole='household';
+            hideModal('signin');
+            showModal('otp');
+        }
+
+        function verifyOTP(){
+            if(!debounce())return;
+            const o=document.getElementById('otp-input').value;
+            if(o.length!==6){alert('Enter valid 6-digit OTP.');return;}
+>>>>>>> 6f5e39f (changhes05)
             hideModal('otp');
             enterDashboard(pendingRole||'household');
         }
@@ -1069,10 +1157,14 @@
             renderSidebar();renderPanel();
         }
 
+<<<<<<< HEAD
         async function signOut(){
             await window._fbSignOut(window._auth);
             localStorage.removeItem('authToken');
             localStorage.removeItem('irgRole');
+=======
+        function signOut(){
+>>>>>>> 6f5e39f (changhes05)
             document.getElementById('landing-page').style.display='block';
             document.getElementById('dashboard-page').classList.remove('active');
         }
@@ -1080,6 +1172,7 @@
         function changeRole(r){currentRole=r;currentPanel='dashboard';const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};document.getElementById('role-icon').textContent=i.icon;document.getElementById('role-icon').style.background=i.color;document.getElementById('role-name').textContent=i.name;renderSidebar();renderPanel();}
         function renderSidebar(){const n=document.getElementById('sidebar-nav'),m=DASHBOARD_MENUS[currentRole]||[];n.innerHTML=m.map(g=>'<div class="nav-group"><div class="nav-group-title">'+g.group+'</div>'+g.items.map(i=>'<button class="nav-item '+(currentPanel===i.id?'active':'')+'" onclick="selectPanel(\''+i.id+'\')"><span>'+i.icon+'</span><span>'+i.label+'</span></button>').join('')+'</div>').join('');}
         function selectPanel(p){currentPanel=p;renderSidebar();renderPanel();}
+<<<<<<< HEAD
 
         function renderPanel(){
           const c=document.getElementById('panel-content');
@@ -2137,6 +2230,13 @@
           // Recall
           initiateRecall, approveRecall, executeRecall,
         });
+=======
+        function renderPanel(){const c=document.getElementById('panel-content');if(currentRole==='admin'){if(currentPanel==='scf'){c.innerHTML=renderSCF();return;}if(currentPanel==='lbma'){c.innerHTML=renderLBMA();return;}}c.innerHTML=renderGeneric();}
+        function renderSCF(){return'<div class="card"><h3 style="color:var(--gold);margin-bottom:20px;">🏦 Super CF Account</h3><div class="bank-details-grid"><div class="bank-detail-box"><div class="bank-detail-label">Account Name</div><div class="bank-detail-value">'+SUPER_CF.accountName+'</div></div><div class="bank-detail-box"><div class="bank-detail-label">Account Number</div><div class="bank-detail-value highlight">'+SUPER_CF.accountNumber+'</div></div><div class="bank-detail-box"><div class="bank-detail-label">Bank</div><div class="bank-detail-value">'+SUPER_CF.bankName+'</div><div class="bank-detail-sub">'+SUPER_CF.branch+', '+SUPER_CF.city+'</div></div><div class="bank-detail-box"><div class="bank-detail-label">SWIFT/IFSC</div><div class="bank-detail-value highlight">'+SUPER_CF.swiftCode+'</div></div></div></div>';}
+        function renderLBMA(){return'<div class="card"><h3 style="color:var(--gold);margin-bottom:20px;">📈 LBMA Rates</h3><table class="table"><thead><tr><th>Metal</th><th>Symbol</th><th style="text-align:right;">AM Fix</th><th style="text-align:right;">PM Fix</th></tr></thead><tbody>'+LBMA_METALS.map(m=>'<tr><td>'+m.name+'</td><td>'+m.symbol+'</td><td style="text-align:right;">—</td><td style="text-align:right;">—</td></tr>').join('')+'</tbody></table></div>';}
+        function renderGeneric(){const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};return'<h2 class="panel-title">'+r.icon+' '+r.name+' Dashboard</h2><div class="card" style="text-align:center;padding:60px;"><div style="font-size:64px;margin-bottom:16px;">'+r.icon+'</div><h3 style="color:var(--white);">Welcome!</h3><p style="color:var(--text-muted);">Select an option from the menu</p></div>';}
+        document.addEventListener('DOMContentLoaded',function(){LBMA_METALS.forEach(m=>{lbmaRates[m.id]={};});});
+>>>>>>> 6f5e39f (changhes05)
     </script>
 <!-- ─── IRG Wallet integration (v2.7) ─── -->
 <style>
@@ -2158,6 +2258,7 @@
 </style>
 <div id="irg-wallet-banner"></div>
 <a id="irg-wallet-quick" href="wallet.html">💼 My Wallet</a>
+<<<<<<< HEAD
 <script type="module">
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
@@ -2167,6 +2268,15 @@ onAuthStateChanged(auth, async user => {
     const t = await user.getIdToken();
     const r = await fetch('/api/v1/wallet/status-banner/', {
       headers: { 'Authorization': 'Bearer ' + t }
+=======
+<script>
+(async function () {
+  try {
+    const t = localStorage.getItem('authToken') || '';
+    if (!t) return;
+    const r = await fetch('/api/v1/wallet/status-banner/', {
+      headers: { 'Authorization': 'Token ' + t }
+>>>>>>> 6f5e39f (changhes05)
     });
     if (!r.ok) return;
     const d = await r.json();
@@ -2178,7 +2288,11 @@ onAuthStateChanged(auth, async user => {
     b.style.display = 'flex';
     document.body.style.marginTop = '48px';
   } catch (e) { /* silent */ }
+<<<<<<< HEAD
 });
+=======
+})();
+>>>>>>> 6f5e39f (changhes05)
 </script>
 </body>
 </html>

@@ -6,14 +6,23 @@ from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+<<<<<<< HEAD
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+=======
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate, get_user_model
+from django.utils import timezone
+import random
+import string
+>>>>>>> 6f5e39f (changhes05)
 
 from .models import *
 from .serializers import *
 
 User = get_user_model()
 
+<<<<<<< HEAD
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -53,6 +62,96 @@ class LoginView(generics.GenericAPIView):
         return Response({
             'message': 'Authentication is handled by Firebase. Use the Firebase SDK on the frontend.'
         }, status=status.HTTP_410_GONE)
+=======
+# In-memory OTP storage (use Redis in production)
+OTP_STORE = {}
+
+def generate_otp():
+    return ''.join(random.choices(string.digits, k=6))
+
+class RegisterView(generics.CreateAPIView):
+    """User registration with multi-role support"""
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        # Generate and store OTP
+        otp = generate_otp()
+        OTP_STORE[user.email] = {'otp': otp, 'created': timezone.now()}
+        
+        # In production: Send OTP via SMS/Email
+        return Response({
+            'message': 'Registration successful. OTP sent to your email/mobile.',
+            'email': user.email,
+            'otp_sent': True,
+            # Remove in production:
+            'debug_otp': otp
+        }, status=status.HTTP_201_CREATED)
+
+class VerifyOTPView(generics.GenericAPIView):
+    """Verify OTP for registration/login"""
+    serializer_class = OTPVerificationSerializer
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
+        
+        stored = OTP_STORE.get(email)
+        if not stored or stored['otp'] != otp:
+            return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # OTP valid - activate user and return token
+        try:
+            user = User.objects.get(email=email)
+            user.is_active = True
+            user.save()
+            
+            token, _ = Token.objects.get_or_create(user=user)
+            del OTP_STORE[email]
+            
+            return Response({
+                'message': 'OTP verified successfully',
+                'token': token.key,
+                'user': UserSerializer(user).data
+            })
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class LoginView(generics.GenericAPIView):
+    """User login"""
+    serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        user = authenticate(
+            username=serializer.validated_data['email'],
+            password=serializer.validated_data['password']
+        )
+        
+        if not user:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Generate OTP for 2FA
+        otp = generate_otp()
+        OTP_STORE[user.email] = {'otp': otp, 'created': timezone.now()}
+        
+        return Response({
+            'message': 'OTP sent for verification',
+            'email': user.email,
+            'debug_otp': otp  # Remove in production
+        })
+>>>>>>> 6f5e39f (changhes05)
 
 class UserViewSet(viewsets.ModelViewSet):
     """User CRUD operations"""
