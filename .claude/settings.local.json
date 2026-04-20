@@ -38,7 +38,18 @@
       "Bash(curl -s https://irggdp.com/api/v1/oracle/ -w \"\\\\nHTTP:%{http_code}\")",
       "Bash(curl -s https://irggdp.com/healthz -w \"\\\\nHTTP:%{http_code}\")",
       "Bash(curl -s https://irggdp.com/healthz/ -w \"\\\\nHTTP:%{http_code}\")",
-      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz/ -w \"\\\\nHTTP:%{http_code}\")"
+      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz/ -w \"\\\\nHTTP:%{http_code}\")",
+      "Bash(curl -s -o /dev/null -w \"irggdp.com/ -> HTTP %{http_code}\\\\n\" https://irggdp.com/)",
+      "Bash(curl -s -o /dev/null -w \"irggdp.com/wallet -> HTTP %{http_code}\\\\n\" https://irggdp.com/wallet)",
+      "Bash(curl -s -o /dev/null -w \"irggdp.com/heir-guide -> HTTP %{http_code}\\\\n\" https://irggdp.com/heir-guide)",
+      "Bash(curl -s https://irggdp.com/healthz/ -w \" -> HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s -o /dev/null -w \"/api/v1/auth/users/me/ -> HTTP %{http_code}\\\\n\" https://irggdp.com/api/v1/auth/users/me/)",
+      "Bash(xargs grep *)",
+      "Bash(python manage.py makemigrations core --name=\"kyc_document_file_optional\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(gcloud artifacts *)",
+      "Bash(curl -s https://irggdp.com/api/v1/auth/users/me/)"
     ]
   }
 }
