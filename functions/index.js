@@ -29,11 +29,14 @@ admin.initializeApp();
 const db = admin.firestore();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EC2 Django backend proxy
-// Forwards /api/** and /admin/** to http://43.205.237.197
+// Django backend proxy
+// Forwards /api/** and /admin/** to the configured backend host.
+// Set DJANGO_BACKEND_HOST in Firebase Functions config or .env.local:
+//   firebase functions:config:set backend.host="your-domain.com"
+// or export DJANGO_BACKEND_HOST=your-domain.com before deploying.
 // ─────────────────────────────────────────────────────────────────────────────
-const EC2_HOST = '43.205.237.197';
-const EC2_PORT = 80;
+const EC2_HOST = process.env.DJANGO_BACKEND_HOST || '43.205.237.197';
+const EC2_PORT = parseInt(process.env.DJANGO_BACKEND_PORT || '80', 10);
 
 exports.apiProxy = onRequest({ invoker: 'public' }, (req, res) => {
   res.set('Access-Control-Allow-Origin', req.headers.origin || '*');

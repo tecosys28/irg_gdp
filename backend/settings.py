@@ -10,12 +10,27 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-secret-key-change-in-production')
-
 DEBUG = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', 'False')) == 'True'
 
+_secret_key = os.environ.get('DJANGO_SECRET_KEY', '')
+if not _secret_key:
+    if DEBUG:
+        _secret_key = 'dev-insecure-key-do-not-use-in-production-irg-gdp'
+    else:
+        raise RuntimeError(
+            'DJANGO_SECRET_KEY environment variable must be set. '
+            'Generate one with: python -c "from django.core.management.utils '
+            'import get_random_secret_key; print(get_random_secret_key())"'
+        )
+SECRET_KEY = _secret_key
+
 _allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
-ALLOWED_HOSTS = ['*'] if _allowed == '*' else _allowed.split(',')
+if _allowed == '*' and not DEBUG:
+    raise RuntimeError(
+        'DJANGO_ALLOWED_HOSTS=* is not permitted in production. '
+        'Set it to a comma-separated list of actual hostnames.'
+    )
+ALLOWED_HOSTS = ['*'] if _allowed == '*' else [h.strip() for h in _allowed.split(',') if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
@@ -82,12 +97,17 @@ WSGI_APPLICATION = 'wsgi.application'
 # Database — uses Postgres when DB_HOST is set, SQLite otherwise (dev/demo)
 _db_host = os.environ.get('DB_HOST', '')
 if _db_host:
+    _db_password = os.environ.get('DB_PASSWORD', '')
+    if not _db_password:
+        raise RuntimeError(
+            'DB_PASSWORD environment variable must be set when DB_HOST is configured.'
+        )
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.environ.get('DB_NAME', 'irg_gdp_db'),
             'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
+            'PASSWORD': _db_password,
             'HOST': _db_host,
             'PORT': os.environ.get('DB_PORT', '5432'),
         }
@@ -150,7 +170,9 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5000',
     'http://localhost:5173',
 ]
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# Never open CORS to all origins — even in DEBUG mode the backend may be
+# accessible from untrusted sources via port-forwarding or tunnelling.
+CORS_ALLOW_ALL_ORIGINS = False
 
 # Firebase Admin SDK — initialised once in core/apps.py
 FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
@@ -234,9 +256,9 @@ BLOCKCHAIN_CONFIG = {
     'SUBMIT_MAX_RETRIES': int(os.environ.get('IRG_CHAIN_SUBMIT_RETRIES', '3')),
 
     # If True, fall back to deterministic simulated hashes when the middleware
-    # is unreachable. Defaults to DEBUG — flip to False in production envs
-    # that must never write a fake hash.
-    'ALLOW_SIMULATE': os.environ.get('IRG_CHAIN_ALLOW_SIMULATE', str(DEBUG)) == 'True',
+    # is unreachable. Must be set explicitly — never inherits from DEBUG so a
+    # misconfigured production environment doesn't silently write fake hashes.
+    'ALLOW_SIMULATE': os.environ.get('IRG_CHAIN_ALLOW_SIMULATE', 'False') == 'True',
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -307,3 +329,21 @@ CONTRACT_ADDRESSES = {
 # Example: IRG_CHAIN_ABI_DIR=/opt/irg_chain/abis
 # Leave blank to auto-discover a sibling irg_chain/abis directory.
 IRG_CHAIN_ABI_DIR = os.environ.get('IRG_CHAIN_ABI_DIR', '')
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HTTPS / SECURITY HEADERS (production only)
+# ─────────────────────────────────────────────────────────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 31536000        # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True

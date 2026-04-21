@@ -46,7 +46,10 @@
       "Bash(python3 -c \"import json,sys; abi=json.load\\(sys.stdin\\); [print\\(x['name'], [i['name']+':'+i['type'] for i in x.get\\('inputs',[]\\)]\\) for x in abi if x.get\\('type'\\)=='event']\")",
       "Bash(python3 -c \"import json,sys; abi=json.load\\(sys.stdin\\); [print\\(x['name'], x.get\\('type'\\)\\) for x in abi if x.get\\('type'\\) in \\('function','event'\\)]\")",
       "Bash(chmod +x /Users/prathmeshwalimbe/Downloads/irg_gdp/infra/besu/setup-validators.sh)",
-      "Bash(python3 -c 'import ast, sys *)"
+      "Bash(python3 -c 'import ast, sys *)",
+      "Bash(python3 -)",
+      "Bash(grep -n \"hideModal\\('signin'\\);\\\\s*$\\\\|showModal\\('otp'\\);\\\\s*$\" /Users/prathmeshwalimbe/Downloads/irg_gdp/frontend/index.html)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

@@ -23,7 +23,6 @@ class ChainConfig(AppConfig):
         if any(cmd in sys.argv for cmd in skip_cmds):
             return
 
-<<<<<<< HEAD
         # Skip licence verification if the token file doesn't exist.
         # This allows deployments without a signed licence token to still serve
         # the API (chain-writing features simply run in simulate mode).
@@ -36,8 +35,6 @@ class ChainConfig(AppConfig):
             )
             return
 
-=======
->>>>>>> 6f5e39f (changhes05)
         try:
             from .licence_guard import verify_licence_or_die
             verify_licence_or_die(product_code="GDP")

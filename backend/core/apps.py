@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import json
 import logging
 import os
@@ -42,13 +41,3 @@ class CoreConfig(AppConfig):
             logger.info('[firebase] Admin SDK initialised for project %s', project_id)
         except Exception as exc:
             logger.error('[firebase] Failed to initialise Admin SDK: %s', exc)
-=======
-from django.apps import AppConfig
-
-class CoreConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'core'
-    
-    def ready(self):
-        import core.signals  # noqa
->>>>>>> 6f5e39f (changhes05)

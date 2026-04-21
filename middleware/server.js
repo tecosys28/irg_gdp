@@ -56,6 +56,7 @@ const SHARED_SECRET = process.env.MIDDLEWARE_SHARED_SECRET || '';
 const SYSTEM_SIGNER_KEY = process.env.SYSTEM_SIGNER_KEY || ''; // loaded from KMS
 const AUDIT_SINK_URL = process.env.AUDIT_SINK_URL || '';      // Django callback
 const AUDIT_SINK_TOKEN = process.env.AUDIT_SINK_TOKEN || '';
+const REDIS_URL = process.env.REDIS_URL || '';
 
 if (!SHARED_SECRET) {
   logger.warn('MIDDLEWARE_SHARED_SECRET is empty — refusing to authenticate requests. ' +
@@ -83,30 +84,66 @@ if (SYSTEM_SIGNER_KEY) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// IDEMPOTENCY CACHE (in-memory; replace with Redis in cluster deployments)
+// IDEMPOTENCY CACHE — Redis-backed when REDIS_URL is set, in-memory fallback
 // ─────────────────────────────────────────────────────────────────────────────
 
-const idempotency = new Map();
 const IDEMPOTENCY_TTL_MS = 15 * 60 * 1000;
 
-function rememberIdempotent(key, result) {
-  idempotency.set(key, { result, expires: Date.now() + IDEMPOTENCY_TTL_MS });
+let redisClient = null;
+if (REDIS_URL) {
+  const Redis = require('ioredis');
+  redisClient = new Redis(REDIS_URL, {
+    enableOfflineQueue: false,
+    lazyConnect: true,
+    maxRetriesPerRequest: 2,
+  });
+  redisClient.connect().catch(err => {
+    logger.error({ err: err.message }, 'Redis connect failed — falling back to in-memory idempotency');
+    redisClient = null;
+  });
+  redisClient.on('error', err => logger.warn({ err: err.message }, 'Redis error'));
+} else {
+  logger.warn('REDIS_URL not set — using in-memory idempotency cache (resets on restart)');
 }
-function recallIdempotent(key) {
-  const hit = idempotency.get(key);
+
+// In-memory fallback (used when Redis is unavailable or not configured)
+const _memCache = new Map();
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of _memCache.entries()) {
+    if (v.expires < now) _memCache.delete(k);
+  }
+}, 60_000).unref();
+
+async function rememberIdempotent(key, result) {
+  if (redisClient) {
+    try {
+      await redisClient.set(`irg:idem:${key}`, JSON.stringify(result), 'NX', 'PX', IDEMPOTENCY_TTL_MS);
+      return;
+    } catch (err) {
+      logger.warn({ err: err.message }, 'Redis set failed — falling back to memory');
+    }
+  }
+  _memCache.set(key, { result, expires: Date.now() + IDEMPOTENCY_TTL_MS });
+}
+
+async function recallIdempotent(key) {
+  if (redisClient) {
+    try {
+      const raw = await redisClient.get(`irg:idem:${key}`);
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      logger.warn({ err: err.message }, 'Redis get failed — falling back to memory');
+    }
+  }
+  const hit = _memCache.get(key);
   if (!hit) return null;
   if (hit.expires < Date.now()) {
-    idempotency.delete(key);
+    _memCache.delete(key);
     return null;
   }
   return hit.result;
 }
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of idempotency.entries()) {
-    if (v.expires < now) idempotency.delete(k);
-  }
-}, 60 * 1000).unref();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AUTH — HMAC of body + timestamp with shared secret
@@ -203,7 +240,7 @@ app.post('/submit-tx', verifyHmac, async (req, res) => {
     return res.status(400).json({ success: false, error: 'clientTxId_required' });
   }
 
-  const cached = recallIdempotent(clientTxId);
+  const cached = await recallIdempotent(clientTxId);
   if (cached) {
     return res.json({ ...cached, idempotent: true });
   }
@@ -244,7 +281,7 @@ app.post('/submit-tx', verifyHmac, async (req, res) => {
     }
 
     const result = { success: true, txHash, chainId: CHAIN_ID };
-    rememberIdempotent(clientTxId, result);
+    await rememberIdempotent(clientTxId, result);
 
     // Fire-and-forget audit push to Django
     forwardAudit({
