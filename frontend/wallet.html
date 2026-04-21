@@ -1068,6 +1068,15 @@ async function emergencyFreeze() {
   await loadWalletInfo();
   await loadBanner();
 })();
+
+// Expose all functions called by inline onclick= handlers (required for type="module")
+Object.assign(window, {
+  showTab, copyAddress, goToStep, addNomineeRow, submitActivation,
+  editNominees, addEditNomineeRow, submitNominees, downloadCsv,
+  confirmLiveness, showRecover, fileOwnershipTransfer, changePassword,
+  emergencyFreeze, revokeDevice, cancelCase, doRecoverSelf,
+  doRecoverSocial, doRecoverTrustee, cancelOwnership, toggleLegalFields,
+});
 </script>
 </body>
 </html>

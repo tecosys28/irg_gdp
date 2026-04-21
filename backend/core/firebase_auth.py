@@ -31,18 +31,38 @@ def _get_firebase_app():
 
 
 def _get_or_create_user(uid: str, email: str):
-    user, created = User.objects.get_or_create(
+    # Try by firebase_uid first
+    try:
+        user = User.objects.get(firebase_uid=uid)
+        if email and user.email != email:
+            user.email = email
+            user.save(update_fields=['email'])
+        return user, False
+    except User.DoesNotExist:
+        pass
+
+    # Fall back to email lookup — handles users created before firebase_uid was set
+    if email:
+        try:
+            user = User.objects.get(email=email)
+            user.firebase_uid = uid
+            update_fields = ['firebase_uid']
+            if not user.username:
+                user.username = email
+                update_fields.append('username')
+            user.save(update_fields=update_fields)
+            return user, False
+        except User.DoesNotExist:
+            pass
+
+    # Create fresh user
+    user = User.objects.create(
         firebase_uid=uid,
-        defaults={
-            'email': email,
-            'username': email or uid,
-            'is_active': True,
-        },
+        email=email or '',
+        username=email or uid,
+        is_active=True,
     )
-    if not created and email and user.email != email:
-        user.email = email
-        user.save(update_fields=['email'])
-    return user, created
+    return user, True
 
 
 class FirebaseAuthentication(BaseAuthentication):
