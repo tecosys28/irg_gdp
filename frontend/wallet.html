@@ -406,7 +406,6 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
   </section>
 </div>
 
-<<<<<<< HEAD
 <script type="module">
 // ─────────────────────────────────────────────────────────────────────────────
 // API base + auth — uses Firebase ID token stored by index.html on sign-in.
@@ -438,34 +437,14 @@ onAuthStateChanged(auth, user => {
 async function apiGet(path) {
   const t = await getFreshToken();
   const r = await fetch(API + path, { headers: t ? { 'Authorization': 'Bearer ' + t } : {} });
-=======
-<script>
-// ─────────────────────────────────────────────────────────────────────────────
-// API base + auth. In production this is the same host; token is whatever
-// the existing dashboard uses (localStorage.authToken for this starter code).
-// ─────────────────────────────────────────────────────────────────────────────
-const API = '/api/v1';
-function authHeaders() {
-  const t = localStorage.getItem('authToken') || '';
-  return t ? { 'Authorization': 'Token ' + t } : {};
-}
-async function apiGet(path) {
-  const r = await fetch(API + path, { headers: authHeaders() });
->>>>>>> 6f5e39f (changhes05)
   if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
   return r.json();
 }
 async function apiPost(path, body, method = 'POST') {
-<<<<<<< HEAD
   const t = await getFreshToken();
   const r = await fetch(API + path, {
     method,
     headers: { 'Content-Type': 'application/json', ...(t ? { 'Authorization': 'Bearer ' + t } : {}) },
-=======
-  const r = await fetch(API + path, {
-    method,
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
->>>>>>> 6f5e39f (changhes05)
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
@@ -1034,15 +1013,9 @@ async function downloadCsv() {
   const params = new URLSearchParams();
   if (mod) params.set('module', mod);
   if (stat) params.set('status', stat);
-<<<<<<< HEAD
   const t = await getFreshToken();
   const r = await fetch(API + '/wallet/transactions/export.csv?' + params.toString(), {
     headers: t ? { 'Authorization': 'Bearer ' + t } : {},
-=======
-  const t = localStorage.getItem('authToken') || '';
-  const r = await fetch(API + '/wallet/transactions/export.csv?' + params.toString(), {
-    headers: t ? { 'Authorization': 'Token ' + t } : {},
->>>>>>> 6f5e39f (changhes05)
   });
   if (!r.ok) return msg('Download failed', 'error');
   const blob = await r.blob();

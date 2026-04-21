@@ -1,6 +1,7 @@
 DJANGO_DEBUG: "False"
 FIREBASE_PROJECT_ID: "irggdp"
-DJANGO_ALLOWED_HOSTS: "*"
+# Cloud Run URL is added automatically by deploy.sh; add custom domain here too.
+DJANGO_ALLOWED_HOSTS: "irggdp.com,www.irggdp.com,irggdp.firebaseapp.com,irggdp.web.app"
 
 # ── IRG Chain 888101 ──────────────────────────────────────────────────────────
 # URL of the Node.js middleware service that relays transactions to Besu.

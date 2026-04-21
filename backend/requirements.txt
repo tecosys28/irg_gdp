@@ -1,8 +1,5 @@
 Django>=4.2,<5.0
-<<<<<<< HEAD
 cryptography>=42.0
-=======
->>>>>>> 6f5e39f (changhes05)
 djangorestframework>=3.14
 django-cors-headers>=4.0
 psycopg2-binary>=2.9
