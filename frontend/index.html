@@ -702,7 +702,7 @@
         let lbmaRates={},lbmaEditMode=false;
 
         // ─── API helpers ──────────────────────────────────────────────────────
-        const API = '/api/v1';
+        const API = (window.IRG_API_BASE || 'https://asia-south1-irggdp.cloudfunctions.net/apiProxy') + '/api/v1';
         async function _freshToken(){
           const u=window._auth&&window._auth.currentUser;
           if(u){const t=await u.getIdToken();localStorage.setItem('authToken',t);return t;}
@@ -2139,7 +2139,7 @@ onAuthStateChanged(auth, async user => {
   if (!user) return;
   try {
     const t = await user.getIdToken();
-    const r = await fetch('/api/v1/wallet/status-banner/', {
+    const r = await fetch(API + '/wallet/status-banner/', {
       headers: { 'Authorization': 'Bearer ' + t }
     });
     if (!r.ok) return;

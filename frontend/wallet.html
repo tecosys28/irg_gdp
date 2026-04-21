@@ -410,9 +410,8 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
 // ─────────────────────────────────────────────────────────────────────────────
 // API base + auth — uses Firebase ID token stored by index.html on sign-in.
 // ─────────────────────────────────────────────────────────────────────────────
-const API = '/api/v1';
-
-import { auth } from './firebase-init.js';
+import { auth, API_BASE } from './firebase-init.js';
+const API = API_BASE + '/api/v1';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
 async function getFreshToken() {
