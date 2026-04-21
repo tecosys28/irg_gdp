@@ -196,6 +196,25 @@
         };
         firebase.initializeApp(firebaseConfig);
     </script>
+
+    <div id="landing-page">
+
+        <!-- ── Top Navigation Header ──────────────────────────────────────── -->
+        <header class="landing-header">
+            <div class="logo-section">
+                <div class="logo-container"><div class="quad"></div><div class="quad gold"></div><div class="quad"></div><div class="quad"></div></div>
+                <span class="logo-text">IRG_GDP</span>
+            </div>
+            <nav class="landing-nav">
+                <button onclick="document.getElementById('section-about').scrollIntoView({behavior:'smooth'})">About</button>
+                <button onclick="document.getElementById('section-products').scrollIntoView({behavior:'smooth'})">Products</button>
+                <button onclick="document.getElementById('section-chain').scrollIntoView({behavior:'smooth'})">Blockchain</button>
+                <button style="border:1px solid var(--gold);border-radius:6px;color:var(--gold);" onclick="showModal('signin')">Sign In</button>
+                <button style="background:var(--gold);border-radius:6px;color:var(--navy-blue);font-weight:700;" onclick="showModal('register')">Register</button>
+            </nav>
+        </header>
+
+        <section class="hero-section">
             <div class="hero-logo-title">
                 <div class="logo-container"><div class="quad"></div><div class="quad gold"></div><div class="quad"></div><div class="quad"></div></div>
                 <h1 class="hero-title">IRG_GDP</h1>
