@@ -38,7 +38,15 @@
       "Bash(curl -s https://irggdp.com/api/v1/oracle/ -w \"\\\\nHTTP:%{http_code}\")",
       "Bash(curl -s https://irggdp.com/healthz -w \"\\\\nHTTP:%{http_code}\")",
       "Bash(curl -s https://irggdp.com/healthz/ -w \"\\\\nHTTP:%{http_code}\")",
-      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz/ -w \"\\\\nHTTP:%{http_code}\")"
+      "Bash(curl -s https://irggdp-api-128695548877.asia-south1.run.app/healthz/ -w \"\\\\nHTTP:%{http_code}\")",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(xargs ls *)",
+      "Bash(python3 -c \"import json,sys; abi=json.load\\(sys.stdin\\); [print\\(x['name'], x.get\\('type'\\)\\) for x in abi if x.get\\('type'\\)=='event']\")",
+      "Bash(python3 -c \"import json,sys; abi=json.load\\(sys.stdin\\); [print\\(x['name'], [i['name']+':'+i['type'] for i in x.get\\('inputs',[]\\)]\\) for x in abi if x.get\\('type'\\)=='event']\")",
+      "Bash(python3 -c \"import json,sys; abi=json.load\\(sys.stdin\\); [print\\(x['name'], x.get\\('type'\\)\\) for x in abi if x.get\\('type'\\) in \\('function','event'\\)]\")",
+      "Bash(chmod +x /Users/prathmeshwalimbe/Downloads/irg_gdp/infra/besu/setup-validators.sh)",
+      "Bash(python3 -c 'import ast, sys *)"
     ]
   }
 }

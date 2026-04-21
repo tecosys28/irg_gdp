@@ -1,0 +1,68 @@
+# Hyperledger Besu node configuration — IRG Chain 888101
+# Copy this file to each validator node. Adjust per-node values where noted.
+
+# ── Network ──────────────────────────────────────────────────────────────────
+genesis-file="/opt/irg_chain/genesis.json"
+network-id=888101
+sync-mode="FULL"
+
+# ── P2P ──────────────────────────────────────────────────────────────────────
+p2p-enabled=true
+p2p-host="0.0.0.0"
+p2p-port=30303
+# Set to this node's public IP (or internal VPC IP for private network):
+# p2p-interface="10.x.x.x"
+
+# Bootnodes — replace with enode URLs of all other validators:
+# bootnodes=[
+#   "enode://<pubkey1>@<ip1>:30303",
+#   "enode://<pubkey2>@<ip2>:30303",
+#   "enode://<pubkey3>@<ip3>:30303",
+#   "enode://<pubkey4>@<ip4>:30303"
+# ]
+
+# Static permissioning — only validators may peer:
+permissions-nodes-config-file-enabled=false
+# Alternatively, use on-chain permissioning:
+# permissions-nodes-contract-enabled=true
+# permissions-nodes-contract-address="0x..."
+
+# ── RPC ──────────────────────────────────────────────────────────────────────
+# Internal RPC — do NOT expose to the public internet.
+rpc-http-enabled=true
+rpc-http-host="127.0.0.1"
+rpc-http-port=8545
+rpc-http-api=["ETH","NET","WEB3","MINER","ADMIN","TXPOOL"]
+rpc-http-cors-origins=["none"]
+rpc-http-authentication-enabled=true
+rpc-http-authentication-jwt-public-key-file="/opt/irg_chain/jwt-pubkey.pem"
+
+# WebSocket RPC (optional — for event subscriptions from watchers):
+rpc-ws-enabled=false
+# rpc-ws-host="127.0.0.1"
+# rpc-ws-port=8546
+
+# ── Consensus ─────────────────────────────────────────────────────────────────
+# IBFT2 consensus. Validator key managed by the node.
+# For HSM-backed keys, set:
+# key-store-type="PKCS12"    # or "AWS_KMS", "AZURE", "HASHICORP"
+
+# ── Tx pool ──────────────────────────────────────────────────────────────────
+tx-pool-max-size=3000
+tx-pool-retention-hours=999
+
+# ── Gas ──────────────────────────────────────────────────────────────────────
+# Zero-gas network — no gas cost for transactions.
+min-gas-price=0
+target-gas-limit=30000000
+
+# ── Data / Logging ───────────────────────────────────────────────────────────
+# data-path="/opt/besu/data"   # set per node
+logging="INFO"
+# log-file="/var/log/besu/besu.log"
+
+# ── Metrics (Prometheus) ─────────────────────────────────────────────────────
+metrics-enabled=true
+metrics-host="0.0.0.0"
+metrics-port=9545
+metrics-category=["BLOCKCHAIN","ETHEREUM","NETWORK","PEERS","JVM"]

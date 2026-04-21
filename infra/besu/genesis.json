@@ -1,0 +1,39 @@
+{
+  "config": {
+    "chainId": 888101,
+    "homesteadBlock": 0,
+    "eip150Block": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "constantinopleBlock": 0,
+    "petersburgBlock": 0,
+    "istanbulBlock": 0,
+    "berlinBlock": 0,
+    "londonBlock": 0,
+    "ibft2": {
+      "blockperiodseconds": 2,
+      "epochlength": 30000,
+      "requesttimeoutseconds": 4,
+      "blockreward": "0",
+      "miningbeneficiary": "0x0000000000000000000000000000000000000000"
+    }
+  },
+  "nonce": "0x0",
+  "timestamp": "0x0",
+  "extraData": "REPLACE_WITH_IBFT2_EXTRA_DATA",
+  "gasLimit": "0x1fffffffffffff",
+  "difficulty": "0x1",
+  "mixHash": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365",
+  "coinbase": "0x0000000000000000000000000000000000000000",
+  "baseFeePerGas": "0x0",
+  "alloc": {
+    "REPLACE_WITH_DEPLOYER_ADDRESS": {
+      "balance": "0x200000000000000000000000000000000000000000000000000000000000000"
+    },
+    "REPLACE_WITH_VALIDATOR_1_ADDRESS": { "balance": "0x0" },
+    "REPLACE_WITH_VALIDATOR_2_ADDRESS": { "balance": "0x0" },
+    "REPLACE_WITH_VALIDATOR_3_ADDRESS": { "balance": "0x0" },
+    "REPLACE_WITH_VALIDATOR_4_ADDRESS": { "balance": "0x0" }
+  }
+}

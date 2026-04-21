@@ -7,7 +7,8 @@ Usage:
 
 Intended to run as a long-lived sidecar process (systemd / Kubernetes
 Deployment). Safe to restart — it resumes from the last block it saw,
-persisted in the ChainWatcherCursor singleton row.
+persisted in the ChainWatcherCursor singleton row (watcher name:
+"ombudsman_orders").
 
 IPR Owner: Rohit Tidke | Exclusively assigned to: Intech Research Group
 """
@@ -18,27 +19,31 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from web3 import Web3
 
+from chain.models import ChainWatcherCursor
 from wallet_access import services as wallet_services
 
 logger = logging.getLogger(__name__)
 
+WATCHER_NAME = 'ombudsman_orders'
 
-# Minimal ABI — only the event and a helper to decode it.
+# ABI matches WalletRecoveryEvents.sol exactly.
+# OmbudsmanOrderIssued(bytes32 indexed caseId, bytes32 indexed orderHash,
+#                      uint8 orderType, uint8 action, uint256 timestamp)
 EVENT_ABI = [{
     "anonymous": False,
     "inputs": [
-        {"indexed": True, "name": "caseId", "type": "bytes32"},
-        {"indexed": True, "name": "orderHash", "type": "bytes32"},
-        {"indexed": False, "name": "disposition", "type": "uint8"},
-        {"indexed": True, "name": "targetWallet", "type": "address"},
-        {"indexed": False, "name": "actionPayload", "type": "bytes32"},
-        {"indexed": False, "name": "issuedAt", "type": "uint256"},
+        {"indexed": True,  "name": "caseId",    "type": "bytes32"},
+        {"indexed": True,  "name": "orderHash", "type": "bytes32"},
+        {"indexed": False, "name": "orderType", "type": "uint8"},
+        {"indexed": False, "name": "action",    "type": "uint8"},
+        {"indexed": False, "name": "timestamp", "type": "uint256"},
     ],
     "name": "OmbudsmanOrderIssued",
     "type": "event",
 }]
 
-DISPOSITION_MAP = {
+# orderType uint8 mapping (must match OmbudsmanRegistry.sol enum OrderType).
+ORDER_TYPE_MAP = {
     0: 'APPROVE',
     1: 'APPROVE_MODIFIED',
     2: 'REJECT',
@@ -53,6 +58,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--poll-seconds', type=float, default=10.0)
         parser.add_argument('--confirmations', type=int, default=2)
+        parser.add_argument('--from-block', type=int, default=0,
+                            help='Override stored cursor and start from this block (0 = use stored).')
 
     def handle(self, *args, **opts):
         rpc_url = settings.BLOCKCHAIN_CONFIG.get('RPC_URL')
@@ -69,9 +76,16 @@ class Command(BaseCommand):
         contract = w3.eth.contract(address=Web3.to_checksum_address(contract_addr), abi=EVENT_ABI)
         event = contract.events.OmbudsmanOrderIssued
 
-        last_block = w3.eth.block_number
         confirmations = int(opts['confirmations'])
         poll = float(opts['poll_seconds'])
+
+        # Resume from stored cursor, or from explicit --from-block, or from chain head.
+        forced_start = int(opts.get('from_block') or 0)
+        if forced_start > 0:
+            last_block = forced_start
+        else:
+            last_block = ChainWatcherCursor.resume_from(WATCHER_NAME, w3.eth.block_number)
+
         self.stdout.write(f'Watching OmbudsmanOrderIssued from block {last_block}')
 
         while True:
@@ -85,7 +99,9 @@ class Command(BaseCommand):
                 logs = event.get_logs(fromBlock=last_block + 1, toBlock=to_block)
                 for log in logs:
                     self._process(log)
+
                 last_block = to_block
+                ChainWatcherCursor.advance(WATCHER_NAME, last_block)
             except KeyboardInterrupt:
                 self.stdout.write('stopping')
                 return
@@ -98,12 +114,11 @@ class Command(BaseCommand):
         try:
             case_id_bytes = args['caseId']
             order_hash_bytes = args['orderHash']
-            target_wallet = args['targetWallet']
-            disposition_int = int(args['disposition'])
-            disposition = DISPOSITION_MAP.get(disposition_int, str(disposition_int))
+            order_type_int = int(args['orderType'])
+            disposition = ORDER_TYPE_MAP.get(order_type_int, str(order_type_int))
 
-            # case_id is a bytes32 of the Django RecoveryCase.id string.
-            # Convert back: strip trailing zero bytes.
+            # caseId is a bytes32 left-padded encoding of the Django RecoveryCase.id (int).
+            # Strip trailing zero bytes and decode as UTF-8 integer string.
             raw = bytes(case_id_bytes).rstrip(b'\x00')
             try:
                 case_id = int(raw.decode('utf-8'))
@@ -112,14 +127,16 @@ class Command(BaseCommand):
                 return
 
             order_hash_hex = '0x' + bytes(order_hash_bytes).hex()
-            tx_hash_hex = log['transactionHash'].hex() if hasattr(log['transactionHash'], 'hex') else str(log['transactionHash'])
+            tx_hash_hex = (log['transactionHash'].hex()
+                           if hasattr(log['transactionHash'], 'hex')
+                           else str(log['transactionHash']))
 
             case = wallet_services.execute_ombudsman_order(
                 case_id=case_id,
                 order_hash=order_hash_hex,
                 order_tx_hash=tx_hash_hex,
                 disposition=disposition,
-                target_wallet=target_wallet,
+                target_wallet='',  # resolved from the DB case; not emitted in this event
             )
             self.stdout.write(f'Processed Ombudsman Order for case {case_id}: {case.status}')
         except Exception as exc:  # noqa: BLE001

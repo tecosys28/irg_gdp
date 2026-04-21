@@ -1,0 +1,132 @@
+# Local development / CI Besu network — 4 IBFT2 validators on a single machine.
+# NOT for production. For production, run each validator on a separate host.
+#
+# Usage:
+#   ./setup-validators.sh          # generate keys + genesis extraData
+#   docker compose -f docker-compose.besu.yml up -d
+#   docker compose -f docker-compose.besu.yml logs -f validator1
+
+version: "3.9"
+
+x-validator-common: &validator-common
+  image: hyperledger/besu:24.9.1
+  restart: unless-stopped
+  environment:
+    - BESU_OPTS=-Xmx2g
+  volumes:
+    - ./genesis.json:/opt/besu/genesis.json:ro
+  networks:
+    - irg_chain
+
+services:
+  validator1:
+    <<: *validator-common
+    hostname: validator1
+    ports:
+      - "8545:8545"   # RPC (internal use only — do not expose in prod)
+      - "9545:9545"   # Prometheus metrics
+    volumes:
+      - ./genesis.json:/opt/besu/genesis.json:ro
+      - ./keys/validator1:/opt/besu/keys:ro
+      - besu_data_v1:/opt/besu/data
+    command:
+      - --genesis-file=/opt/besu/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --p2p-host=0.0.0.0
+      - --p2p-port=30303
+      - --bootnodes=enode://${VALIDATOR2_PUBKEY}@validator2:30303,enode://${VALIDATOR3_PUBKEY}@validator3:30303,enode://${VALIDATOR4_PUBKEY}@validator4:30303
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,MINER,ADMIN,IBFT
+      - --rpc-http-cors-origins=*
+      - --rpc-http-authentication-enabled=false
+      - --min-gas-price=0
+      - --logging=INFO
+      - --metrics-enabled=true
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9545
+      - --network-id=888101
+
+  validator2:
+    <<: *validator-common
+    hostname: validator2
+    volumes:
+      - ./genesis.json:/opt/besu/genesis.json:ro
+      - ./keys/validator2:/opt/besu/keys:ro
+      - besu_data_v2:/opt/besu/data
+    command:
+      - --genesis-file=/opt/besu/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --p2p-host=0.0.0.0
+      - --p2p-port=30303
+      - --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1:30303,enode://${VALIDATOR3_PUBKEY}@validator3:30303,enode://${VALIDATOR4_PUBKEY}@validator4:30303
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,MINER,ADMIN,IBFT
+      - --rpc-http-cors-origins=*
+      - --rpc-http-authentication-enabled=false
+      - --min-gas-price=0
+      - --logging=INFO
+      - --network-id=888101
+
+  validator3:
+    <<: *validator-common
+    hostname: validator3
+    volumes:
+      - ./genesis.json:/opt/besu/genesis.json:ro
+      - ./keys/validator3:/opt/besu/keys:ro
+      - besu_data_v3:/opt/besu/data
+    command:
+      - --genesis-file=/opt/besu/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --p2p-host=0.0.0.0
+      - --p2p-port=30303
+      - --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1:30303,enode://${VALIDATOR2_PUBKEY}@validator2:30303,enode://${VALIDATOR4_PUBKEY}@validator4:30303
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,MINER,ADMIN,IBFT
+      - --rpc-http-cors-origins=*
+      - --rpc-http-authentication-enabled=false
+      - --min-gas-price=0
+      - --logging=INFO
+      - --network-id=888101
+
+  validator4:
+    <<: *validator-common
+    hostname: validator4
+    volumes:
+      - ./genesis.json:/opt/besu/genesis.json:ro
+      - ./keys/validator4:/opt/besu/keys:ro
+      - besu_data_v4:/opt/besu/data
+    command:
+      - --genesis-file=/opt/besu/genesis.json
+      - --data-path=/opt/besu/data
+      - --node-private-key-file=/opt/besu/keys/key
+      - --p2p-host=0.0.0.0
+      - --p2p-port=30303
+      - --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1:30303,enode://${VALIDATOR2_PUBKEY}@validator2:30303,enode://${VALIDATOR3_PUBKEY}@validator3:30303
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,MINER,ADMIN,IBFT
+      - --rpc-http-cors-origins=*
+      - --rpc-http-authentication-enabled=false
+      - --min-gas-price=0
+      - --logging=INFO
+      - --network-id=888101
+
+volumes:
+  besu_data_v1:
+  besu_data_v2:
+  besu_data_v3:
+  besu_data_v4:
+
+networks:
+  irg_chain:
+    driver: bridge

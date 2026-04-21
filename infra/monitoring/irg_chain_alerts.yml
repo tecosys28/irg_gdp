@@ -1,0 +1,93 @@
+groups:
+  - name: irg_chain_besu
+    rules:
+      - alert: BesuBlockProductionStalled
+        expr: increase(ethereum_blockchain_height[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Besu block production has stalled for 5 minutes."
+          description: "No new blocks on IRG Chain 888101. Check validator connectivity and IBFT quorum."
+
+      - alert: BesuValidatorPeerLow
+        expr: ethereum_peer_count < 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Besu validator has fewer than 2 peers."
+          description: "Instance {{ $labels.instance }} has {{ $value }} peers. Quorum may be at risk."
+
+      - alert: BesuRPCErrorRateHigh
+        expr: rate(rpc_requests_total{success="false"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Besu RPC error rate above 10% for 5 minutes."
+
+  - name: irg_chain_contracts
+    rules:
+      - alert: LMEOracleStale
+        expr: irg_oracle_is_stale == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LME Oracle is stale on IRG Chain 888101."
+          description: "LMEOracle.isStale() returned true. New GDP minting and FTR redemptions are blocked until the oracle is refreshed."
+
+      - alert: SystemPauseActive
+        expr: irg_system_paused == 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "IRG Chain system pause is active."
+          description: "SystemPause has been triggered. All transactions are blocked. Investigate immediately."
+
+      - alert: RecoveryCaseQueueDeep
+        expr: irg_recovery_cases_awaiting_ombudsman > 10
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 10 recovery cases awaiting Ombudsman."
+          description: "Current count: {{ $value }}. Check Ombudsman portal for unprocessed orders."
+
+      - alert: EscrowDiscrepancyDetected
+        expr: irg_escrow_reconciliation_discrepancy != 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Escrow reconciliation discrepancy detected."
+          description: "On-chain EscrowVault totals do not match bank statement. New redemptions halted. Run: python manage.py reconcile_escrow --bank-credits-inr <amount>"
+
+  - name: irg_gdp_backend
+    rules:
+      - alert: WalletActivationFunnelDrop
+        expr: rate(irg_wallet_activations_total[1h]) < 0.001
+        for: 2h
+        labels:
+          severity: info
+        annotations:
+          summary: "No new wallet activations in the past 2 hours."
+
+      - alert: TxAuditLogPendingBacklog
+        expr: irg_chain_tx_pending_count > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 50 transactions stuck in PENDING state."
+          description: "Middleware may be unreachable or retrying. Check middleware health endpoint."
+
+      - alert: MiddlewareUnreachable
+        expr: up{job="irg-middleware"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "IRG transaction middleware is unreachable."
