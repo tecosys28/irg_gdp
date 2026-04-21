@@ -222,6 +222,40 @@
                 <div class="usp-card" id="section-licensees"><h3>📋 For Licensees</h3><ul><li>Exclusive territory rights</li><li>Revenue share from all 3 GIC streams</li><li>Training and support</li><li>Complete technology platform</li></ul></div>
             </div>
         </section>
+
+        <!-- ── Live on IRG Chain 888101 ──────────────────────────────────── -->
+        <section class="usps-section" id="section-chain" style="background:var(--navy-dark);padding:48px 24px;">
+          <h2 style="text-align:center;color:var(--gold);margin-bottom:8px;">Live on IRG Chain 888101</h2>
+          <p style="text-align:center;color:var(--text-muted);margin-bottom:32px;font-size:14px;">Every transaction is recorded on a private Hyperledger Besu blockchain — immutable and independently verifiable.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:1100px;margin:0 auto;">
+            <div class="usp-card">
+              <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;">Network</h3>
+              <ul style="list-style:none;padding:0;">
+                <li style="margin-bottom:8px;"><span style="color:var(--text-muted);font-size:12px;">Chain ID</span><br><span style="font-family:monospace;color:var(--gold);">888101</span></li>
+                <li style="margin-bottom:8px;"><span style="color:var(--text-muted);font-size:12px;">Consensus</span><br><span style="font-family:monospace;">IBFT2 / Hyperledger Besu</span></li>
+                <li><span style="color:var(--text-muted);font-size:12px;">Settlement</span><br><span style="font-family:monospace;">Zero-gas · Instant finality</span></li>
+              </ul>
+            </div>
+            <div class="usp-card">
+              <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;">Core Contracts</h3>
+              <ul style="list-style:none;padding:0;">
+                <li style="margin-bottom:6px;"><span style="color:var(--text-muted);font-size:11px;">TGDP Minting</span><br><span style="font-family:monospace;font-size:11px;word-break:break-all;">0xE3A11Ed8B799067222C139d5B88f81B6DB1a6C8C</span></li>
+                <li style="margin-bottom:6px;"><span style="color:var(--text-muted);font-size:11px;">FTR Token</span><br><span style="font-family:monospace;font-size:11px;word-break:break-all;">0xb121Ea7360b864a90810606cF5a97a1eAfcB6c7F</span></li>
+                <li><span style="color:var(--text-muted);font-size:11px;">Identity Registry</span><br><span style="font-family:monospace;font-size:11px;word-break:break-all;">0x14db991477D2076D5bd8Ce8eb0Aacb9152eC8c96</span></li>
+              </ul>
+            </div>
+            <div class="usp-card">
+              <h3 style="font-size:13px;letter-spacing:.5px;text-transform:uppercase;">Governance &amp; Trust</h3>
+              <ul style="list-style:none;padding:0;">
+                <li style="margin-bottom:6px;"><span style="color:var(--text-muted);font-size:11px;">Super Corpus Fund</span><br><span style="font-family:monospace;font-size:11px;word-break:break-all;">0x47c4feB71DD89d6180aEB263C1061C90F07Dc788</span></li>
+                <li style="margin-bottom:6px;"><span style="color:var(--text-muted);font-size:11px;">LBMA Oracle</span><br><span style="font-family:monospace;font-size:11px;word-break:break-all;">0xf3b502165bfd216040Eb63f8Eeb884731e5f2b05</span></li>
+                <li><span style="color:var(--text-muted);font-size:11px;">Dispute Registry</span><br><span style="font-family:monospace;font-size:11px;word-break:break-all;">0x6eC99F4937F9496092B7521fff737ef075df5AfC</span></li>
+              </ul>
+            </div>
+          </div>
+          <p style="text-align:center;margin-top:24px;font-size:12px;color:var(--text-muted);">47 smart contracts deployed &nbsp;·&nbsp; Full ABI available on request &nbsp;·&nbsp; Audit in progress</p>
+        </section>
+
         <footer class="landing-footer">
             <div class="footer-content">
                 <p class="ipr-notice"><strong>IPR Notice:</strong> IPRs of the IRG_GDP and its sub product groups, FTRs, and the system built around it are registered in the name of Mr. Rohit Tidke. He has exclusively assigned them to Intech Research Group.</p>
@@ -998,8 +1032,18 @@
               pendingRole = localStorage.getItem('irgRole') || 'household';
               hideModal('signin');
               enterDashboard(pendingRole);
-            } catch(e) {
-              alert('Sign in failed: ' + (e.message || e.code));
+            } catch(err) {
+              const code = err.code || '';
+              const msg = {
+                'auth/user-not-found':    'No account found for this email. Please register first.',
+                'auth/wrong-password':    'Incorrect password. Try again or use Forgot Password.',
+                'auth/invalid-credential':'Incorrect email or password.',
+                'auth/invalid-email':     'Please enter a valid email address.',
+                'auth/user-disabled':     'This account has been disabled. Contact support.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again in a few minutes.',
+                'auth/network-request-failed': 'Network error. Check your connection and retry.',
+              }[code] || (err.message || 'Sign-in failed. Please try again.');
+              alert(msg);
             }
         }
 
