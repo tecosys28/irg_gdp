@@ -40,6 +40,16 @@ from web3 import Web3
 
 from chain.client import RawTx, SystemTx, raw_submit, system_submit
 
+<<<<<<< HEAD
+=======
+try:
+    from chain import abi_encoders as _abi
+    _ABI_AVAILABLE = True
+except ImportError:
+    _abi = None
+    _ABI_AVAILABLE = False
+
+>>>>>>> 6f5e39f (changhes05)
 logger = logging.getLogger(__name__)
 
 
@@ -64,6 +74,16 @@ def _encode_placeholder(action: str, **kwargs: Any) -> str:
     return '0x' + digest  # 32 bytes; middleware treats this as opaque data
 
 
+<<<<<<< HEAD
+=======
+def _calldata(real: Optional[str], fallback_action: str, **kwargs: Any) -> str:
+    """Return real ABI-encoded calldata if available, else a placeholder."""
+    if real is not None:
+        return real
+    return _encode_placeholder(fallback_action, **kwargs)
+
+
+>>>>>>> 6f5e39f (changhes05)
 def _unwrap(result) -> str:
     """All call sites expect a bare tx-hash string, so unwrap the SubmitResult."""
     return result.tx_hash or ''
@@ -243,32 +263,73 @@ class BlockchainService:
     # GOVERNANCE
     # ─────────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
     def submit_proposal(self, proposer: str, title: str, category: str) -> str:
+=======
+    def submit_proposal(self, proposer: str, title: str, category: str,
+                        param_key: str = '', proposed_value: int = 0,
+                        justification_hash: str = '0x' + '00' * 32) -> str:
+        """
+        GovernanceVoting.submitProposal(bytes32 paramKey, uint256 proposedValue, bytes32 justificationHash)
+        Legacy callers pass title/category; production callers should pass param_key and proposed_value.
+        param_key: keccak256 of the parameter name string (e.g. 'MINTING_CAP_GRAMS')
+        """
+        pk       = param_key or title or category
+        real_data = _abi.encode_submit_proposal(
+            pk, proposed_value, justification_hash
+        ) if _ABI_AVAILABLE else None
+>>>>>>> 6f5e39f (changhes05)
         result = system_submit(SystemTx(
             module='governance',
             action='submit_proposal',
             to_address=_contract('Governance'),
+<<<<<<< HEAD
             data=_encode_placeholder('propose', proposer=proposer, title=title, category=category),
             meta={'proposer': proposer, 'title': title, 'category': category},
+=======
+            data=_calldata(real_data, 'propose',
+                           proposer=proposer, title=title, category=category),
+            meta={'proposer': proposer, 'title': title, 'category': category,
+                  'param_key': pk, 'proposed_value': proposed_value},
+>>>>>>> 6f5e39f (changhes05)
         ))
         return _unwrap(result)
 
     def cast_vote(self, proposal_id: str, voter: str, vote_for: bool) -> str:
+<<<<<<< HEAD
+=======
+        """GovernanceVoting.castVote(bytes32, bool)"""
+        real_data = _abi.encode_cast_vote(proposal_id, vote_for) if _ABI_AVAILABLE else None
+>>>>>>> 6f5e39f (changhes05)
         result = system_submit(SystemTx(
             module='governance',
             action='cast_vote',
             to_address=_contract('Governance'),
+<<<<<<< HEAD
             data=_encode_placeholder('vote', id=proposal_id, voter=voter, yes=vote_for),
+=======
+            data=_calldata(real_data, 'vote',
+                           id=proposal_id, voter=voter, yes=vote_for),
+>>>>>>> 6f5e39f (changhes05)
             meta={'proposal_id': proposal_id, 'voter': voter, 'vote_for': vote_for},
         ))
         return _unwrap(result)
 
     def execute_proposal(self, proposal_id: str) -> str:
+<<<<<<< HEAD
+=======
+        """GovernanceVoting.finalizeProposal(bytes32)"""
+        real_data = _abi.encode_finalize_proposal(proposal_id) if _ABI_AVAILABLE else None
+>>>>>>> 6f5e39f (changhes05)
         result = system_submit(SystemTx(
             module='governance',
             action='execute_proposal',
             to_address=_contract('Governance'),
+<<<<<<< HEAD
             data=_encode_placeholder('execute', id=proposal_id),
+=======
+            data=_calldata(real_data, 'execute', id=proposal_id),
+>>>>>>> 6f5e39f (changhes05)
             meta={'proposal_id': proposal_id},
         ))
         return _unwrap(result)
@@ -291,12 +352,30 @@ class BlockchainService:
     # ORACLE
     # ─────────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
     def update_lbma_rate(self, metal: str, rate: str, date: str) -> str:
+=======
+    def update_lbma_rate(self, metal: str, rate: str, date: str,
+                         lme_timestamp: Optional[int] = None) -> str:
+        """
+        LMEOracle.submitPrice(uint256 priceUSDPerGram, uint256 lmeTimestamp)
+        rate: USD per gram as a decimal string e.g. '63.50'
+        Internally converts to × 1e8 integer representation.
+        """
+        import time as _time
+        price_scaled = int(float(rate) * 1e8)
+        ts = lme_timestamp or int(_time.time())
+        real_data = _abi.encode_submit_price(price_scaled, ts) if _ABI_AVAILABLE else None
+>>>>>>> 6f5e39f (changhes05)
         result = system_submit(SystemTx(
             module='oracle',
             action='update_lbma_rate',
             to_address=_contract('LBMAOracle'),
+<<<<<<< HEAD
             data=_encode_placeholder('lbma', metal=metal, rate=rate, date=date),
+=======
+            data=_calldata(real_data, 'lbma', metal=metal, rate=rate, date=date),
+>>>>>>> 6f5e39f (changhes05)
             meta={'metal': metal, 'rate': rate, 'date': date},
         ))
         return _unwrap(result)
@@ -306,6 +385,7 @@ class BlockchainService:
     # ─────────────────────────────────────────────────────────────────────────
 
     def recall_units(self, unit_ids, reason: str) -> str:
+<<<<<<< HEAD
         result = system_submit(SystemTx(
             module='recall',
             action='recall_units',
@@ -315,6 +395,26 @@ class BlockchainService:
                   'reason': reason},
         ))
         return _unwrap(result)
+=======
+        """
+        FTRRecall.requestRecall(bytes32 lotId, string reason)
+        unit_ids: a single lot ID (bytes32 hex string) or a list of lot IDs.
+        When a list is given, each lot is recalled in a separate transaction.
+        Returns the tx hash of the last recall submitted.
+        """
+        ids = [unit_ids] if isinstance(unit_ids, str) else list(unit_ids)
+        result = None
+        for lot_id in ids:
+            real_data = _abi.encode_request_recall(lot_id, reason) if _ABI_AVAILABLE else None
+            result = system_submit(SystemTx(
+                module='recall',
+                action='recall_units',
+                to_address=_contract('RecallRegistry'),
+                data=_calldata(real_data, 'recall', units=lot_id, reason=reason),
+                meta={'lot_id': lot_id, 'reason': reason},
+            ))
+        return _unwrap(result) if result else ''
+>>>>>>> 6f5e39f (changhes05)
 
     # ─────────────────────────────────────────────────────────────────────────
     # NEW: automatic wallet / identity registration (v2.7 of linking note)
@@ -325,13 +425,30 @@ class BlockchainService:
         """
         Record a newly-created user wallet on IRG Chain 888101.
         Called from the post-registration signal in core/signals.py.
+<<<<<<< HEAD
         """
+=======
+        kyc_tier maps to IdentityRegistry participant types (1=NATURAL_PERSON etc.).
+        Defaults to 1 (NATURAL_PERSON) when kyc_tier is 0.
+        """
+        ptype       = max(1, kyc_tier)
+        kyc_hash    = (meta or {}).get('kyc_doc_hash', '0x' + '00' * 32)
+        ipfs_cid    = (meta or {}).get('ipfs_cid', '')
+        real_data   = _abi.encode_register_participant(
+            wallet_address, ptype, kyc_hash, ipfs_cid, jurisdiction
+        ) if _ABI_AVAILABLE else None
+>>>>>>> 6f5e39f (changhes05)
         result = system_submit(SystemTx(
             module='core',
             action='register_user',
             to_address=_contract('IdentityRegistry'),
+<<<<<<< HEAD
             data=_encode_placeholder('register', wallet=wallet_address,
                                      tier=kyc_tier, jur=jurisdiction),
+=======
+            data=_calldata(real_data, 'register', wallet=wallet_address,
+                           tier=kyc_tier, jur=jurisdiction),
+>>>>>>> 6f5e39f (changhes05)
             meta={'wallet': wallet_address, 'kyc_tier': kyc_tier,
                   'jurisdiction': jurisdiction, **(meta or {})},
         ))
@@ -358,13 +475,23 @@ class BlockchainService:
                               evidence_bundle_hash: str) -> str:
         """
         Emit WalletRecoveryRequested on the WalletRecoveryEvents contract.
+<<<<<<< HEAD
         Only TRUSTEE path is filed on-chain; self and social paths stay
         off-chain (recorded in the audit log via the wallet_access service).
         """
+=======
+        path: '1'=PATH_SELF_SEED, '2'=PATH_SOCIAL_NOMINEE, '3'=PATH_TRUSTEE_OMBUDSMAN
+        """
+        path_int  = int(path) if str(path).isdigit() else 3
+        real_data = _abi.encode_file_recovery_request(
+            original_wallet, claimant_wallet, path_int, evidence_bundle_hash
+        ) if _ABI_AVAILABLE else None
+>>>>>>> 6f5e39f (changhes05)
         result = system_submit(SystemTx(
             module='wallet_access',
             action='file_recovery_request',
             to_address=_contract('WalletRecoveryEvents'),
+<<<<<<< HEAD
             data=_encode_placeholder(
                 'fileRecoveryRequest',
                 case=case_id,
@@ -373,6 +500,12 @@ class BlockchainService:
                 path=path,
                 ev=evidence_bundle_hash,
             ),
+=======
+            data=_calldata(real_data, 'fileRecoveryRequest',
+                           case=case_id, orig=original_wallet,
+                           claim=claimant_wallet, path=path,
+                           ev=evidence_bundle_hash),
+>>>>>>> 6f5e39f (changhes05)
             meta={
                 'case_id': case_id,
                 'original_wallet': original_wallet,

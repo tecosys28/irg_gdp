@@ -3,6 +3,7 @@ IRG_GDP URL Configuration
 IPR Owner: Rohit Tidke | Exclusively assigned to: Intech Research Group
 """
 from django.contrib import admin
+<<<<<<< HEAD
 from django.http import JsonResponse
 from django.urls import path, include
 from django.conf import settings
@@ -17,6 +18,16 @@ urlpatterns = [
     path('healthz', healthz, name='healthz'),
     path('healthz/', healthz),
     path('admin/', admin.site.urls),
+=======
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from rest_framework.authtoken.views import obtain_auth_token
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/token/', obtain_auth_token, name='api_token'),
+>>>>>>> 6f5e39f (changhes05)
     path('api/v1/auth/', include('core.urls')),
     path('api/v1/gdp/', include('irg_gdp.urls')),
     path('api/v1/jr/', include('irg_jr.urls')),

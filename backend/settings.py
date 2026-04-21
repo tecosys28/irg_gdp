@@ -12,10 +12,16 @@ BASE_DIR = Path(__file__).resolve().parent
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-secret-key-change-in-production')
 
+<<<<<<< HEAD
 DEBUG = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', 'False')) == 'True'
 
 _allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
 ALLOWED_HOSTS = ['*'] if _allowed == '*' else _allowed.split(',')
+=======
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+ALLOWED_HOSTS = ['*']
+>>>>>>> 6f5e39f (changhes05)
 
 # Application definition
 INSTALLED_APPS = [
@@ -49,7 +55,10 @@ MIDDLEWARE = [
     'chain.licence_middleware.LicenceEnforcementMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+<<<<<<< HEAD
     'whitenoise.middleware.WhiteNoiseMiddleware',
+=======
+>>>>>>> 6f5e39f (changhes05)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -79,6 +88,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'wsgi.application'
 
+<<<<<<< HEAD
 # Database — uses Postgres when DB_HOST is set, SQLite otherwise (dev/demo)
 _db_host = os.environ.get('DB_HOST', '')
 if _db_host:
@@ -99,6 +109,19 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+=======
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'irg_gdp_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
+}
+>>>>>>> 6f5e39f (changhes05)
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -120,7 +143,10 @@ USE_TZ = True
 # Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+<<<<<<< HEAD
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+=======
+>>>>>>> 6f5e39f (changhes05)
 
 # Media files
 MEDIA_URL = 'media/'
@@ -128,11 +154,19 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+<<<<<<< HEAD
 # REST Framework — Firebase ID token authentication
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'core.firebase_auth.FirebaseAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+=======
+# REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+>>>>>>> 6f5e39f (changhes05)
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -142,6 +176,7 @@ REST_FRAMEWORK = {
 }
 
 # CORS
+<<<<<<< HEAD
 CORS_ALLOWED_ORIGINS = [
     'https://irggdp.com',
     'https://www.irggdp.com',
@@ -156,6 +191,10 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
 FIREBASE_PROJECT_ID = os.environ.get('FIREBASE_PROJECT_ID', 'irggdp')
 
+=======
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+>>>>>>> 6f5e39f (changhes05)
 # ═══════════════════════════════════════════════════════════════════════════════
 # IRG_GDP SYSTEM CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -244,6 +283,7 @@ BLOCKCHAIN_CONFIG = {
 # rows instead of real on-chain writes (useful in dev/CI).
 # ─────────────────────────────────────────────────────────────────────────────
 CONTRACT_ADDRESSES = {
+<<<<<<< HEAD
     'TGDPMinting':            os.environ.get('ADDR_TGDP_MINTING', ''),
     'FTRRedemption':          os.environ.get('ADDR_FTR_REDEMPTION', ''),
     'P2PGuaranteedSettlement': os.environ.get('ADDR_P2P_SETTLEMENT', ''),
@@ -260,3 +300,67 @@ CONTRACT_ADDRESSES = {
     'DeviceP2PRegistry':      os.environ.get('ADDR_DEVICE_P2P', ''),
     'WalletRecoveryEvents':   os.environ.get('ADDR_WALLET_RECOVERY_EVENTS', ''),
 }
+=======
+    # Identity
+    'IdentityRegistry':       os.environ.get('ADDR_IDENTITY_REGISTRY', ''),
+    'IPRLicense':             os.environ.get('ADDR_IPR_LICENSE', ''),
+    'WalletRecoveryEvents':   os.environ.get('ADDR_WALLET_RECOVERY_EVENTS', ''),
+    'LegalEntityRegistry':    os.environ.get('ADDR_LEGAL_ENTITY_REGISTRY', ''),
+    # TGDP
+    'TGDPMinting':            os.environ.get('ADDR_TGDP_MINTING', ''),
+    'TGDPToken':              os.environ.get('ADDR_TGDP_TOKEN', ''),
+    # FTR
+    'FTRToken':               os.environ.get('ADDR_FTR_TOKEN', ''),
+    'FTRRedemption':          os.environ.get('ADDR_FTR_REDEMPTION', ''),
+    'FTRRecall':              os.environ.get('ADDR_FTR_RECALL', ''),
+    'FTRClassRegistry':       os.environ.get('ADDR_FTR_CLASS_REGISTRY', ''),
+    'FTRMintingApproval':     os.environ.get('ADDR_FTR_MINTING_APPROVAL', ''),
+    'OmbudsmanRegistry':      os.environ.get('ADDR_OMBUDSMAN_REGISTRY', ''),
+    'EscrowVault':            os.environ.get('ADDR_ESCROW_VAULT', ''),
+    # Corpus
+    'SuperCorpusFund':        os.environ.get('ADDR_SUPER_CORPUS', ''),
+    'CorpusFundFactory':      os.environ.get('ADDR_CORPUS_FUND_FACTORY', ''),
+    'TrusteeBanker':          os.environ.get('ADDR_TRUSTEE_BANKER', ''),
+    'CFRiskMonitor':          os.environ.get('ADDR_CF_RISK_MONITOR', ''),
+    # Governance
+    'Governance':             os.environ.get('ADDR_GOVERNANCE', ''),
+    'GovernanceParameters':   os.environ.get('ADDR_GOVERNANCE_PARAMS', ''),
+    'IRGMultisig':            os.environ.get('ADDR_IRG_MULTISIG', ''),
+    'IRGTimelock':            os.environ.get('ADDR_IRG_TIMELOCK', ''),
+    # Enforcement / dispute
+    'DisputeRegistry':        os.environ.get('ADDR_DISPUTE_REGISTRY', ''),
+    'LawFirmRegistry':        os.environ.get('ADDR_LAW_FIRM_REGISTRY', ''),
+    'SpecialRecoveryCF':      os.environ.get('ADDR_SPECIAL_RECOVERY_CF', ''),
+    # Oracle
+    'LBMAOracle':             os.environ.get('ADDR_LBMA_ORACLE', ''),
+    'BenchmarkOracle':        os.environ.get('ADDR_BENCHMARK_ORACLE', ''),
+    'VRFCoordinator':         os.environ.get('ADDR_VRF_COORDINATOR', ''),
+    'OracleNodePool':         os.environ.get('ADDR_ORACLE_NODE_POOL', ''),
+    # Recall
+    'RecallRegistry':         os.environ.get('ADDR_RECALL_REGISTRY', ''),
+    # GIC
+    'GICLedger':              os.environ.get('ADDR_GIC_LEDGER', ''),
+    'GICRedemption':          os.environ.get('ADDR_GIC_REDEMPTION', ''),
+    'LicenseeRegistry':       os.environ.get('ADDR_LICENSEE_REGISTRY', ''),
+    # TDiR
+    'TDiRToken':              os.environ.get('ADDR_TDIR_TOKEN', ''),
+    'TDiRRedemption':         os.environ.get('ADDR_TDIR_REDEMPTION', ''),
+    # Node
+    'NodeAdmission':          os.environ.get('ADDR_NODE_ADMISSION', ''),
+    # Utility
+    'SystemPause':            os.environ.get('ADDR_SYSTEM_PAUSE', ''),
+    # Registries
+    'JewelerRegistry':        os.environ.get('ADDR_JEWELER_REGISTRY', ''),
+    'CertifierRegistry':      os.environ.get('ADDR_CERTIFIER_REGISTRY', ''),
+    # Legacy / placeholder keys kept for backward compat with old call sites
+    'P2PGuaranteedSettlement': os.environ.get('ADDR_P2P_SETTLEMENT', ''),
+    'JRRegistry':             os.environ.get('ADDR_JR_REGISTRY', ''),
+    'JDBRegistry':            os.environ.get('ADDR_JDB_REGISTRY', ''),
+    'DeviceP2PRegistry':      os.environ.get('ADDR_DEVICE_P2P', ''),
+}
+
+# Path to the irg_chain ABI directory (populated by node scripts/export-abis.js)
+# Example: IRG_CHAIN_ABI_DIR=/opt/irg_chain/abis
+# Leave blank to auto-discover a sibling irg_chain/abis directory.
+IRG_CHAIN_ABI_DIR = os.environ.get('IRG_CHAIN_ABI_DIR', '')
+>>>>>>> 6f5e39f (changhes05)

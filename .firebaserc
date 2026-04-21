@@ -1,6 +1,10 @@
 {
   "projects": {
+<<<<<<< HEAD
     "default": "irggdp",
+=======
+    "default": "irg-gdp-prod",
+>>>>>>> 6f5e39f (changhes05)
     "staging": "irg-gdp-staging"
   },
   "targets": {},

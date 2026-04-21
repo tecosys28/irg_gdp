@@ -45,8 +45,8 @@ h3 { font-size: 1.05em; margin: 12px 0 6px; }
 .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 .row { display: flex; gap: 16px; flex-wrap: wrap; }
 .col { flex: 1; min-width: 280px; }
-.kv { display: flex; justify-content: space-between; padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; }
+.kv { display: flex; justify-content: space-between; padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); }
 .kv:last-child { border-bottom: none; }
 .kv span:first-child { color: var(--text-muted); }
 .address { font-family: 'Courier New', monospace; word-break: break-all;
@@ -97,58 +97,14 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
                gap: 8px; margin-bottom: 6px; align-items: center; }
 .nominee-row input { margin: 0; }
 .text-muted { color: var(--text-muted); font-size: 0.88em; }
-
-/* Toast notification system — replaces alert() */
-#toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999;
-                   display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
-.toast { padding: 14px 18px; border-radius: 8px; font-size: 0.92em; font-weight: 500;
-         display: flex; align-items: flex-start; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-         animation: slide-in 0.25s ease; }
-.toast.success { background: rgba(76,175,122,0.95); color: white; }
-.toast.error   { background: rgba(192,88,88,0.95); color: white; }
-.toast.info    { background: rgba(74,138,176,0.95); color: white; }
-.toast .close  { margin-left: auto; cursor: pointer; opacity: 0.7; font-size: 1.1em; flex-shrink: 0; }
-@keyframes slide-in { from { transform: translateX(120%); opacity: 0; } to { transform: none; opacity: 1; } }
-
-/* QR code box */
-.qr-box { width: 180px; height: 180px; background: white; border-radius: 8px;
-          display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.qr-box canvas, .qr-box img { width: 100%; height: 100%; }
-
-/* Skeleton loader */
-.skeleton { background: linear-gradient(90deg, var(--surface-light) 25%, var(--surface) 50%, var(--surface-light) 75%);
-            background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px;
-            display: inline-block; height: 1em; }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-/* Inline error */
-.inline-error { background: rgba(192,88,88,0.12); border: 1px solid var(--danger);
-                color: #FFB8B8; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; }
-
-/* Loading spinner */
-.spinner { width: 24px; height: 24px; border: 3px solid rgba(228,180,74,0.3);
-           border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite;
-           display: inline-block; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Auth loading overlay */
-#auth-loading { position: fixed; inset: 0; background: var(--navy-blue); z-index: 9998;
-                display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
-#auth-loading p { color: var(--text-muted); }
+.qr-placeholder { width: 180px; height: 180px; background: white; color: var(--navy-dark);
+                  display: flex; align-items: center; justify-content: center;
+                  text-align: center; padding: 10px; border-radius: 8px;
+                  font-size: 0.8em; }
 </style>
 </head>
 <body>
-
-<!-- Auth loading overlay — hidden once auth state resolves -->
-<div id="auth-loading">
-  <div class="spinner" style="width:40px;height:40px;border-width:4px"></div>
-  <p>Verifying session…</p>
-</div>
-
-<!-- Toast container -->
-<div id="toast-container"></div>
-
-<div class="page" id="main-content" style="display:none">
+<div class="page">
   <div class="nav">
     <a href="index.html">← Dashboard</a>
     <a href="#" class="active">Wallet</a>
@@ -158,33 +114,28 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
   <h1>Your IRG Wallet</h1>
 
   <div id="banner-slot"></div>
-  <div id="wallet-load-error"></div>
 
   <!-- ─── WALLET INFO ─── -->
   <div class="card">
     <div class="row">
       <div class="col">
         <h2>Wallet Details</h2>
-        <div class="kv"><span>State</span><span id="wallet-state"><span class="skeleton" style="width:80px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+        <div class="kv"><span>State</span><span id="wallet-state" class="state-badge">—</span></div>
         <div class="kv"><span>Chain</span><span>IRG Chain 888101</span></div>
-        <div class="kv"><span>Holder</span><span id="wallet-holder"><span class="skeleton" style="width:100px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
-        <div class="kv"><span>Created</span><span id="wallet-created"><span class="skeleton" style="width:120px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+        <div class="kv"><span>Holder</span><span id="wallet-holder">—</span></div>
+        <div class="kv"><span>Created</span><span id="wallet-created">—</span></div>
         <div class="kv"><span>Activated</span><span id="wallet-activated">—</span></div>
         <div class="kv"><span>Last activity</span><span id="wallet-last-activity">—</span></div>
         <div class="kv"><span>Nominees</span><span id="wallet-nominees">—</span></div>
         <div class="kv"><span>Devices (active)</span><span id="wallet-devices-count">—</span></div>
         <h3>Address</h3>
-        <div class="address" id="wallet-address"><span class="skeleton" style="width:340px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
-        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-          <button class="btn btn-secondary" id="copy-addr-btn" onclick="copyAddress()" disabled>Copy address</button>
-          <span id="copy-feedback" style="color:var(--success);font-size:0.85em;display:none">✓ Copied!</span>
-        </div>
+        <div class="address" id="wallet-address">—</div>
+        <button class="btn btn-secondary" onclick="copyAddress()" style="margin-top:8px">Copy address</button>
       </div>
-      <div class="col" style="max-width: 220px; display:flex; flex-direction:column; align-items:center; gap:12px">
-        <div class="qr-box" id="qr-box">
-          <div class="spinner"></div>
+      <div class="col" style="max-width: 220px">
+        <div class="qr-placeholder">
+          QR code renders here<br><span class="text-muted">(wire in qrcode.js)</span>
         </div>
-        <p class="text-muted" style="font-size:0.75em;text-align:center">Your wallet address QR</p>
       </div>
     </div>
   </div>
@@ -204,7 +155,7 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
   <!-- ─── ACTIVATION TAB ─── -->
   <section id="tab-activation" class="card">
     <h2>Activate Your Wallet</h2>
-    <p class="text-muted">You cannot transact until your wallet is activated. Activation covers four things:</p>
+    <p class="text-muted">You cannot transact until your wallet is activated. Activation is a one-time process covering four things:</p>
     <ol style="margin: 12px 0 16px 20px; color: var(--text-muted)">
       <li>Write down your 15-word recovery phrase — the only way to recover your wallet if you lose your device.</li>
       <li>Set a wallet password (different from your login password).</li>
@@ -212,6 +163,7 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
       <li>Declare the personal law that governs succession of your assets.</li>
     </ol>
 
+    <!-- Step 1: seed -->
     <div id="act-step-1">
       <h3>Step 1: Your 15-word recovery phrase</h3>
       <div class="warning-box">
@@ -224,17 +176,19 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
       </div>
       <div class="seed-grid" id="seed-grid"></div>
       <label><input type="checkbox" id="seed-written-chk"> I have written down all 15 words in the correct order.</label>
-      <button class="btn" onclick="goToStep(2)" id="seed-next-btn" disabled style="margin-top:12px">Continue</button>
+      <button class="btn" onclick="goToStep(2)" id="seed-next-btn" disabled>Continue</button>
     </div>
 
+    <!-- Step 2: confirmation -->
     <div id="act-step-2" class="hidden">
       <h3>Step 2: Confirm your recovery phrase</h3>
       <p class="text-muted">To confirm you wrote it down, please enter words at these positions:</p>
       <div id="seed-confirm-inputs"></div>
       <button class="btn" onclick="goToStep(3)">Continue</button>
-      <button class="btn btn-secondary" onclick="goToStep(1)" style="margin-left:8px">← Back</button>
+      <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
     </div>
 
+    <!-- Step 3: wallet type, password, nominees -->
     <div id="act-step-3" class="hidden">
       <h3>Step 3: Wallet type</h3>
       <select id="holder-type" onchange="toggleLegalFields()">
@@ -272,7 +226,7 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
       <p class="text-muted" id="nominees-hint-individual">Required for individual wallets. Your nominees can help recover access if you lose your device and forget your password.</p>
       <p class="text-muted hidden" id="nominees-hint-legal">Optional for legal-person wallets. If provided, they serve as the humans who can initiate recovery on behalf of the entity.</p>
       <div id="nominee-list"></div>
-      <button class="btn btn-secondary" onclick="addNomineeRow()" style="margin-bottom:16px">+ Add nominee</button>
+      <button class="btn btn-secondary" onclick="addNomineeRow()">+ Add nominee</button>
 
       <h3>Step 6: Accept recovery terms</h3>
       <div class="warning-box">
@@ -280,17 +234,14 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
         <ul style="margin: 8px 0 0 20px">
           <li>IRG stores only a hash of your password and recovery phrase. We cannot reset them.</li>
           <li>If you lose access: self-recovery via seed phrase, or nominee-assisted recovery, or trustee-assisted recovery via the IRG Ombudsman.</li>
-          <li>For legal-person wallets, ownership transfer runs through a dedicated Ombudsman-reviewed process.</li>
+          <li>For legal-person wallets, ownership transfer (acquisition, partnership change, trustee succession) runs through a dedicated Ombudsman-reviewed process.</li>
           <li>In case of your death, your nominees and legal heirs can recover your assets through the documented process.</li>
         </ul>
       </div>
       <label><input type="checkbox" id="terms-chk"> I have read and accept the recovery terms.</label>
 
-      <div style="margin-top:16px;display:flex;gap:8px;align-items:center">
-        <button class="btn" onclick="submitActivation()" id="activate-btn">Activate Wallet</button>
-        <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
-        <span id="activate-spinner" class="hidden"><div class="spinner"></div></span>
-      </div>
+      <button class="btn" onclick="submitActivation()" id="activate-btn">Activate Wallet</button>
+      <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
     </div>
   </section>
 
@@ -298,12 +249,10 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
   <section id="tab-nominees" class="card hidden">
     <h2>Your Nominees</h2>
     <p class="text-muted">In case of emergency, these nominees can initiate wallet recovery. Shares must total 100%.</p>
-    <div id="nominees-loading" style="padding:20px 0;text-align:center"><div class="spinner"></div></div>
-    <table id="nominees-table" class="hidden">
+    <table id="nominees-table">
       <thead><tr><th>Name</th><th>Relationship</th><th>Contact</th><th>Share</th><th>Status</th></tr></thead>
       <tbody></tbody>
     </table>
-    <div id="nominees-empty" class="hidden" style="color:var(--text-muted);padding:12px 0">No nominees registered yet.</div>
     <button class="btn btn-secondary" onclick="editNominees()" style="margin-top: 16px">Update nominees</button>
     <div id="edit-nominees-panel" class="hidden" style="margin-top: 20px">
       <h3>Edit nominees</h3>
@@ -319,12 +268,10 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
   <section id="tab-devices" class="card hidden">
     <h2>Authorised Devices</h2>
     <p class="text-muted">Only devices listed here can sign transactions from your wallet. New devices enter a 48-hour cooling-off period.</p>
-    <div id="devices-loading" style="padding:20px 0;text-align:center"><div class="spinner"></div></div>
-    <table id="devices-table" class="hidden">
+    <table id="devices-table">
       <thead><tr><th>Label</th><th>Platform</th><th>State</th><th>Bound</th><th>Cooling off until</th><th></th></tr></thead>
       <tbody></tbody>
     </table>
-    <div id="devices-empty" class="hidden" style="color:var(--text-muted);padding:12px 0">No devices registered.</div>
   </section>
 
   <!-- ─── TRANSACTION HISTORY ─── -->
@@ -351,21 +298,17 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
       </select>
       <button class="btn btn-secondary" onclick="downloadCsv()">⬇ Download CSV</button>
     </div>
-    <div id="history-loading" style="padding:20px 0;text-align:center"><div class="spinner"></div></div>
-    <table id="history-table" class="hidden">
+    <table id="history-table">
       <thead><tr><th>When</th><th>Module</th><th>Action</th><th>Tx hash</th><th>Status</th></tr></thead>
       <tbody></tbody>
     </table>
-    <div id="history-empty" class="hidden" style="color:var(--text-muted);padding:12px 0">No transactions yet.</div>
   </section>
 
-  <!-- ─── ACTIVITY TAB ─── -->
+  <!-- ─── ACTIVITY TAB (inactivity watchdog) ─── -->
   <section id="tab-liveness" class="card hidden">
     <h2>Activity</h2>
     <p class="text-muted">IRG tracks your activity so we never bother you unnecessarily. If your wallet sees no login, transaction, or confirmation for a full year, we send you a prompt; 2 days later a reminder; 2 days after that, your nominees are informed.</p>
-    <div id="liveness-status" style="margin: 16px 0; padding: 14px; background: var(--surface-light); border-radius: 6px">
-      <div class="spinner"></div>
-    </div>
+    <div id="liveness-status" style="margin: 16px 0; padding: 14px; background: var(--surface-light); border-radius: 6px"></div>
     <button class="btn" onclick="confirmLiveness()">Confirm I am still active</button>
     <h3 style="margin-top: 24px">Inactivity audit trail</h3>
     <table id="liveness-table">
@@ -404,14 +347,15 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
     </table>
   </section>
 
-  <!-- ─── OWNERSHIP TRANSFER TAB ─── -->
+  <!-- ─── OWNERSHIP TRANSFER TAB (legal-person wallets only) ─── -->
   <section id="tab-ownership" class="card hidden">
     <h2>Ownership Transfer</h2>
     <p class="text-muted">
       For legal-person wallets only. Use this when the ownership of the entity that holds
       the wallet has changed — company acquisition, new partnership deed, trustee succession,
       or the proprietorship has been sold as a going concern. The wallet address does not
-      change, but a new authorised operator takes over after Ombudsman review.
+      change, but a new authorised operator takes over after Ombudsman review. Transactions
+      are paused during the process.
     </p>
 
     <h3>File a new ownership transfer</h3>
@@ -428,7 +372,7 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
     <textarea id="ot-grounds" rows="3" placeholder="Brief description of what changed"></textarea>
     <label>Evidence bundle hash (IPFS CID)</label>
     <input type="text" id="ot-evidence" placeholder="0x...">
-    <label>Incoming operator user ID (optional)</label>
+    <label>Incoming operator user ID (optional — can be filled after Ombudsman review)</label>
     <input type="number" id="ot-incoming" placeholder="e.g. 42">
     <button class="btn" onclick="fileOwnershipTransfer()">File transfer case</button>
 
@@ -460,29 +404,18 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
     <input type="text" id="freeze-reason" placeholder="E.g. phone stolen">
     <button class="btn btn-danger" onclick="emergencyFreeze()">Freeze wallet</button>
   </section>
-</div><!-- end .page -->
+</div>
 
-<!-- QR code library (lightweight, no deps) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+<<<<<<< HEAD
 <script type="module">
+// ─────────────────────────────────────────────────────────────────────────────
+// API base + auth — uses Firebase ID token stored by index.html on sign-in.
+// ─────────────────────────────────────────────────────────────────────────────
+const API = '/api/v1';
+
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
-const API = '/api/v1';
-
-// ── Toast notification system (replaces alert()) ──────────────────────────────
-function toast(text, level = 'info', duration = 4000) {
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-  const el = document.createElement('div');
-  el.className = `toast ${level}`;
-  el.innerHTML = `<span>${icons[level] || ''} ${text}</span><span class="close" onclick="this.parentElement.remove()">✕</span>`;
-  document.getElementById('toast-container').appendChild(el);
-  if (duration > 0) setTimeout(() => el.remove(), duration);
-}
-window._walletToast = toast; // expose for onclick handlers
-
-// ── Auth & token ──────────────────────────────────────────────────────────────
 async function getFreshToken() {
   const user = auth.currentUser;
   if (!user) return localStorage.getItem('authToken') || '';
@@ -491,161 +424,65 @@ async function getFreshToken() {
   return token;
 }
 
-// Wait for auth state before showing page — avoids false redirect on cold load
-onAuthStateChanged(auth, async user => {
-  document.getElementById('auth-loading').style.display = 'none';
-  if (!user && !localStorage.getItem('authToken')) {
-    window.location.href = 'index.html';
-    return;
-  }
-  document.getElementById('main-content').style.display = '';
-  // Refresh token if user object is present
-  if (user) {
-    const t = await user.getIdToken();
-    localStorage.setItem('authToken', t);
-  }
-  await Promise.all([loadWalletInfo(), loadBanner()]);
-});
+function authHeaders() {
+  const t = localStorage.getItem('authToken') || '';
+  return t ? { 'Authorization': 'Bearer ' + t } : {};
+}
 
-// ── API helpers ───────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    // Redirect to login if not authenticated
+    window.location.href = 'index.html';
+  }
+});
 async function apiGet(path) {
   const t = await getFreshToken();
   const r = await fetch(API + path, { headers: t ? { 'Authorization': 'Bearer ' + t } : {} });
+=======
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// API base + auth. In production this is the same host; token is whatever
+// the existing dashboard uses (localStorage.authToken for this starter code).
+// ─────────────────────────────────────────────────────────────────────────────
+const API = '/api/v1';
+function authHeaders() {
+  const t = localStorage.getItem('authToken') || '';
+  return t ? { 'Authorization': 'Token ' + t } : {};
+}
+async function apiGet(path) {
+  const r = await fetch(API + path, { headers: authHeaders() });
+>>>>>>> 6f5e39f (changhes05)
   if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
   return r.json();
 }
 async function apiPost(path, body, method = 'POST') {
+<<<<<<< HEAD
   const t = await getFreshToken();
   const r = await fetch(API + path, {
     method,
     headers: { 'Content-Type': 'application/json', ...(t ? { 'Authorization': 'Bearer ' + t } : {}) },
+=======
+  const r = await fetch(API + path, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+>>>>>>> 6f5e39f (changhes05)
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!r.ok) throw await r.json().catch(() => ({ error: 'request_failed' }));
   return r.json();
 }
-
-// ── QR code rendering ─────────────────────────────────────────────────────────
-function renderQR(address) {
-  const box = document.getElementById('qr-box');
-  box.innerHTML = '';
-  if (!address || address === '—') {
-    box.innerHTML = '<span style="color:#999;font-size:0.75em;text-align:center;padding:8px">No address yet</span>';
-    return;
-  }
-  try {
-    new QRCode(box, {
-      text: address,
-      width: 180,
-      height: 180,
-      colorDark: '#000000',
-      colorLight: '#FFFFFF',
-      correctLevel: QRCode.CorrectLevel.M,
-    });
-  } catch(e) {
-    box.innerHTML = '<span style="color:#999;font-size:0.75em;text-align:center;padding:8px">QR unavailable</span>';
-  }
+function msg(text, level = 'info') {
+  alert((level === 'error' ? '❌ ' : level === 'success' ? '✅ ' : '') + text);
 }
 
-// ── Wallet info + banner ──────────────────────────────────────────────────────
-async function loadWalletInfo() {
-  try {
-    const info = await apiGet('/wallet/info/');
-    const stateEl = document.getElementById('wallet-state');
-    stateEl.innerHTML = `<span class="state-badge state-${info.state || 'CREATED'}">${info.state_label || info.state || 'Created'}</span>`;
-
-    const addr = info.address || '—';
-    document.getElementById('wallet-address').textContent = addr;
-    document.getElementById('wallet-created').textContent = (info.created_at || '').slice(0, 16).replace('T', ' ') || '—';
-    document.getElementById('wallet-activated').textContent =
-      info.activated_at ? info.activated_at.slice(0, 16).replace('T', ' ') : '—';
-    document.getElementById('wallet-last-activity').textContent =
-      info.last_activity_at ? info.last_activity_at.slice(0, 16).replace('T', ' ') : '—';
-    document.getElementById('wallet-nominees').textContent =
-      `${info.nominee_count || 0}${info.nominee_shares_total && info.nominee_shares_total !== '0' ? ' (shares: ' + info.nominee_shares_total + '%)' : ''}`;
-    document.getElementById('wallet-devices-count').textContent = info.active_device_count ?? '—';
-
-    const holderLabel = info.holder_type === 'LEGAL_PERSON'
-      ? (info.legal_entity_name || 'Legal entity') + (info.entity_type ? ' (' + info.entity_type + ')' : '')
-      : 'Individual';
-    document.getElementById('wallet-holder').textContent = holderLabel;
-
-    // Enable copy button only when real address is available
-    if (addr && addr !== '—') {
-      document.getElementById('copy-addr-btn').disabled = false;
-    }
-
-    // Render QR
-    renderQR(addr);
-
-    // Show/hide ownership-transfer tab
-    const ownershipTab = document.getElementById('tab-ownership-link');
-    if (ownershipTab) ownershipTab.style.display = info.holder_type === 'LEGAL_PERSON' ? '' : 'none';
-
-    // If wallet is already activated, replace activation steps with a note
-    if (info.state === 'ACTIVATED') {
-      document.getElementById('act-step-1').classList.add('hidden');
-      document.getElementById('act-step-2').classList.add('hidden');
-      document.getElementById('act-step-3').classList.add('hidden');
-      const tabAct = document.querySelector('#tab-activation');
-      if (!tabAct.dataset.notified) {
-        tabAct.insertAdjacentHTML('beforeend',
-          '<div class="banner info" style="margin-top:12px">✓ Your wallet is activated. Update nominees or change your password using the tabs above.</div>');
-        tabAct.dataset.notified = '1';
-      }
-    }
-  } catch (e) {
-    // Show inline error — no alert popup
-    const code = e.error || e.detail || 'unknown';
-    document.getElementById('wallet-load-error').innerHTML =
-      `<div class="inline-error">⚠️ Could not load wallet info (${code}). ${code === 'request_failed' ? 'The backend may be starting up — <a href="#" onclick="location.reload()" style="color:var(--gold)">try again</a>.' : 'Please refresh the page.'}</div>`;
-    // Set address fields to dashes gracefully
-    document.getElementById('wallet-state').textContent = '—';
-    document.getElementById('wallet-holder').textContent = '—';
-    document.getElementById('wallet-created').textContent = '—';
-    document.getElementById('qr-box').innerHTML = '<span style="color:#999;font-size:0.75em;text-align:center;padding:8px">Unavailable</span>';
-  }
-}
-
-async function loadBanner() {
-  try {
-    const r = await apiGet('/wallet/status-banner/');
-    const slot = document.getElementById('banner-slot');
-    if (!r.banner) { slot.innerHTML = ''; return; }
-    const { level, message, cta_label, cta_route } = r.banner;
-    slot.innerHTML = `<div class="banner ${level}">
-      <div>${message}</div>
-      ${cta_label ? `<button onclick="window.location='${cta_route}'">${cta_label}</button>` : ''}
-    </div>`;
-  } catch (e) { /* banner is best-effort, fail silently */ }
-}
-
-// ── Copy address ──────────────────────────────────────────────────────────────
-window.copyAddress = function() {
-  const addr = document.getElementById('wallet-address').textContent;
-  if (!addr || addr === '—') return;
-  navigator.clipboard.writeText(addr).then(() => {
-    const fb = document.getElementById('copy-feedback');
-    fb.style.display = 'inline';
-    setTimeout(() => { fb.style.display = 'none'; }, 2000);
-  });
-};
-
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-window.showTab = function(id, ev) {
-  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(id).classList.remove('hidden');
-  if (ev && ev.target) ev.target.classList.add('active');
-  if (id === 'tab-nominees') loadNominees();
-  if (id === 'tab-devices') loadDevices();
-  if (id === 'tab-history') loadHistory();
-  if (id === 'tab-liveness') loadLiveness();
-  if (id === 'tab-recovery') loadRecoveryCases();
-  if (id === 'tab-ownership') loadOwnershipCases();
-};
-
-// ── Seed phrase ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Seed phrase generation — happens ENTIRELY CLIENT-SIDE. The server never sees
+// the plaintext words; it only receives a SHA-256 hash of them when the user
+// completes activation.
+//
+// For production, replace this with a real BIP-39 wordlist + CSPRNG entropy.
+// Here we use a 300-word starter list to keep the starter frontend standalone.
+// ─────────────────────────────────────────────────────────────────────────────
 const WORDLIST = [
  'abandon','ability','able','about','above','absent','absorb','abstract','absurd',
  'abuse','access','accident','account','accuse','achieve','acid','acoustic','acquire',
@@ -681,18 +518,102 @@ const WORDLIST = [
  'charge','chase','chat','cheap','check','cheese','chef','cherry','chest','chicken','chief',
  'child','chimney','choice'
 ];
-let activationWords = [];
+let activationWords = [];  // generated on open, kept in memory only
 
 function generateSeed() {
   const buf = new Uint32Array(15);
   crypto.getRandomValues(buf);
   return Array.from(buf).map(n => WORDLIST[n % WORDLIST.length]);
 }
+
 async function sha256Hex(s) {
   const buf = new TextEncoder().encode(s);
   const hash = await crypto.subtle.digest('SHA-256', buf);
   return '0x' + Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wallet info + banner
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadWalletInfo() {
+  try {
+    const info = await apiGet('/wallet/info/');
+    document.getElementById('wallet-state').textContent = info.state_label;
+    document.getElementById('wallet-state').className = 'state-badge state-' + info.state;
+    document.getElementById('wallet-address').textContent = info.address;
+    document.getElementById('wallet-created').textContent = (info.created_at || '').slice(0, 16).replace('T', ' ');
+    document.getElementById('wallet-activated').textContent =
+      info.activated_at ? info.activated_at.slice(0, 16).replace('T', ' ') : '—';
+    document.getElementById('wallet-last-activity').textContent =
+      info.last_activity_at ? info.last_activity_at.slice(0, 16).replace('T', ' ') : '—';
+    document.getElementById('wallet-nominees').textContent =
+      `${info.nominee_count}${info.nominee_shares_total !== '0' ? ' (shares: ' + info.nominee_shares_total + '%)' : ''}`;
+    document.getElementById('wallet-devices-count').textContent = info.active_device_count;
+
+    const holderLabel = info.holder_type === 'LEGAL_PERSON'
+      ? (info.legal_entity_name || 'Legal entity') + (info.entity_type ? ' (' + info.entity_type + ')' : '')
+      : 'Individual';
+    document.getElementById('wallet-holder').textContent = holderLabel;
+
+    // Show/hide ownership-transfer tab for legal persons only
+    const ownershipTab = document.getElementById('tab-ownership-link');
+    if (ownershipTab) {
+      ownershipTab.style.display = info.holder_type === 'LEGAL_PERSON' ? '' : 'none';
+    }
+
+    if (info.state === 'ACTIVATED') {
+      document.getElementById('act-step-1').classList.add('hidden');
+      document.getElementById('act-step-2').classList.add('hidden');
+      document.getElementById('act-step-3').classList.add('hidden');
+      const tabAct = document.querySelector('#tab-activation');
+      if (!tabAct.dataset.notified) {
+        tabAct.insertAdjacentHTML('beforeend',
+          '<p class="text-muted">✓ Your wallet is activated. You can update nominees or change your password from the tabs above.</p>');
+        tabAct.dataset.notified = '1';
+      }
+    }
+  } catch (e) {
+    msg('Could not load wallet info: ' + (e.error || 'unknown'), 'error');
+  }
+}
+
+async function loadBanner() {
+  try {
+    const r = await apiGet('/wallet/status-banner/');
+    const slot = document.getElementById('banner-slot');
+    if (!r.banner) { slot.innerHTML = ''; return; }
+    const { level, message, cta_label, cta_route } = r.banner;
+    slot.innerHTML = `<div class="banner ${level}">
+      <div>${message}</div>
+      ${cta_label ? `<button onclick="window.location='${cta_route}'">${cta_label}</button>` : ''}
+    </div>`;
+  } catch (e) { /* banner is best-effort */ }
+}
+
+function copyAddress() {
+  navigator.clipboard.writeText(document.getElementById('wallet-address').textContent);
+  msg('Address copied', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tabs
+// ─────────────────────────────────────────────────────────────────────────────
+function showTab(id, ev) {
+  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.remove('hidden');
+  if (ev && ev.target) ev.target.classList.add('active');
+  if (id === 'tab-nominees') loadNominees();
+  if (id === 'tab-devices') loadDevices();
+  if (id === 'tab-history') loadHistory();
+  if (id === 'tab-liveness') loadLiveness();
+  if (id === 'tab-recovery') loadRecoveryCases();
+  if (id === 'tab-ownership') loadOwnershipCases();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Activation flow
+// ─────────────────────────────────────────────────────────────────────────────
 function renderSeed() {
   activationWords = generateSeed();
   const grid = document.getElementById('seed-grid');
@@ -704,7 +625,7 @@ document.getElementById('seed-written-chk').addEventListener('change', e => {
   document.getElementById('seed-next-btn').disabled = !e.target.checked;
 });
 
-window.goToStep = function(n) {
+function goToStep(n) {
   [1,2,3].forEach(i => document.getElementById(`act-step-${i}`).classList.add('hidden'));
   document.getElementById(`act-step-${n}`).classList.remove('hidden');
   if (n === 2) {
@@ -718,8 +639,10 @@ window.goToStep = function(n) {
       `<label>Word #${p+1}</label><input type="text" data-idx="${p}" class="seed-confirm-input">`
     ).join('');
   }
-  if (n === 3) renderInitialNominees();
-};
+  if (n === 3) {
+    renderInitialNominees();
+  }
+}
 
 function renderInitialNominees() {
   const list = document.getElementById('nominee-list');
@@ -727,7 +650,7 @@ function renderInitialNominees() {
   addNomineeRow();
   addNomineeRow();
 }
-window.addNomineeRow = function(parent = 'nominee-list') {
+function addNomineeRow(parent = 'nominee-list') {
   const el = document.createElement('div');
   el.className = 'nominee-row';
   el.innerHTML = `
@@ -738,66 +661,79 @@ window.addNomineeRow = function(parent = 'nominee-list') {
     <input type="number" placeholder="Share %" data-k="share_percent" min="0" max="100" step="0.001">
     <button class="btn btn-secondary" onclick="this.parentElement.remove()">×</button>`;
   document.getElementById(parent).appendChild(el);
-};
+}
 
 function collectNominees(parent) {
-  return Array.from(document.querySelectorAll(`#${parent} .nominee-row`)).map(r => {
+  const rows = document.querySelectorAll(`#${parent} .nominee-row`);
+  return Array.from(rows).map(r => {
     const obj = {};
-    r.querySelectorAll('input').forEach(inp => { if (inp.dataset.k) obj[inp.dataset.k] = inp.value.trim(); });
+    r.querySelectorAll('input').forEach(inp => {
+      if (inp.dataset.k) obj[inp.dataset.k] = inp.value.trim();
+    });
     obj.share_percent = parseFloat(obj.share_percent || '0');
     return obj;
   }).filter(n => n.name);
 }
 
-window.toggleLegalFields = function() {
+function toggleLegalFields() {
   const t = document.getElementById('holder-type').value;
   const legal = document.getElementById('legal-fields');
   const indHint = document.getElementById('nominees-hint-individual');
   const legalHint = document.getElementById('nominees-hint-legal');
   if (t === 'LEGAL_PERSON') {
-    legal.classList.remove('hidden'); indHint.classList.add('hidden'); legalHint.classList.remove('hidden');
+    legal.classList.remove('hidden');
+    indHint.classList.add('hidden');
+    legalHint.classList.remove('hidden');
     document.getElementById('nominees-heading').textContent = 'Step 5: Register nominees (optional for legal-person wallets)';
   } else {
-    legal.classList.add('hidden'); indHint.classList.remove('hidden'); legalHint.classList.add('hidden');
+    legal.classList.add('hidden');
+    indHint.classList.remove('hidden');
+    legalHint.classList.add('hidden');
     document.getElementById('nominees-heading').textContent = 'Step 5: Register nominees (minimum 2, shares must total 100%)';
   }
-};
+}
 
-window.submitActivation = async function() {
+async function submitActivation() {
+  // Validate step 2 confirmation
   const inputs = document.querySelectorAll('.seed-confirm-input');
   for (const inp of inputs) {
     const idx = parseInt(inp.dataset.idx, 10);
     if (inp.value.trim().toLowerCase() !== activationWords[idx]) {
-      return toast('Recovery phrase confirmation failed at word #' + (idx+1), 'error');
+      return msg('Recovery phrase confirmation failed at word #' + (idx+1), 'error');
     }
   }
   const pw = document.getElementById('wallet-password').value;
   const pw2 = document.getElementById('wallet-password-confirm').value;
-  if (pw !== pw2) return toast('Passwords do not match', 'error');
-  if (!document.getElementById('terms-chk').checked) return toast('You must accept the recovery terms', 'error');
+  if (pw !== pw2) return msg('Passwords do not match', 'error');
+  if (!document.getElementById('terms-chk').checked) return msg('You must accept the recovery terms', 'error');
 
   const holderType = document.getElementById('holder-type').value;
   const legalEntityName = document.getElementById('legal-entity-name').value.trim();
-  if (holderType === 'LEGAL_PERSON' && !legalEntityName) return toast('Legal entity name is required', 'error');
+  const entityType = document.getElementById('entity-type').value;
+  if (holderType === 'LEGAL_PERSON' && !legalEntityName) {
+    return msg('Legal entity name is required', 'error');
+  }
 
   const nominees = collectNominees('nominee-list');
   if (holderType === 'INDIVIDUAL') {
-    if (nominees.length < 2) return toast('At least two nominees required', 'error');
+    if (nominees.length < 2) return msg('At least two nominees required', 'error');
     const total = nominees.reduce((s, n) => s + n.share_percent, 0);
-    if (Math.abs(total - 100) > 0.001) return toast('Shares must total 100 (got ' + total.toFixed(2) + ')', 'error');
+    if (Math.abs(total - 100) > 0.001) return msg('Shares must total 100 (got ' + total + ')', 'error');
+  } else if (nominees.length > 0) {
+    const total = nominees.reduce((s, n) => s + n.share_percent, 0);
+    if (Math.abs(total - 100) > 0.001) return msg('If you provide nominees, shares must total 100 (got ' + total + ')', 'error');
   }
 
+  // Device identification (starter: random + stored)
   let devId = localStorage.getItem('irgDeviceId');
   if (!devId) {
-    const arr = new Uint8Array(32); crypto.getRandomValues(arr);
+    const arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
     devId = '0x' + Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
     localStorage.setItem('irgDeviceId', devId);
   }
-
-  const label = window.prompt('Give this device a name (e.g. "iPhone 14")') || 'My device';
-  const btn = document.getElementById('activate-btn');
-  btn.disabled = true;
-  document.getElementById('activate-spinner').classList.remove('hidden');
+  const platform = navigator.platform || 'web';
+  const label = prompt('Give this device a name (e.g. "iPhone 14")') || 'This device';
 
   try {
     await apiPost('/wallet/activate/', {
@@ -805,84 +741,63 @@ window.submitActivation = async function() {
       seed_phrase_words: activationWords,
       holder_type: holderType,
       legal_entity_name: holderType === 'LEGAL_PERSON' ? legalEntityName : '',
-      entity_type: holderType === 'LEGAL_PERSON' ? document.getElementById('entity-type').value : '',
-      nominees,
+      entity_type: holderType === 'LEGAL_PERSON' ? entityType : '',
+      nominees: nominees,
       device_id_hash: devId,
       device_label: label,
-      platform: navigator.platform || 'web',
+      platform: platform,
       terms_accepted: true,
     });
-    toast('Wallet activated successfully!', 'success');
-    activationWords = [];
+    msg('Wallet activated!', 'success');
+    activationWords = [];                                    // clear from memory
     document.getElementById('wallet-password').value = '';
     document.getElementById('wallet-password-confirm').value = '';
     await loadWalletInfo();
     await loadBanner();
   } catch (e) {
-    toast('Activation failed: ' + (e.error || e.detail || 'unknown'), 'error');
-  } finally {
-    btn.disabled = false;
-    document.getElementById('activate-spinner').classList.add('hidden');
+    msg('Activation failed: ' + (e.error || 'unknown'), 'error');
   }
-};
+}
 
-// ── Nominees tab ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Nominees tab
+// ─────────────────────────────────────────────────────────────────────────────
 async function loadNominees() {
-  document.getElementById('nominees-loading').style.display = '';
-  document.getElementById('nominees-table').classList.add('hidden');
-  document.getElementById('nominees-empty').classList.add('hidden');
   try {
     const rows = await apiGet('/wallet/nominees/');
-    document.getElementById('nominees-loading').style.display = 'none';
-    if (!rows || rows.length === 0) {
-      document.getElementById('nominees-empty').classList.remove('hidden');
-      return;
-    }
-    document.getElementById('nominees-table').classList.remove('hidden');
     document.querySelector('#nominees-table tbody').innerHTML = rows.map(n => `
       <tr>
         <td>${n.name}</td><td>${n.relationship}</td>
         <td>${n.email || n.mobile || '—'}</td>
         <td>${n.share_percent}%</td>
-        <td>${n.active ? '<span style="color:var(--success)">✓ Active</span>' : 'Inactive'}</td>
-      </tr>`).join('');
-  } catch (e) {
-    document.getElementById('nominees-loading').style.display = 'none';
-    document.getElementById('nominees-empty').classList.remove('hidden');
-    document.getElementById('nominees-empty').innerHTML = '<span style="color:var(--text-muted)">Could not load nominees. Please activate your wallet first.</span>';
-  }
+        <td>${n.active ? '✓ Active' : 'Inactive'}</td>
+      </tr>`).join('') || '<tr><td colspan="5">No nominees yet</td></tr>';
+  } catch (e) { /* unauth or no wallet */ }
 }
-window.editNominees = function() {
+function editNominees() {
   document.getElementById('edit-nominees-panel').classList.remove('hidden');
   const list = document.getElementById('edit-nominee-list');
   list.innerHTML = '';
-  addNomineeRow('edit-nominee-list'); addNomineeRow('edit-nominee-list');
-};
-window.addEditNomineeRow = function() { window.addNomineeRow('edit-nominee-list'); };
-window.submitNominees = async function() {
+  addEditNomineeRow(); addEditNomineeRow();
+}
+function addEditNomineeRow() { addNomineeRow('edit-nominee-list'); }
+async function submitNominees() {
   const nominees = collectNominees('edit-nominee-list');
   const pw = document.getElementById('edit-nominees-pw').value;
   try {
     await apiPost('/wallet/nominees/update/', { nominees, wallet_password: pw }, 'PUT');
-    toast('Nominees updated', 'success');
+    msg('Nominees updated', 'success');
     document.getElementById('edit-nominees-pw').value = '';
     loadNominees();
-  } catch (e) { toast('Update failed: ' + (e.error || 'unknown'), 'error'); }
-};
+  } catch (e) { msg('Update failed: ' + (e.error || 'unknown'), 'error'); }
+}
 
-// ── Devices tab ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Devices tab
+// ─────────────────────────────────────────────────────────────────────────────
 async function loadDevices() {
-  document.getElementById('devices-loading').style.display = '';
-  document.getElementById('devices-table').classList.add('hidden');
-  document.getElementById('devices-empty').classList.add('hidden');
   try {
     const rows = await apiGet('/wallet/devices/');
-    document.getElementById('devices-loading').style.display = 'none';
-    if (!rows || rows.length === 0) {
-      document.getElementById('devices-empty').classList.remove('hidden');
-      return;
-    }
-    document.getElementById('devices-table').classList.remove('hidden');
     document.querySelector('#devices-table tbody').innerHTML = rows.map(d => `
       <tr>
         <td>${d.device_label || '—'}</td>
@@ -891,138 +806,132 @@ async function loadDevices() {
         <td>${(d.bound_at || '').slice(0, 16).replace('T', ' ')}</td>
         <td>${d.cooling_off_until ? d.cooling_off_until.slice(0, 16).replace('T', ' ') : '—'}</td>
         <td>${d.state === 'ACTIVE' ? `<button class="btn btn-secondary" onclick="revokeDevice(${d.id})">Revoke</button>` : ''}</td>
-      </tr>`).join('');
-  } catch (e) {
-    document.getElementById('devices-loading').style.display = 'none';
-    document.getElementById('devices-empty').classList.remove('hidden');
-    document.getElementById('devices-empty').innerHTML = '<span style="color:var(--text-muted)">Could not load devices.</span>';
-  }
+      </tr>`).join('') || '<tr><td colspan="6">No devices</td></tr>';
+  } catch (e) { /* silent */ }
 }
-window.revokeDevice = async function(id) {
-  const pw = window.prompt('Enter wallet password to revoke device:');
+async function revokeDevice(id) {
+  const pw = prompt('Enter wallet password to revoke device:');
   if (!pw) return;
   try {
     await apiPost('/wallet/devices/revoke/', { device_id: id, wallet_password: pw });
-    toast('Device revoked', 'success');
+    msg('Device revoked', 'success');
     loadDevices();
-  } catch (e) { toast('Revoke failed: ' + (e.error || ''), 'error'); }
-};
+  } catch (e) { msg('Revoke failed: ' + (e.error || ''), 'error'); }
+}
 
-// ── Transaction history ───────────────────────────────────────────────────────
-window.loadHistory = async function() {
+// ─────────────────────────────────────────────────────────────────────────────
+// Transaction history tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadHistory() {
   const mod = document.getElementById('history-module').value;
   const stat = document.getElementById('history-status').value;
   const params = new URLSearchParams();
   if (mod) params.set('module', mod);
   if (stat) params.set('status', stat);
-  document.getElementById('history-loading').style.display = '';
-  document.getElementById('history-table').classList.add('hidden');
-  document.getElementById('history-empty').classList.add('hidden');
   try {
     const rows = await apiGet('/wallet/transactions/?' + params.toString());
-    document.getElementById('history-loading').style.display = 'none';
-    if (!rows || rows.length === 0) {
-      document.getElementById('history-empty').classList.remove('hidden');
-      return;
-    }
-    document.getElementById('history-table').classList.remove('hidden');
     document.querySelector('#history-table tbody').innerHTML = rows.map(r => `
       <tr>
         <td>${(r.created_at || '').slice(0, 16).replace('T', ' ')}</td>
         <td>${r.module}</td>
         <td>${r.action}</td>
-        <td class="tx-hash">${r.tx_hash ? (r.tx_hash.slice(0, 14) + '…') : '—'}</td>
+        <td class="tx-hash">${(r.tx_hash || '').slice(0, 14)}…</td>
         <td class="tx-status-${r.status}">${r.status}</td>
-      </tr>`).join('');
-  } catch (e) {
-    document.getElementById('history-loading').style.display = 'none';
-    document.getElementById('history-empty').classList.remove('hidden');
-    document.getElementById('history-empty').textContent = 'No transaction history available.';
-  }
-};
+      </tr>`).join('') || '<tr><td colspan="5">No transactions yet</td></tr>';
+  } catch (e) { /* silent */ }
+}
 
-// ── Activity tab ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Liveness tab
+// ─────────────────────────────────────────────────────────────────────────────
 async function loadLiveness() {
-  const slot = document.getElementById('liveness-status');
-  slot.innerHTML = '<div class="spinner"></div>';
   try {
     const rows = await apiGet('/wallet/liveness/history/');
-    const latest = rows && rows[0];
+    const slot = document.getElementById('liveness-status');
+    const latest = rows[0];
     if (!latest) {
       slot.innerHTML = 'No inactivity events yet — you will only hear from us if your wallet is silent for a full year.';
     } else if (latest.kind === 'CONFIRMED') {
-      slot.innerHTML = `<span style="color:var(--success)">✓ Last confirmed ${(latest.occurred_at || '').slice(0, 10)}.</span>`;
+      slot.innerHTML = `✓ Last confirmed ${(latest.occurred_at || '').slice(0, 10)}.`;
     } else if (latest.kind === 'PROMPT_SENT') {
-      slot.innerHTML = `<strong style="color:var(--warning)">We noticed you have been quiet.</strong> Please tap "Confirm I am still active" to stop further reminders.`;
+      slot.innerHTML = `<strong>We noticed you have been quiet.</strong> Please tap "Confirm I am still active" to stop further reminders.`;
     } else if (latest.kind === 'REMINDER_SENT') {
-      slot.innerHTML = `<strong style="color:var(--danger)">Second reminder.</strong> Your nominees will be informed shortly if we hear nothing.`;
+      slot.innerHTML = `<strong>Second reminder.</strong> Your nominees will be informed shortly if we hear nothing.`;
     } else if (latest.kind === 'NOMINEES_ALERTED') {
-      slot.innerHTML = `<strong style="color:var(--danger)">Your nominees have been informed.</strong> Please confirm activity to reset this.`;
+      slot.innerHTML = `<strong>Your nominees have been informed.</strong> Please confirm activity to reset this.`;
     }
-    document.querySelector('#liveness-table tbody').innerHTML = (rows || []).map(e => `
+    document.querySelector('#liveness-table tbody').innerHTML = rows.map(e => `
       <tr>
         <td>${(e.occurred_at || '').slice(0, 16).replace('T', ' ')}</td>
         <td>${e.kind}</td>
         <td>${e.detail || ''}</td>
       </tr>`).join('') || '<tr><td colspan="3">No events</td></tr>';
-  } catch (e) {
-    slot.innerHTML = 'Activity data unavailable.';
-  }
+  } catch (e) { /* silent */ }
 }
-window.confirmLiveness = async function() {
+async function confirmLiveness() {
   try {
     await apiPost('/wallet/liveness/confirm/');
-    toast('Activity confirmed. Thank you.', 'success');
+    msg('Activity confirmed. Thank you.', 'success');
     loadLiveness();
     loadWalletInfo();
-  } catch (e) { toast('Failed: ' + (e.error || ''), 'error'); }
-};
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
 
-// ── Recovery tab ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Recovery tab
+// ─────────────────────────────────────────────────────────────────────────────
 async function loadRecoveryCases() {
   try {
     const rows = await apiGet('/wallet/recovery/cases/');
-    document.querySelector('#recovery-cases-table tbody').innerHTML = (rows || []).map(c => `
+    document.querySelector('#recovery-cases-table tbody').innerHTML = rows.map(c => `
       <tr>
-        <td>${c.id}</td><td>${c.path}</td><td>${c.status}</td>
+        <td>${c.id}</td>
+        <td>${c.path}</td>
+        <td>${c.status}</td>
         <td>${(c.created_at || '').slice(0, 16).replace('T', ' ')}</td>
         <td>${c.public_notice_ends_at ? c.public_notice_ends_at.slice(0, 10) : (c.cooling_off_ends_at ? c.cooling_off_ends_at.slice(0, 10) : '—')}</td>
         <td>${['NOTIFIED', 'AWAITING_OMBUDSMAN', 'AWAITING_SIGNATURES'].includes(c.status)
                ? `<button class="btn btn-secondary" onclick="cancelCase(${c.id})">Cancel</button>` : ''}</td>
-      </tr>`).join('') || '<tr><td colspan="6" style="color:var(--text-muted)">No cases</td></tr>';
+      </tr>`).join('') || '<tr><td colspan="6">No cases</td></tr>';
   } catch (e) { /* silent */ }
 }
-window.showRecover = function(type) {
+function showRecover(type) {
   const panel = document.getElementById('recover-panel');
   panel.classList.remove('hidden');
   if (type === 'self') {
     panel.innerHTML = `<h3>Self-recovery</h3>
       <p class="text-muted">Enter all 15 words of your recovery phrase.</p>
-      <textarea id="rec-seed" rows="3" placeholder="word1 word2 word3 ..."></textarea>
+      <textarea id="rec-seed" rows="3" placeholder="word1 word2 ..."></textarea>
       <button class="btn" onclick="doRecoverSelf()">Rebind this device</button>`;
   } else if (type === 'social') {
     panel.innerHTML = `<h3>Social recovery (you are a nominee)</h3>
-      <label>Original wallet address</label><input type="text" id="rec-orig">
-      <label>Your recovery wallet address</label><input type="text" id="rec-claim">
-      <label>Grounds / reason</label><textarea id="rec-grounds" rows="3"></textarea>
+      <label>Original wallet address</label>
+      <input type="text" id="rec-orig">
+      <label>Your recovery wallet address</label>
+      <input type="text" id="rec-claim">
+      <label>Grounds / reason</label>
+      <textarea id="rec-grounds" rows="3"></textarea>
       <button class="btn" onclick="doRecoverSocial()">File case</button>`;
   } else if (type === 'trustee') {
     panel.innerHTML = `<h3>Trustee / Ombudsman recovery</h3>
       <p class="text-muted">For death, incapacity, or contested cases. The IRG Ombudsman will review.</p>
-      <label>Original wallet address</label><input type="text" id="rec-orig">
-      <label>Your recovery wallet address</label><input type="text" id="rec-claim">
-      <label>Grounds</label><textarea id="rec-grounds" rows="3"></textarea>
-      <label>Evidence bundle hash (IPFS CID)</label><input type="text" id="rec-ev" placeholder="0x…">
+      <label>Original wallet address</label>
+      <input type="text" id="rec-orig">
+      <label>Your recovery wallet address</label>
+      <input type="text" id="rec-claim">
+      <label>Grounds</label>
+      <textarea id="rec-grounds" rows="3"></textarea>
+      <label>Evidence bundle hash (IPFS CID)</label>
+      <input type="text" id="rec-ev" placeholder="0x…">
       <button class="btn" onclick="doRecoverTrustee()">File Ombudsman case</button>`;
   }
-};
-window.doRecoverSelf = async function() {
+}
+async function doRecoverSelf() {
   const words = document.getElementById('rec-seed').value.trim().split(/\s+/);
-  if (words.length !== 15) return toast('Please enter all 15 words', 'error');
   let devId = localStorage.getItem('irgDeviceId');
   if (!devId) {
     const arr = new Uint8Array(32); crypto.getRandomValues(arr);
-    devId = '0x' + Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
+    devId = '0x' + Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
     localStorage.setItem('irgDeviceId', devId);
   }
   try {
@@ -1032,22 +941,22 @@ window.doRecoverSelf = async function() {
       new_device_label: 'Recovered device',
       new_platform: navigator.platform || 'web',
     });
-    toast('Self-recovery accepted. Case ' + r.case_id, 'success');
+    msg('Self-recovery accepted. Case ' + r.case_id, 'success');
     loadRecoveryCases();
-  } catch (e) { toast('Self-recovery failed: ' + (e.error || ''), 'error'); }
-};
-window.doRecoverSocial = async function() {
+  } catch (e) { msg('Self-recovery failed: ' + (e.error || ''), 'error'); }
+}
+async function doRecoverSocial() {
   try {
     const r = await apiPost('/wallet/recovery/social/', {
       original_wallet_address: document.getElementById('rec-orig').value.trim(),
       claimant_wallet_address: document.getElementById('rec-claim').value.trim(),
       grounds: document.getElementById('rec-grounds').value.trim(),
     });
-    toast('Social recovery filed. Case ' + r.case_id, 'success');
+    msg('Social recovery filed. Case ' + r.case_id, 'success');
     loadRecoveryCases();
-  } catch (e) { toast('Filing failed: ' + (e.error || ''), 'error'); }
-};
-window.doRecoverTrustee = async function() {
+  } catch (e) { msg('Filing failed: ' + (e.error || ''), 'error'); }
+}
+async function doRecoverTrustee() {
   try {
     const r = await apiPost('/wallet/recovery/trustee/', {
       original_wallet_address: document.getElementById('rec-orig').value.trim(),
@@ -1055,111 +964,132 @@ window.doRecoverTrustee = async function() {
       grounds: document.getElementById('rec-grounds').value.trim(),
       evidence_bundle_hash: document.getElementById('rec-ev').value.trim(),
     });
-    toast('Ombudsman case filed. Case ' + r.case_id, 'success');
+    msg('Ombudsman case filed. Case ' + r.case_id, 'success');
     loadRecoveryCases();
-  } catch (e) { toast('Filing failed: ' + (e.error || ''), 'error'); }
-};
-window.cancelCase = async function(id) {
-  const reason = window.prompt('Cancellation reason:');
+  } catch (e) { msg('Filing failed: ' + (e.error || ''), 'error'); }
+}
+async function cancelCase(id) {
+  const reason = prompt('Cancellation reason:');
   if (!reason) return;
   try {
     await apiPost('/wallet/recovery/cancel/', { case_id: id, reason });
-    toast('Case cancelled', 'success');
+    msg('Case cancelled', 'success');
     loadRecoveryCases();
-  } catch (e) { toast('Cancel failed: ' + (e.error || ''), 'error'); }
-};
+  } catch (e) { msg('Cancel failed: ' + (e.error || ''), 'error'); }
+}
 
-// ── Ownership transfer ────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Ownership transfer (legal-person wallets)
+// ─────────────────────────────────────────────────────────────────────────────
 async function loadOwnershipCases() {
   try {
     const rows = await apiGet('/wallet/ownership/cases/');
-    document.querySelector('#ownership-cases-table tbody').innerHTML = (rows || []).map(c => `
+    document.querySelector('#ownership-cases-table tbody').innerHTML = rows.map(c => `
       <tr>
-        <td>${c.id}</td><td>${c.status}</td><td>${c.reason}</td>
+        <td>${c.id}</td>
+        <td>${c.status}</td>
+        <td>${c.reason}</td>
         <td>${(c.created_at || '').slice(0, 16).replace('T', ' ')}</td>
         <td>${c.public_notice_ends_at ? c.public_notice_ends_at.slice(0, 10) : '—'}</td>
         <td>${['FILED', 'AWAITING_OMBUDSMAN'].includes(c.status)
                ? `<button class="btn btn-secondary" onclick="cancelOwnership(${c.id})">Cancel</button>` : ''}</td>
-      </tr>`).join('') || '<tr><td colspan="6" style="color:var(--text-muted)">No cases</td></tr>';
+      </tr>`).join('') || '<tr><td colspan="6">No cases</td></tr>';
   } catch (e) { /* silent */ }
 }
-window.fileOwnershipTransfer = async function() {
+async function fileOwnershipTransfer() {
+  const reason = document.getElementById('ot-reason').value;
+  const grounds = document.getElementById('ot-grounds').value.trim();
   const ev = document.getElementById('ot-evidence').value.trim();
-  if (!ev) return toast('Evidence bundle hash is required', 'error');
   const incomingRaw = document.getElementById('ot-incoming').value.trim();
+  if (!ev) return msg('Evidence bundle hash is required', 'error');
   try {
     const r = await apiPost('/wallet/ownership/initiate/', {
-      reason: document.getElementById('ot-reason').value,
-      grounds: document.getElementById('ot-grounds').value.trim(),
+      reason,
+      grounds,
       evidence_bundle_hash: ev,
       incoming_user_id: incomingRaw ? parseInt(incomingRaw, 10) : null,
     });
-    toast('Case filed. ID ' + r.case_id, 'success');
+    msg('Case filed. ID ' + r.case_id, 'success');
     loadOwnershipCases();
     loadWalletInfo();
-  } catch (e) { toast('Failed: ' + (e.error || ''), 'error'); }
-};
-window.cancelOwnership = async function(id) {
-  const reason = window.prompt('Cancellation reason:');
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
+async function cancelOwnership(id) {
+  const reason = prompt('Cancellation reason:');
   if (!reason) return;
   try {
     await apiPost('/wallet/ownership/cancel/', { case_id: id, reason });
-    toast('Case cancelled', 'success');
+    msg('Case cancelled', 'success');
     loadOwnershipCases();
     loadWalletInfo();
-  } catch (e) { toast('Failed: ' + (e.error || ''), 'error'); }
-};
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
 
-// ── CSV download ──────────────────────────────────────────────────────────────
-window.downloadCsv = async function() {
+// ─────────────────────────────────────────────────────────────────────────────
+// CSV download
+// ─────────────────────────────────────────────────────────────────────────────
+async function downloadCsv() {
   const mod = document.getElementById('history-module').value;
   const stat = document.getElementById('history-status').value;
   const params = new URLSearchParams();
   if (mod) params.set('module', mod);
   if (stat) params.set('status', stat);
+<<<<<<< HEAD
   const t = await getFreshToken();
-  try {
-    const r = await fetch(API + '/wallet/transactions/export.csv?' + params.toString(), {
-      headers: t ? { 'Authorization': 'Bearer ' + t } : {},
-    });
-    if (!r.ok) return toast('Download failed', 'error');
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'irg_transactions.csv'; a.click();
-    URL.revokeObjectURL(url);
-  } catch(e) { toast('Download failed', 'error'); }
-};
+  const r = await fetch(API + '/wallet/transactions/export.csv?' + params.toString(), {
+    headers: t ? { 'Authorization': 'Bearer ' + t } : {},
+=======
+  const t = localStorage.getItem('authToken') || '';
+  const r = await fetch(API + '/wallet/transactions/export.csv?' + params.toString(), {
+    headers: t ? { 'Authorization': 'Token ' + t } : {},
+>>>>>>> 6f5e39f (changhes05)
+  });
+  if (!r.ok) return msg('Download failed', 'error');
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'irg_transactions.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
-// ── Security tab ──────────────────────────────────────────────────────────────
-window.changePassword = async function() {
+// ─────────────────────────────────────────────────────────────────────────────
+// Security tab
+// ─────────────────────────────────────────────────────────────────────────────
+async function changePassword() {
   const oldP = document.getElementById('pw-old').value;
   const newP = document.getElementById('pw-new').value;
   const newP2 = document.getElementById('pw-new-confirm').value;
-  if (!oldP || !newP) return toast('All fields are required', 'error');
-  if (newP !== newP2) return toast('New passwords do not match', 'error');
+  if (newP !== newP2) return msg('New passwords do not match', 'error');
   try {
     await apiPost('/wallet/password/change/', { old_password: oldP, new_password: newP });
-    toast('Password changed successfully', 'success');
+    msg('Password changed', 'success');
     document.getElementById('pw-old').value = '';
     document.getElementById('pw-new').value = '';
     document.getElementById('pw-new-confirm').value = '';
-  } catch (e) { toast('Failed: ' + (e.error || 'Incorrect current password'), 'error'); }
-};
-window.emergencyFreeze = async function() {
-  const reason = document.getElementById('freeze-reason').value.trim();
-  if (!reason) return toast('Please provide a reason', 'error');
-  if (!window.confirm('Freeze your wallet? You will not be able to transact until you contact support.')) return;
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
+async function emergencyFreeze() {
+  const reason = document.getElementById('freeze-reason').value;
+  if (!reason) return msg('Please provide a reason', 'error');
+  if (!confirm('Freeze your wallet? You will not be able to transact.')) return;
   try {
     await apiPost('/wallet/freeze/', { reason });
-    toast('Wallet frozen. Contact support to unfreeze.', 'success');
+    msg('Wallet frozen', 'success');
     loadWalletInfo();
     loadBanner();
-  } catch (e) { toast('Failed: ' + (e.error || ''), 'error'); }
-};
+  } catch (e) { msg('Failed: ' + (e.error || ''), 'error'); }
+}
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-renderSeed();
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+(async function init() {
+  renderSeed();
+  await loadWalletInfo();
+  await loadBanner();
+})();
 </script>
 </body>
 </html>

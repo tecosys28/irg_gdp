@@ -7,18 +7,26 @@ flag — no crypto or disk I/O on the hot path.
 IPR Owner: Rohit Tidke | (c) 2026 Intech Research Group
 """
 
+<<<<<<< HEAD
 import os
 
+=======
+>>>>>>> 6f5e39f (changhes05)
 from django.http import JsonResponse
 
 from .licence_guard import STATE
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6f5e39f (changhes05)
 EXEMPT_PATHS = {
     "/healthz",
     "/licence/status",
     "/chain/licence/status",
 }
 
+<<<<<<< HEAD
 # Bypass when:
 #   1. DEBUG mode (local dev / CI)
 #   2. No licence token path configured (token file doesn't exist) — allows
@@ -29,13 +37,19 @@ _TOKEN_PATH = os.environ.get("IRG_LICENCE_TOKEN_PATH", "/etc/irg/licence.token")
 _BYPASS = _DEBUG or not os.path.isfile(_TOKEN_PATH) or \
           os.environ.get("IRG_LICENCE_BYPASS", "False") == "True"
 
+=======
+>>>>>>> 6f5e39f (changhes05)
 
 class LicenceEnforcementMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+<<<<<<< HEAD
         if _BYPASS or request.path in EXEMPT_PATHS:
+=======
+        if request.path in EXEMPT_PATHS:
+>>>>>>> 6f5e39f (changhes05)
             return self.get_response(request)
         if not STATE.valid:
             return JsonResponse(

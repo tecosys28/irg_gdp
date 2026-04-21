@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 COPY backend /app
 
+<<<<<<< HEAD
 # Collect static files (Whitenoise serves them — DB not needed at build time)
 RUN DJANGO_DEBUG=True python manage.py collectstatic --noinput || true
 
@@ -29,3 +30,10 @@ RUN DJANGO_DEBUG=True python manage.py collectstatic --noinput || true
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
+=======
+# Collect static files (Whitenoise serves them)
+RUN python manage.py collectstatic --noinput || true
+
+# Run with gunicorn
+CMD gunicorn wsgi:application --bind 0.0.0.0:${PORT} --workers 2 --timeout 60
+>>>>>>> 6f5e39f (changhes05)
