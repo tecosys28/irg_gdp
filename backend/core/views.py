@@ -86,7 +86,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def dashboard(self, request):
         """Get dashboard data based on user roles"""
         user = request.user
-        roles = [r.role for r in user.roles.filter(status='ACTIVE')]
+        roles = [r.role for r in user.roles.filter(status__in=['ACTIVE', 'PENDING'])]
         
         dashboard_data = {
             'user': UserSerializer(user).data,

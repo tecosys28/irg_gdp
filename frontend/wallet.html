@@ -102,6 +102,7 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
                   text-align: center; padding: 10px; border-radius: 8px;
                   font-size: 0.8em; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
 <div class="page">
@@ -133,9 +134,7 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
         <button class="btn btn-secondary" onclick="copyAddress()" style="margin-top:8px">Copy address</button>
       </div>
       <div class="col" style="max-width: 220px">
-        <div class="qr-placeholder">
-          QR code renders here<br><span class="text-muted">(wire in qrcode.js)</span>
-        </div>
+        <canvas id="wallet-qr" width="180" height="180" style="border-radius:8px;display:block;background:#ffffff"></canvas>
       </div>
     </div>
   </div>
@@ -519,6 +518,13 @@ async function loadWalletInfo() {
     document.getElementById('wallet-state').textContent = info.state_label;
     document.getElementById('wallet-state').className = 'state-badge state-' + info.state;
     document.getElementById('wallet-address').textContent = info.address;
+    if (info.address && info.address.length > 4 && window.QRCode) {
+      window.QRCode.toCanvas(
+        document.getElementById('wallet-qr'),
+        info.address,
+        { width: 180, margin: 1, color: { dark: '#000052', light: '#ffffff' } }
+      ).catch(() => {});
+    }
     document.getElementById('wallet-created').textContent = (info.created_at || '').slice(0, 16).replace('T', ' ');
     document.getElementById('wallet-activated').textContent =
       info.activated_at ? info.activated_at.slice(0, 16).replace('T', ' ') : '—';

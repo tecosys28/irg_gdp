@@ -1161,7 +1161,7 @@
             // Fetch user's actual active roles from backend; rebuild dropdown to only those
             try{
               const me=await apiGet('/auth/users/me/');
-              const active=(me.roles||[]).filter(x=>x.status==='ACTIVE').map(x=>x.role.toLowerCase());
+              const active=(me.roles||[]).filter(x=>x.status==='ACTIVE'||x.status==='PENDING').map(x=>x.role.toLowerCase());
               window._userRoles=active.length?active:[r];
             }catch(_){window._userRoles=[r];}
             const sel=document.getElementById('role-select');
@@ -2314,7 +2314,7 @@
   #irg-wallet-banner button  { background: rgba(0,0,0,0.2); color: inherit;
       border: 1px solid currentColor; padding: 6px 12px; border-radius: 4px;
       cursor: pointer; font-weight: 600; }
-  #irg-wallet-quick { position: fixed; bottom: 20px; right: 20px; z-index: 9998;
+  #irg-wallet-quick { position: fixed; bottom: 90px; right: 20px; z-index: 9998;
       background: #E4B44A; color: #00003A; padding: 12px 18px;
       border-radius: 24px; font-weight: 600; text-decoration: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
