@@ -32,6 +32,15 @@ if _allowed == '*' and not DEBUG:
     )
 ALLOWED_HOSTS = ['*'] if _allowed == '*' else [h.strip() for h in _allowed.split(',') if h.strip()]
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://43.205.237.197',
+    'https://43.205.237.197',
+    'https://irggdp.web.app',
+    'https://irggdp.firebaseapp.com',
+    'https://irggdp.com',
+    'https://www.irggdp.com',
+]
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
