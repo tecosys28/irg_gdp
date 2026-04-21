@@ -9,31 +9,20 @@
       "**/*.pyc"
     ],
     "rewrites": [
-<<<<<<< HEAD
-      { "source": "/healthz",    "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
-      { "source": "/healthz/",   "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
-      { "source": "/api/**",     "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
-      { "source": "/admin/**",   "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
-      { "source": "/static/**",  "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
-      { "source": "/media/**",   "run": { "serviceId": "irggdp-api", "region": "asia-south1" } },
+      { "source": "/healthz",    "function": "apiProxy" },
+      { "source": "/healthz/",   "function": "apiProxy" },
+      { "source": "/api/**",     "function": "apiProxy" },
+      { "source": "/admin/**",   "function": "apiProxy" },
+      { "source": "/static/**",  "function": "apiProxy" },
+      { "source": "/media/**",   "function": "apiProxy" },
       { "source": "/wallet",     "destination": "/wallet.html" },
       { "source": "/heir-guide", "destination": "/heir-guide.html" },
       { "source": "/**",         "destination": "/index.html" }
-=======
-      { "source": "/api/**",     "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/admin/**",   "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/static/**",  "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/media/**",   "run": { "serviceId": "irg-gdp-api", "region": "asia-south1" } },
-      { "source": "/",           "destination": "/index.html" },
-      { "source": "/wallet",     "destination": "/wallet.html" },
-      { "source": "/heir-guide", "destination": "/heir-guide.html" }
->>>>>>> 6f5e39f (changhes05)
     ],
     "headers": [
       {
         "source": "**/*.@(js|css|html)",
         "headers": [
-<<<<<<< HEAD
           { "key": "Cache-Control", "value": "no-cache" },
           { "key": "X-Content-Type-Options", "value": "nosniff" },
           { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
@@ -44,11 +33,6 @@
         "source": "**/*.@(js)",
         "headers": [
           { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-=======
-          { "key": "Cache-Control", "value": "max-age=3600" },
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
->>>>>>> 6f5e39f (changhes05)
         ]
       }
     ]
@@ -61,11 +45,7 @@
     {
       "source": "functions",
       "codebase": "default",
-<<<<<<< HEAD
       "runtime": "nodejs22",
-=======
-      "runtime": "nodejs18",
->>>>>>> 6f5e39f (changhes05)
       "region": "asia-south1",
       "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
     }

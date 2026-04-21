@@ -1,68 +1,93 @@
 /**
-<<<<<<< HEAD
  * irg_gdp Cloud Functions (firebase-functions v5 / Node 22)
  *
- * Scope:
- *   • getMICSDigest      — PUBLIC HTTPS endpoint returning aggregate metrics
- *   • getMICSDrill       — PUBLIC HTTPS endpoint for drill-down details
- *   • onUnitMint         — Firestore trigger maintaining aggregate counters
- *   • onDisputeChange    — Firestore trigger updating dispute rollups
- *   • refreshMICSDigest  — Hourly scheduled recompute
- *   • licenceStatus      — Callable: licence health check
-=======
- * irg_gdp Cloud Functions
- *
- * Scope:
- *   • getMICSDigest  — PUBLIC HTTPS endpoint returning aggregate metrics
- *                      for this ecosystem. Consumed by irg_gov's Advisory
- *                      Board MICS via its federation client.
- *   • getMICSDrill   — PUBLIC HTTPS endpoint returning drill-down details
- *                      when the AB member clicks through from an aggregate.
- *   • onUnitMint     — Firestore trigger that maintains aggregate counters.
- *   • onDisputeChange — Firestore trigger that updates dispute rollups.
- *
- * CORS policy: both public endpoints allow gov.irgecosystem.com (prod) and
- * staging equivalents. Rate-limited per IP to prevent scraping.
->>>>>>> 6f5e39f (changhes05)
+ * Exports:
+ *   • apiProxy          — Proxies /api/** and /admin/** to EC2 Django backend
+ *   • getMICSDigest     — PUBLIC HTTPS endpoint returning aggregate metrics
+ *   • getMICSDrill      — PUBLIC HTTPS endpoint for drill-down details
+ *   • onUnitMint        — Firestore trigger maintaining aggregate counters
+ *   • onDisputeChange   — Firestore trigger updating dispute rollups
+ *   • refreshMICSDigest — Hourly scheduled recompute
+ *   • licenceStatus     — Callable: licence health check
  *
  * IPR Owner: Mr. Rohit Tidke · © 2026 Intech Research Group
  */
 
-<<<<<<< HEAD
 const { onRequest, onCall } = require('firebase-functions/v2/https');
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { setGlobalOptions } = require('firebase-functions/v2');
 const admin = require('firebase-admin');
 const cors  = require('cors');
+const http  = require('http');
 
 const { currentLicenceInfo } = require('./licence-guard');
-// Licence guard disabled for owner-operated production deployment (irggdp project).
 
 setGlobalOptions({ region: 'asia-south1' });
-=======
-const functions = require('firebase-functions');
-const admin     = require('firebase-admin');
-const cors      = require('cors');
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Licence guard — verified at module load. If the deployment is unlicensed,
-// this exits during load and Firebase refuses to register any function.
-// ─────────────────────────────────────────────────────────────────────────────
-const { verifyLicenceOrDie, currentLicenceInfo } = require('./licence-guard');
-if (process.env.FUNCTIONS_EMULATOR !== 'true') {
-  verifyLicenceOrDie('GDP');
-}
->>>>>>> 6f5e39f (changhes05)
 
 admin.initializeApp();
 const db = admin.firestore();
 
-<<<<<<< HEAD
-// Public callable for ops team to check licence health.
+// ─────────────────────────────────────────────────────────────────────────────
+// EC2 Django backend proxy
+// Forwards /api/** and /admin/** to http://43.205.237.197
+// ─────────────────────────────────────────────────────────────────────────────
+const EC2_HOST = '43.205.237.197';
+const EC2_PORT = 80;
+
+exports.apiProxy = onRequest({ invoker: 'public' }, (req, res) => {
+  res.set('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send('');
+  }
+
+  const options = {
+    hostname: EC2_HOST,
+    port: EC2_PORT,
+    path: req.url,
+    method: req.method,
+    headers: {
+      ...req.headers,
+      host: EC2_HOST,
+      'x-forwarded-for': req.ip,
+      'x-forwarded-proto': 'https',
+    },
+  };
+
+  const proxy = http.request(options, (backendRes) => {
+    res.status(backendRes.statusCode);
+    Object.entries(backendRes.headers).forEach(([k, v]) => {
+      if (k.toLowerCase() !== 'transfer-encoding') res.set(k, v);
+    });
+    backendRes.pipe(res, { end: true });
+  });
+
+  proxy.on('error', (err) => {
+    console.error('Proxy error:', err);
+    res.status(502).json({ error: 'backend_unavailable', detail: err.message });
+  });
+
+  if (req.body && req.method !== 'GET' && req.method !== 'HEAD') {
+    const body = typeof req.body === 'object'
+      ? JSON.stringify(req.body)
+      : req.body;
+    proxy.write(body);
+  }
+  proxy.end();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Licence status callable
+// ─────────────────────────────────────────────────────────────────────────────
 exports.licenceStatus = onCall(async () => currentLicenceInfo());
 
-// CORS: explicit allowlist
+// ─────────────────────────────────────────────────────────────────────────────
+// CORS helper for public MICS endpoints
+// ─────────────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
   'https://irggdp.com',
   'https://www.irggdp.com',
@@ -72,46 +97,19 @@ const ALLOWED_ORIGINS = [
   'https://irg-gov-prod.web.app',
   'http://localhost:5173',
   'http://localhost:5000',
-=======
-// Public callable for the licensee's ops team to check licence health.
-exports.licenceStatus = functions.https.onCall(async () => currentLicenceInfo());
-
-// CORS: explicit allowlist of origins that may call our digest endpoint
-const ALLOWED_ORIGINS = [
-  'https://gov.irgecosystem.com',
-  'https://irg-gov-prod.web.app',
-  'https://irg-gov-prod.firebaseapp.com',
-  'https://irg-gov-staging.web.app',
-  'https://gov-staging.irgecosystem.com',
-  'http://localhost:5173',    // Vite dev
-  'http://localhost:5000'     // Firebase hosting emulator
->>>>>>> 6f5e39f (changhes05)
 ];
 
 const corsHandler = cors({
   origin: (origin, cb) => {
-<<<<<<< HEAD
     if (!origin) return cb(null, true);
-=======
-    if (!origin) return cb(null, true);  // Server-to-server / curl
->>>>>>> 6f5e39f (changhes05)
     if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
     return cb(new Error(`Origin ${origin} not allowed`));
   },
   methods: ['GET'],
-<<<<<<< HEAD
   credentials: false,
 });
 
 // Naive per-IP rate limiter (resets on cold start)
-=======
-  credentials: false
-});
-
-const regional = functions.region('asia-south1');
-
-// ── Naive in-memory per-IP rate limiter (resets on cold start) ─────────────
->>>>>>> 6f5e39f (changhes05)
 const _rlBuckets = new Map();
 function rateLimited(ip, max = 30, windowMs = 60_000) {
   const now = Date.now();
@@ -122,21 +120,12 @@ function rateLimited(ip, max = 30, windowMs = 60_000) {
   return recent.length > max;
 }
 
-<<<<<<< HEAD
 // ── getMICSDigest ─────────────────────────────────────────────────────────────
 exports.getMICSDigest = onRequest({ cors: false }, (req, res) => {
-=======
-// ═════════════════════════════════════════════════════════════════════════
-// getMICSDigest — public aggregate for the Advisory Board MICS
-// ═════════════════════════════════════════════════════════════════════════
-
-exports.getMICSDigest = regional.https.onRequest((req, res) => {
->>>>>>> 6f5e39f (changhes05)
   corsHandler(req, res, async () => {
     try {
       const ip = req.headers['x-forwarded-for'] || req.ip;
       if (rateLimited(ip)) return res.status(429).json({ error: 'rate_limited' });
-<<<<<<< HEAD
       const { period } = req.query;
       if (!period) return res.status(400).json({ error: 'period_required' });
       const snap = await db.collection('mics_digest').doc(period).get();
@@ -145,47 +134,17 @@ exports.getMICSDigest = regional.https.onRequest((req, res) => {
       return res.status(200).json(clean);
     } catch (e) {
       console.error('getMICSDigest failed:', e);
-=======
-
-      const { period } = req.query;
-      if (!period) return res.status(400).json({ error: 'period_required' });
-
-      // Read the pre-computed cached digest for this period (maintained by
-      // the Django backend via firebase-admin, and/or refreshed hourly by
-      // the refreshMICSDigest scheduled function below).
-      const snap = await db.collection('mics_digest').doc(period).get();
-      if (!snap.exists) {
-        return res.status(404).json({ error: 'no_data_for_period', period });
-      }
-
-      const payload = snap.data();
-      // Strip any fields prefixed with _ (internal)
-      const clean = Object.fromEntries(Object.entries(payload).filter(([k]) => !k.startsWith('_')));
-
-      return res.status(200).json(clean);
-    } catch (e) {
-      functions.logger.error('getMICSDigest failed:', e);
->>>>>>> 6f5e39f (changhes05)
       return res.status(500).json({ error: 'internal_error' });
     }
   });
 });
 
-<<<<<<< HEAD
 // ── getMICSDrill ──────────────────────────────────────────────────────────────
 exports.getMICSDrill = onRequest({ cors: false }, (req, res) => {
-=======
-// ═════════════════════════════════════════════════════════════════════════
-// getMICSDrill — public drill-down endpoint
-// ═════════════════════════════════════════════════════════════════════════
-
-exports.getMICSDrill = regional.https.onRequest((req, res) => {
->>>>>>> 6f5e39f (changhes05)
   corsHandler(req, res, async () => {
     try {
       const ip = req.headers['x-forwarded-for'] || req.ip;
       if (rateLimited(ip)) return res.status(429).json({ error: 'rate_limited' });
-<<<<<<< HEAD
       const { key } = req.query;
       if (!key) return res.status(400).json({ error: 'key_required' });
       const [, slice] = key.split('-');
@@ -195,27 +154,11 @@ exports.getMICSDrill = regional.https.onRequest((req, res) => {
       return res.status(200).json(snap.data());
     } catch (e) {
       console.error('getMICSDrill failed:', e);
-=======
-
-      const { key } = req.query;
-      if (!key) return res.status(400).json({ error: 'key_required' });
-
-      const [, slice] = key.split('-');  // 'gdp-minting' -> 'minting'
-      if (!slice) return res.status(400).json({ error: 'invalid_key' });
-
-      const snap = await db.collection('mics_drill').doc(slice).get();
-      if (!snap.exists) return res.status(404).json({ error: 'no_drill_data', slice });
-
-      return res.status(200).json(snap.data());
-    } catch (e) {
-      functions.logger.error('getMICSDrill failed:', e);
->>>>>>> 6f5e39f (changhes05)
       return res.status(500).json({ error: 'internal_error' });
     }
   });
 });
 
-<<<<<<< HEAD
 // ── onUnitMint ────────────────────────────────────────────────────────────────
 exports.onUnitMint = onDocumentCreated('minting_records/{recordId}', async (event) => {
   const data = event.data.data();
@@ -258,72 +201,3 @@ exports.refreshMICSDigest = onSchedule(
     }, { merge: true });
   }
 );
-=======
-// ═════════════════════════════════════════════════════════════════════════
-// onUnitMint — maintain aggregate counters in mics_digest
-// ═════════════════════════════════════════════════════════════════════════
-
-exports.onUnitMint = regional.firestore
-  .document('minting_records/{recordId}')
-  .onCreate(async (snap) => {
-    const data = snap.data();
-    const grams = data.gramsPure || 0;
-
-    // Update the MTD aggregate atomically
-    const digestRef = db.collection('mics_digest').doc('mtd');
-    await db.runTransaction(async tx => {
-      const cur = await tx.get(digestRef);
-      const existing = cur.exists ? cur.data() : {};
-      const kpis = existing.kpis || {};
-      const txCounts = kpis.transactions || { mint: 0, earmark: 0, swap: 0, trade: 0, redeem: 0 };
-      tx.set(digestRef, {
-        ...existing,
-        kpis: {
-          ...kpis,
-          transactions: { ...txCounts, mint: (txCounts.mint || 0) + 1 },
-          pureGoldGrams: (kpis.pureGoldGrams || 0) + grams
-        },
-        _updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    });
-  });
-
-// ═════════════════════════════════════════════════════════════════════════
-// onDisputeChange — maintain dispute rollups
-// ═════════════════════════════════════════════════════════════════════════
-
-exports.onDisputeChange = regional.firestore
-  .document('disputes/{caseId}')
-  .onWrite(async () => {
-    // Recompute and write dispute rollup into mics_digest
-    const openSnap = await db.collection('disputes').where('status', 'in', ['Filed', 'Under Review', 'Hearing']).get();
-    const closedSnap = await db.collection('disputes').where('status', '==', 'Closed').get();
-
-    await db.collection('mics_digest').doc('mtd').set({
-      complaintsRollup: {
-        open:   openSnap.size,
-        closed: closedSnap.size
-      },
-      _updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  });
-
-// ═════════════════════════════════════════════════════════════════════════
-// refreshMICSDigest — hourly scheduled full recomputation
-// ═════════════════════════════════════════════════════════════════════════
-
-exports.refreshMICSDigest = regional.pubsub
-  .schedule('every 60 minutes')
-  .timeZone('Asia/Kolkata')
-  .onRun(async () => {
-    // Full recompute of the canonical aggregates. In production this would
-    // read from the authoritative Django models (via the paa-bridge pattern)
-    // and write the canonical snapshot. Currently emits a heartbeat so the
-    // collection is always writeable.
-    await db.collection('mics_digest').doc('mtd').set({
-      _refreshedAt: admin.firestore.FieldValue.serverTimestamp(),
-      _source:      'scheduled_refresh'
-    }, { merge: true });
-    return null;
-  });
->>>>>>> 6f5e39f (changhes05)

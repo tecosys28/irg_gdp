@@ -1,0 +1,153 @@
+# Kubernetes CronJob manifests for IRG Chain recurring operations.
+# Deploy after the Django backend Deployment is running.
+# All jobs share the same image and env as the backend pod.
+#
+# Usage:
+#   kubectl apply -f ops-cronjobs.yaml -n irg-chain
+
+---
+# Daily escrow reconciliation — runs at 06:00 UTC (11:30 IST) each day.
+# Add --bank-credits-inr via a ConfigMap or Sealed Secret once you have
+# the bank statement API integrated.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: reconcile-escrow-daily
+  namespace: irg-chain
+spec:
+  schedule: "0 6 * * *"
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: django-job
+              image: irg-gdp-backend:latest
+              command: ["python", "manage.py", "reconcile_escrow"]
+              envFrom:
+                - secretRef:
+                    name: irg-backend-secrets
+                - configMapRef:
+                    name: irg-backend-config
+---
+# Monthly TSF cycle — runs at 07:00 UTC on the 1st of each month.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: run-monthly-tsf
+  namespace: irg-chain
+spec:
+  schedule: "0 7 1 * *"
+  successfulJobsHistoryLimit: 13
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: django-job
+              image: irg-gdp-backend:latest
+              command: ["python", "manage.py", "run_monthly_tsf"]
+              envFrom:
+                - secretRef:
+                    name: irg-backend-secrets
+                - configMapRef:
+                    name: irg-backend-config
+---
+# Monthly referral flush — runs at 07:30 UTC on the 1st of each month
+# (30 min after TSF cycle to allow TSF to confirm first).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: run-referral-flush
+  namespace: irg-chain
+spec:
+  schedule: "30 7 1 * *"
+  successfulJobsHistoryLimit: 13
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: django-job
+              image: irg-gdp-backend:latest
+              command: ["python", "manage.py", "run_referral_flush"]
+              envFrom:
+                - secretRef:
+                    name: irg-backend-secrets
+                - configMapRef:
+                    name: irg-backend-config
+---
+# Ombudsman order watcher — long-lived sidecar Deployment (not a CronJob).
+# Restarts automatically; resumes from ChainWatcherCursor.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watch-ombudsman-orders
+  namespace: irg-chain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watch-ombudsman-orders
+  template:
+    metadata:
+      labels:
+        app: watch-ombudsman-orders
+    spec:
+      containers:
+        - name: django-watcher
+          image: irg-gdp-backend:latest
+          command: ["python", "manage.py", "watch_ombudsman_orders"]
+          envFrom:
+            - secretRef:
+                name: irg-backend-secrets
+            - configMapRef:
+                name: irg-backend-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+---
+# Chain event watcher — long-lived sidecar Deployment.
+# Watches WalletRecoveryRequested + RecoveryExecuted events.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watch-chain-events
+  namespace: irg-chain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watch-chain-events
+  template:
+    metadata:
+      labels:
+        app: watch-chain-events
+    spec:
+      containers:
+        - name: django-watcher
+          image: irg-gdp-backend:latest
+          command: ["python", "manage.py", "watch_chain_events"]
+          envFrom:
+            - secretRef:
+                name: irg-backend-secrets
+            - configMapRef:
+                name: irg-backend-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "200m"

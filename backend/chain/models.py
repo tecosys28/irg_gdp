@@ -75,3 +75,64 @@ class TxAuditLog(models.Model):
 
     def __str__(self):
         return f'[{self.module}.{self.action}] {self.client_tx_id} -> {self.tx_hash or "(pending)"}'
+
+
+class ChainWatcherCursor(models.Model):
+    """
+    Singleton (one row per watcher name) that persists the last-processed
+    block number for each long-running event-watcher management command.
+    Prevents watchers from re-scanning from genesis on restart.
+    """
+    name = models.CharField(max_length=80, unique=True, db_index=True)
+    last_block = models.BigIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'chain_watcher_cursor'
+
+    @classmethod
+    def advance(cls, name: str, block: int) -> None:
+        cls.objects.update_or_create(name=name, defaults={'last_block': block})
+
+    @classmethod
+    def resume_from(cls, name: str, fallback: int) -> int:
+        obj = cls.objects.filter(name=name).first()
+        return obj.last_block if (obj and obj.last_block > 0) else fallback
+
+    def __str__(self):
+        return f'{self.name} @ block {self.last_block}'
+
+
+class EscrowReconciliationLog(models.Model):
+    """
+    One row per daily escrow reconciliation run.
+    Tracks counts of on-chain escrow events vs what the bank statement supplies.
+    A DISCREPANCY status halts new redemptions until an operator clears it.
+    """
+    STATUS_CHOICES = [
+        ('OK', 'Balanced — on-chain events match bank credits'),
+        ('DISCREPANCY', 'Mismatch detected — redemptions halted'),
+        ('PARTIAL', 'Bank statement not yet received — run again when available'),
+        ('ERROR', 'Reconciliation run failed due to RPC or DB error'),
+    ]
+
+    run_date = models.DateField(db_index=True)
+    status = models.CharField(max_length=14, choices=STATUS_CHOICES, db_index=True)
+    escrow_locked_count = models.PositiveIntegerField(default=0)
+    escrow_released_count = models.PositiveIntegerField(default=0)
+    escrow_refunded_count = models.PositiveIntegerField(default=0)
+    total_locked_inr = models.BigIntegerField(default=0)
+    total_released_inr = models.BigIntegerField(default=0)
+    total_refunded_inr = models.BigIntegerField(default=0)
+    bank_credits_inr = models.BigIntegerField(default=0)
+    discrepancy_inr = models.BigIntegerField(default=0)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'chain_escrow_reconciliation_log'
+        ordering = ['-run_date']
+        get_latest_by = 'run_date'
+
+    def __str__(self):
+        return f'Reconciliation {self.run_date}: {self.status}'
