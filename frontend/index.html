@@ -206,13 +206,23 @@
                 <span class="logo-text">IRG_GDP</span>
             </div>
             <nav class="landing-nav">
-                <button onclick="document.getElementById('section-about').scrollIntoView({behavior:'smooth'})">About</button>
-                <button onclick="document.getElementById('section-products').scrollIntoView({behavior:'smooth'})">Products</button>
-                <button onclick="document.getElementById('section-chain').scrollIntoView({behavior:'smooth'})">Blockchain</button>
-                <button style="border:1px solid var(--gold);border-radius:6px;color:var(--gold);" onclick="showModal('signin')">Sign In</button>
-                <button style="background:var(--gold);border-radius:6px;color:var(--navy-blue);font-weight:700;" onclick="showModal('register')">Register</button>
+                <button onclick="showModal('signin')">Sign In</button>
+                <button onclick="showModal('register')">Sign On</button>
+                <button onclick="document.getElementById('section-about').scrollIntoView({behavior:'smooth'})">Search</button>
+                <button onclick="showModal('heir-guide')">Help</button>
             </nav>
         </header>
+        <!-- ── Section Menu Bar ───────────────────────────────────────────── -->
+        <div class="menu-bar">
+            <button onclick="window.scrollTo({top:0,behavior:'smooth'})">Home</button>
+            <button onclick="document.getElementById('section-about').scrollIntoView({behavior:'smooth'})">About</button>
+            <button onclick="document.getElementById('section-products').scrollIntoView({behavior:'smooth'})">Products</button>
+            <button onclick="document.getElementById('section-about').scrollIntoView({behavior:'smooth'})">How It Works</button>
+            <button onclick="document.getElementById('section-for-jewelers').scrollIntoView({behavior:'smooth'})">For Jewelers</button>
+            <button onclick="document.getElementById('section-for-households').scrollIntoView({behavior:'smooth'})">For Households</button>
+            <button onclick="document.getElementById('section-licensees').scrollIntoView({behavior:'smooth'})">Licensees</button>
+            <button onclick="document.getElementById('section-chain').scrollIntoView({behavior:'smooth'})">FAQs</button>
+        </div>
 
         <section class="hero-section">
             <div class="hero-logo-title">
