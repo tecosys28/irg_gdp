@@ -41,7 +41,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             **validated_data
         )
         for role in roles:
-            UserRole.objects.create(user=user, role=role.upper(), status='PENDING')
+            UserRole.objects.create(user=user, role=role.upper(), status='ACTIVE')
         return user
 
 class UserSerializer(serializers.ModelSerializer):

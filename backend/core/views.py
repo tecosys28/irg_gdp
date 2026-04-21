@@ -40,7 +40,7 @@ class RegisterView(generics.CreateAPIView):
             role_upper = role.upper()
             UserRole.objects.get_or_create(
                 user=user, role=role_upper,
-                defaults={'status': 'PENDING'}
+                defaults={'status': 'ACTIVE'}
             )
         return Response({
             'message': 'Profile registered successfully.',

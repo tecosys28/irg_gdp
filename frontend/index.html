@@ -1091,6 +1091,21 @@
                 localStorage.setItem('authToken', token);
                 window._regRole = selectedRoles[0] || 'household';
                 localStorage.setItem('irgRole', window._regRole);
+                // Register user profile + roles in Django backend
+                const nameParts = (_pendingRegName||'').trim().split(' ');
+                try {
+                  await fetch(API+'/auth/register/', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+                    body: JSON.stringify({
+                      first_name: nameParts[0]||'',
+                      last_name:  nameParts.slice(1).join(' ')||'',
+                      mobile:     document.getElementById('reg-mobile')?.value?.trim()||'',
+                      city:       '',
+                      roles:      selectedRoles.length ? selectedRoles.map(r=>r.toUpperCase()) : [window._regRole.toUpperCase()],
+                    })
+                  });
+                } catch(_){}  // non-fatal — user can complete profile later
                 _phoneConfirmResult = null; _pendingRegEmail=''; _pendingRegPw='';
                 hideModal('otp');
                 document.getElementById('success-name').textContent = 'Welcome, ' + (_pendingRegName || '') + '!';
@@ -1125,7 +1140,18 @@
             document.getElementById('dashboard-page').classList.remove('active');
         }
 
-        function changeRole(r){currentRole=r;currentPanel='dashboard';const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};document.getElementById('role-icon').textContent=i.icon;document.getElementById('role-icon').style.background=i.color;document.getElementById('role-name').textContent=i.name;renderSidebar();renderPanel();}
+        const ROLE_CONSTRAINTS={JEWELER:{HOUSEHOLD:false,RETURNEE:false,DESIGNER:false,OMBUDSMAN:false,LICENSEE:false},HOUSEHOLD:{JEWELER:false,OMBUDSMAN:false},OMBUDSMAN:{JEWELER:false,HOUSEHOLD:false,RETURNEE:false,DESIGNER:false,LICENSEE:false,MARKETMAKER:false,MINTER:false,TRUSTEE:false}};
+        function changeRole(r){
+          const rUp=r.toUpperCase();
+          const block=ROLE_CONSTRAINTS[currentRole.toUpperCase()]||{};
+          if(block[rUp]===false){alert(`❌ Role conflict: ${currentRole.toUpperCase()} cannot be combined with ${rUp} per IRG_GDP multi-role rules.`);document.getElementById('role-select').value=currentRole;return;}
+          currentRole=r;currentPanel='dashboard';
+          const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};
+          document.getElementById('role-icon').textContent=i.icon;
+          document.getElementById('role-icon').style.background=i.color;
+          document.getElementById('role-name').textContent=i.name;
+          renderSidebar();renderPanel();
+        }
         function renderSidebar(){const n=document.getElementById('sidebar-nav'),m=DASHBOARD_MENUS[currentRole]||[];n.innerHTML=m.map(g=>'<div class="nav-group"><div class="nav-group-title">'+g.group+'</div>'+g.items.map(i=>'<button class="nav-item '+(currentPanel===i.id?'active':'')+'" onclick="selectPanel(\''+i.id+'\')"><span>'+i.icon+'</span><span>'+i.label+'</span></button>').join('')+'</div>').join('');}
         function selectPanel(p){currentPanel=p;renderSidebar();renderPanel();}
 
@@ -1176,7 +1202,11 @@
               ${panelCard('Quick Links','<div style="display:flex;gap:12px;flex-wrap:wrap">'+(DASHBOARD_MENUS[currentRole]||[]).flatMap(g=>g.items).filter(i=>i.id!=='dashboard').slice(0,6).map(i=>`<button class="btn btn-outline" onclick="selectPanel('${i.id}')">${i.icon} ${i.label}</button>`).join('')+'</div>')}`;
           }catch(e){
             const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};
-            return`<h2 class="panel-title">${r.icon} ${r.name} Dashboard</h2>${errCard('Could not load dashboard data.')}`;
+            const hint=e&&(e.detail||e.error||e.message||'');
+            const msg=hint.includes('not initialised')||hint.includes('invalid_token')||String(e).includes('401')
+              ?'Your session has expired — please Sign Out and Sign In again.'
+              :'Could not load dashboard data. Check your connection and try again.';
+            return`<h2 class="panel-title">${r.icon} ${r.name} Dashboard</h2>${panelCard('Quick Links','<div style="display:flex;gap:12px;flex-wrap:wrap">'+(DASHBOARD_MENUS[currentRole]||[]).flatMap(g=>g.items).filter(i=>i.id!=='dashboard').slice(0,6).map(i=>`<button class="btn btn-outline" onclick="selectPanel('${i.id}')">${i.icon} ${i.label}</button>`).join('')+'</div>')}${errCard(msg)}`;
           }
         }
 
@@ -1213,7 +1243,13 @@
                 </div>
                 <button class="btn btn-gold btn-sm" onclick="submitKYC()">Submit Document</button>
               </div>`);
-          }catch(e){return errCard('Could not load profile.');}
+          }catch(e){
+            const hint=e&&(e.detail||e.error||e.message||'');
+            const msg=String(e).includes('401')||hint.includes('token')
+              ?'Session expired — please Sign Out and Sign In again to reload your profile.'
+              :'Could not load profile. Please check your connection and retry.';
+            return errCard(msg)+`<div style="margin-top:16px"><button class="btn btn-outline" onclick="renderPanel()">↻ Retry</button>&nbsp;<button class="btn btn-gold" onclick="signOut()">Sign Out &amp; Back to Login</button></div>`;
+          }
         }
         async function submitKYC(){
           const dt=document.getElementById('kyc-type')?.value;

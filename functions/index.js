@@ -38,7 +38,7 @@ const db = admin.firestore();
 const EC2_HOST = process.env.DJANGO_BACKEND_HOST || '43.205.237.197';
 const EC2_PORT = parseInt(process.env.DJANGO_BACKEND_PORT || '80', 10);
 
-exports.apiProxy = onRequest({ invoker: 'public' }, (req, res) => {
+exports.apiProxy = onRequest({ invoker: 'public' }, async (req, res) => {
   res.set('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -48,13 +48,31 @@ exports.apiProxy = onRequest({ invoker: 'public' }, (req, res) => {
     return res.status(204).send('');
   }
 
+  // Verify Firebase ID token here (Cloud Functions has implicit admin credentials).
+  // Inject trusted headers so EC2 Django backend never needs its own Firebase creds.
+  const authHeader = req.headers['authorization'] || '';
+  const trustedHeaders = {};
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      const decoded = await admin.auth().verifyIdToken(token);
+      trustedHeaders['x-verified-firebase-uid']   = decoded.uid;
+      trustedHeaders['x-verified-firebase-email'] = decoded.email || '';
+    } catch (err) {
+      return res.status(401).json({ error: 'invalid_token', detail: err.message });
+    }
+  }
+
+  const forwardHeaders = { ...req.headers, ...trustedHeaders };
+  delete forwardHeaders['host'];
+
   const options = {
     hostname: EC2_HOST,
     port: EC2_PORT,
     path: req.url,
     method: req.method,
     headers: {
-      ...req.headers,
+      ...forwardHeaders,
       host: EC2_HOST,
       'x-forwarded-for': req.ip,
       'x-forwarded-proto': 'https',

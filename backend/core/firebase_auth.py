@@ -1,8 +1,12 @@
 """
 Firebase ID token authentication for Django REST Framework.
 
-Verifies the Bearer token sent by the frontend (Firebase JS SDK),
-looks up or creates the matching local User, and sets request.user.
+Two paths:
+  1. Trusted proxy headers (X-Verified-Firebase-UID / X-Verified-Firebase-Email)
+     set by the Cloud Function apiProxy after it verifies the token.
+     EC2 trusts these unconditionally — they come from an internal hop.
+  2. Direct Bearer token verification via Firebase Admin SDK
+     (fallback for local dev / direct EC2 access).
 
 IPR Owner: Rohit Tidke | Exclusively assigned to: Intech Research Group
 """
@@ -26,13 +30,37 @@ def _get_firebase_app():
         return None
 
 
+def _get_or_create_user(uid: str, email: str):
+    user, created = User.objects.get_or_create(
+        firebase_uid=uid,
+        defaults={
+            'email': email,
+            'username': email or uid,
+            'is_active': True,
+        },
+    )
+    if not created and email and user.email != email:
+        user.email = email
+        user.save(update_fields=['email'])
+    return user, created
+
+
 class FirebaseAuthentication(BaseAuthentication):
     """
-    Reads `Authorization: Bearer <firebase-id-token>` and verifies it
-    against the Firebase project. On success, returns (user, token_payload).
+    Authenticates via Firebase. Accepts:
+      • X-Verified-Firebase-UID header (set by Cloud Function proxy, already verified)
+      • Authorization: Bearer <firebase-id-token> (verified directly here)
     """
 
     def authenticate(self, request):
+        # ── Path 1: trusted headers from Cloud Function proxy ──────────────────
+        uid = request.META.get('HTTP_X_VERIFIED_FIREBASE_UID', '').strip()
+        if uid:
+            email = request.META.get('HTTP_X_VERIFIED_FIREBASE_EMAIL', '').strip()
+            user, _ = _get_or_create_user(uid, email)
+            return (user, {'uid': uid, 'email': email, 'source': 'proxy'})
+
+        # ── Path 2: direct Bearer token (local dev / direct EC2 access) ────────
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         if not auth_header.startswith('Bearer '):
             return None
@@ -43,7 +71,11 @@ class FirebaseAuthentication(BaseAuthentication):
 
         app = _get_firebase_app()
         if app is None:
-            raise AuthenticationFailed('Firebase not initialised on this server.')
+            raise AuthenticationFailed(
+                'Firebase Admin SDK not initialised. '
+                'Set FIREBASE_CREDENTIALS_JSON in the environment, '
+                'or route requests through the Cloud Function proxy.'
+            )
 
         try:
             import firebase_admin.auth as fb_auth
@@ -51,22 +83,9 @@ class FirebaseAuthentication(BaseAuthentication):
         except Exception as exc:
             raise AuthenticationFailed(f'Invalid Firebase token: {exc}')
 
-        uid = decoded.get('uid')
+        uid   = decoded.get('uid')
         email = decoded.get('email', '')
-
-        user, created = User.objects.get_or_create(
-            firebase_uid=uid,
-            defaults={
-                'email': email,
-                'username': email or uid,
-                'is_active': True,
-            },
-        )
-
-        if not created and email and user.email != email:
-            user.email = email
-            user.save(update_fields=['email'])
-
+        user, _ = _get_or_create_user(uid, email)
         return (user, decoded)
 
     def authenticate_header(self, request):
