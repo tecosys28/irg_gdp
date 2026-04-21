@@ -334,7 +334,7 @@ IRG_CHAIN_ABI_DIR = os.environ.get('IRG_CHAIN_ABI_DIR', '')
 # HTTPS / SECURITY HEADERS (production only)
 # ─────────────────────────────────────────────────────────────────────────────
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False   # SSL terminated by Firebase/CDN; EC2 has no cert on 443
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_SECONDS = 31536000        # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
