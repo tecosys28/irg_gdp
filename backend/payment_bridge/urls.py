@@ -20,6 +20,8 @@ urlpatterns = [
     path("dashboard/",        views.dashboard_metrics, name="dashboard"),
     path("audit/",            views.audit_log,         name="audit-log"),
     path("meta/",             views.bridge_meta,       name="bridge-meta"),
-    path("health/",           views.bridge_health,     name="bridge-health"),
-    path("rpc/",              views.rpc,               name="bridge-rpc"),
+    path("health/",                  views.bridge_health,         name="bridge-health"),
+    path("rpc/",                     views.rpc,                   name="bridge-rpc"),
+    path("razorpay/create-order/",   views.razorpay_create_order, name="razorpay-create-order"),
+    path("razorpay/verify/",         views.razorpay_verify,       name="razorpay-verify"),
 ]

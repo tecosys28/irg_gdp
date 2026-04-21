@@ -180,6 +180,8 @@
         @media (max-width: 1200px) { .usps-grid, .website-info-grid { grid-template-columns: repeat(2, 1fr); } .stats-grid { grid-template-columns: repeat(2, 1fr); } .two-col-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .sidebar { width: 100%; position: relative; height: auto; } .main-content { margin-left: 0; } .usps-grid, .website-info-grid { grid-template-columns: 1fr; } .contact-section { flex-direction: column; gap: 15px; align-items: center; } .hero-title { font-size: 32px; } .form-row { grid-template-columns: 1fr; } }
     </style>
+    <!-- Razorpay checkout -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <!-- Firebase compat SDK — required for compat-style usage alongside modular SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -778,6 +780,37 @@
           if(!r.ok)throw await r.json().catch(()=>({error:'request_failed'}));
           return r.json();
         }
+        // ─── Razorpay helper ──────────────────────────────────────────────────
+        async function openRazorpay({amountPaise, purpose, referenceId, onSuccess, onDismiss}){
+          let order;
+          try{
+            order=await apiPost('/paa/razorpay/create-order/',{amount_paise:amountPaise,purpose,reference_id:referenceId||''});
+          }catch(e){alert('Could not initiate payment: '+(e.error||JSON.stringify(e)));return;}
+          const options={
+            key: order.key_id,
+            amount: order.amount,
+            currency: order.currency||'INR',
+            name: 'IRG_GDP — Intech Research Group',
+            description: purpose,
+            order_id: order.order_id,
+            handler: async function(response){
+              try{
+                await apiPost('/paa/razorpay/verify/',{
+                  razorpay_order_id:   response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature:  response.razorpay_signature,
+                });
+                if(onSuccess) onSuccess(response.razorpay_payment_id);
+              }catch(e){alert('Payment verification failed: '+(e.error||'Please contact support with Payment ID: '+response.razorpay_payment_id));}
+            },
+            prefill:{email:(window._auth?.currentUser?.email||''), contact:''},
+            theme:{color:'#E4B44A'},
+            modal:{ondismiss:()=>{if(onDismiss)onDismiss();}},
+          };
+          const rzp=new window.Razorpay(options);
+          rzp.open();
+        }
+
         async function apiPost(path,body,method='POST'){
           const t=await _freshToken();
           const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json',...(t?{'Authorization':'Bearer '+t}:{})},body:body?JSON.stringify(body):undefined});
@@ -1120,12 +1153,22 @@
             enterDashboard(pendingRole||'household');
         }
 
-        function enterDashboard(r='admin'){
-            currentRole=r;
+        window._userRoles=[];
+        const ROLE_LABEL={household:'🏠 Household',jeweler:'💎 Jeweler',designer:'🎨 Designer',licensee:'📋 Licensee',ombudsman:'⚖️ Ombudsman',admin:'🔧 Administrator'};
+        async function enterDashboard(r='household'){
             document.getElementById('landing-page').style.display='none';
             document.getElementById('dashboard-page').classList.add('active');
-            document.getElementById('role-select').value=r;
-            const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};
+            // Fetch user's actual active roles from backend; rebuild dropdown to only those
+            try{
+              const me=await apiGet('/auth/users/me/');
+              const active=(me.roles||[]).filter(x=>x.status==='ACTIVE').map(x=>x.role.toLowerCase());
+              window._userRoles=active.length?active:[r];
+            }catch(_){window._userRoles=[r];}
+            const sel=document.getElementById('role-select');
+            sel.innerHTML=window._userRoles.map(role=>`<option value="${role}">${ROLE_LABEL[role]||role}</option>`).join('');
+            currentRole=window._userRoles.includes(r)?r:window._userRoles[0];
+            sel.value=currentRole;
+            const i=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤',color:'#E4B44A'};
             document.getElementById('role-icon').textContent=i.icon;
             document.getElementById('role-icon').style.background=i.color;
             document.getElementById('role-name').textContent=i.name;
@@ -1143,8 +1186,17 @@
         const ROLE_CONSTRAINTS={JEWELER:{HOUSEHOLD:false,RETURNEE:false,DESIGNER:false,OMBUDSMAN:false,LICENSEE:false},HOUSEHOLD:{JEWELER:false,OMBUDSMAN:false},OMBUDSMAN:{JEWELER:false,HOUSEHOLD:false,RETURNEE:false,DESIGNER:false,LICENSEE:false,MARKETMAKER:false,MINTER:false,TRUSTEE:false}};
         function changeRole(r){
           const rUp=r.toUpperCase();
+          // Block: user doesn't have this role
+          if(window._userRoles.length&&!window._userRoles.includes(r)){
+            alert(`You are not registered as ${ROLE_LABEL[r]||rUp}.\nRegister for this role first from the Sign On page.`);
+            document.getElementById('role-select').value=currentRole;return;
+          }
+          // Block: role incompatibility
           const block=ROLE_CONSTRAINTS[currentRole.toUpperCase()]||{};
-          if(block[rUp]===false){alert(`❌ Role conflict: ${currentRole.toUpperCase()} cannot be combined with ${rUp} per IRG_GDP multi-role rules.`);document.getElementById('role-select').value=currentRole;return;}
+          if(block[rUp]===false){
+            alert(`❌ Role conflict: ${currentRole.toUpperCase()} cannot be combined with ${rUp} per IRG_GDP multi-role rules.`);
+            document.getElementById('role-select').value=currentRole;return;
+          }
           currentRole=r;currentPanel='dashboard';
           const i=USER_ROLES_DISPLAY[r]||{name:r,icon:'👤',color:'#E4B44A'};
           document.getElementById('role-icon').textContent=i.icon;
@@ -1573,6 +1625,21 @@
             description:document.getElementById('jr-desc')?.value.trim(),
           };
           if(!body.customer_email||!body.gold_weight){alert('Fill in required fields.');return;}
+          const totalInr=body.making_charges+body.stone_value;
+          // If there are charges, collect payment via Razorpay before issuing
+          if(totalInr>0){
+            openRazorpay({
+              amountPaise: Math.round(totalInr*100),
+              purpose: `irg_jr Issuance — ${body.gold_weight}g ${body.purity} for ${body.customer_email}`,
+              referenceId: body.invoice_number||'',
+              onSuccess: async(paymentId)=>{
+                body.payment_id=paymentId;
+                try{const r=await apiPost('/jr/issuance/issue/',body);alert(`irg_jr issued! Unit ID: ${r.jr_unit?.id||'OK'}\nPayment: ${paymentId}`);renderPanel();}
+                catch(e){alert('Payment succeeded but issuance failed: '+(e.error||JSON.stringify(e)));}
+              },
+            });
+            return;
+          }
           try{
             const r=await apiPost('/jr/issuance/issue/',body);
             alert(`irg_jr issued! Unit ID: ${r.jr_unit?.id||'OK'}`);
@@ -1597,7 +1664,7 @@
           const bbRows=(buybacks.results||buybacks||[]).map(b=>`<tr>
             <td>${b.id}</td><td>${b.jr_unit||'—'}</td><td>₹${fmtAmt(b.buyback_value)}</td>
             <td>${badge(b.status,statusColor(b.status))}</td><td>${fmtDate(b.created_at)}</td>
-            <td>${b.status==='REQUESTED'?`<button class="btn btn-sm btn-gold" onclick="approveBuyback(${b.id})">Approve</button>`:'—'}</td>
+            <td>${b.status==='REQUESTED'?`<button class="btn btn-sm btn-gold" onclick="approveBuyback(${b.id},${b.buyback_value||0})">Approve &amp; Pay</button>`:'—'}</td>
           </tr>`);
           return panelCard('↩️ JR Units',tbl(['ID','Owner','Weight & Purity','Buyback Value','Status','Action'],unitRows))
             +panelCard('📋 Buyback Requests',tbl(['ID','JR Unit','Value','Status','Date','Action'],bbRows));
@@ -1607,9 +1674,22 @@
           try{await apiPost('/jr/buyback/request_buyback/',{jr_unit_id:unitId});alert('Buyback requested.');renderPanel();}
           catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
         }
-        async function approveBuyback(id){
-          if(!confirm('Approve buyback #'+id+'?'))return;
-          try{await apiPost(`/jr/buyback/${id}/approve/`,{});alert('Buyback approved and executed.');renderPanel();}
+        async function approveBuyback(id,valueInr){
+          if(!confirm(`Approve buyback #${id}?\nBuyback value: ₹${fmtAmt(valueInr||0)}`))return;
+          // Collect payment receipt before approving
+          if(valueInr>0){
+            openRazorpay({
+              amountPaise: Math.round(valueInr*100),
+              purpose: `irg_jr Buyback #${id}`,
+              referenceId: `buyback-${id}`,
+              onSuccess: async(paymentId)=>{
+                try{await apiPost(`/jr/buyback/${id}/approve/`,{payment_id:paymentId});alert(`Buyback #${id} approved.\nPayment: ${paymentId}`);renderPanel();}
+                catch(e){alert('Payment ok but approval failed: '+(e.error||JSON.stringify(e)));}
+              },
+            });
+            return;
+          }
+          try{await apiPost(`/jr/buyback/${id}/approve/`,{});alert('Buyback approved.');renderPanel();}
           catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
         }
 

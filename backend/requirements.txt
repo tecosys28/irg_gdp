@@ -17,6 +17,9 @@ whitenoise>=6.5
 python-dateutil>=2.8
 requests>=2.31
 
+# ─── Razorpay payment gateway ───
+razorpay>=1.4.1
+
 # ─── Firebase integration (irg-gdp-prod) ───
 firebase-admin>=6.5.0
 google-cloud-firestore>=2.16.0

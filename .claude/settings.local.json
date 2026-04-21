@@ -49,7 +49,13 @@
       "Bash(python3 -c 'import ast, sys *)",
       "Bash(python3 -)",
       "Bash(grep -n \"hideModal\\('signin'\\);\\\\s*$\\\\|showModal\\('otp'\\);\\\\s*$\" /Users/prathmeshwalimbe/Downloads/irg_gdp/frontend/index.html)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(chmod 400 /Users/prathmeshwalimbe/Downloads/irg-key.pem)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=15 ec2-user@43.205.237.197 \"echo connected && whoami && uname -a\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 ' *)",
+      "Bash(git push *)"
     ]
   }
 }

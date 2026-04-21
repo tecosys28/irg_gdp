@@ -178,3 +178,85 @@ def rpc(request):
     if isinstance(result, dict) and "ok" in result:
         return Response(result)
     return Response({"ok": True, "data": result})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Razorpay payment gateway
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _razorpay_client():
+    import razorpay
+    from django.conf import settings
+    key = settings.RAZORPAY_KEY_ID
+    secret = settings.RAZORPAY_KEY_SECRET
+    if not key or not secret:
+        raise ValueError("RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET not configured in environment.")
+    return razorpay.Client(auth=(key, secret))
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def razorpay_create_order(request):
+    """
+    Create a Razorpay order.
+    Body: { amount_paise: int, purpose: str, reference_id: str (optional) }
+    Returns: { order_id, amount, currency, key_id }
+    """
+    from django.conf import settings
+    amount_paise = int(request.data.get("amount_paise", 0))
+    if amount_paise <= 0:
+        return Response({"error": "amount_paise must be > 0"}, status=status.HTTP_400_BAD_REQUEST)
+
+    purpose      = request.data.get("purpose", "IRG_GDP Payment")
+    reference_id = request.data.get("reference_id", "")
+
+    try:
+        client = _razorpay_client()
+    except ValueError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    try:
+        order = client.order.create({
+            "amount":   amount_paise,
+            "currency": "INR",
+            "receipt":  (reference_id or str(request.user.id))[:40],
+            "notes":    {"purpose": purpose, "user": str(request.user.email)},
+        })
+    except Exception as exc:
+        return Response({"error": f"Razorpay error: {exc}"}, status=status.HTTP_502_BAD_GATEWAY)
+
+    return Response({
+        "order_id": order["id"],
+        "amount":   order["amount"],
+        "currency": order["currency"],
+        "key_id":   settings.RAZORPAY_KEY_ID,
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def razorpay_verify(request):
+    """
+    Verify a completed Razorpay payment.
+    Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+    Returns: { verified: true } or 400
+    """
+    import hmac, hashlib
+    from django.conf import settings
+
+    order_id   = request.data.get("razorpay_order_id", "")
+    payment_id = request.data.get("razorpay_payment_id", "")
+    signature  = request.data.get("razorpay_signature", "")
+
+    if not all([order_id, payment_id, signature]):
+        return Response({"error": "Missing payment fields"}, status=status.HTTP_400_BAD_REQUEST)
+
+    msg = f"{order_id}|{payment_id}".encode()
+    expected = hmac.new(
+        settings.RAZORPAY_KEY_SECRET.encode(), msg, hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected, signature):
+        return Response({"error": "Payment signature mismatch — possible tampering"}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({"verified": True, "payment_id": payment_id, "order_id": order_id})

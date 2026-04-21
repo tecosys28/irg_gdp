@@ -187,6 +187,10 @@ CORS_ALLOW_ALL_ORIGINS = False
 FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
 FIREBASE_PROJECT_ID = os.environ.get('FIREBASE_PROJECT_ID', 'irggdp')
 
+# Razorpay payment gateway
+RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # IRG_GDP SYSTEM CONFIGURATION

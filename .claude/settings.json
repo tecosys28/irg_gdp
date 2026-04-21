@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(firebase auth:export /tmp/fb_users.json --project irggdp --format=json)",
+      "Read(//tmp/**)",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Read(//Users/prathmeshwalimbe/Library/**)",
+      "Read(//Users/prathmeshwalimbe/.config/**)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('OK' if not d.get\\('error'\\) else d['error']['message']\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('deleted anon account:', 'OK' if not d.get\\('error'\\) else d['error']['message']\\)\")",
+      "Bash(firebase auth:export /tmp/fb_users2.json --project irggdp --format=json)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('Firebase Auth users remaining:', len\\(d.get\\('users',[]\\)\\)\\)\")",
+      "Bash(git commit -m ' *)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd ~/irg_gdp && git pull origin main 2>&1 | tail -3\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 'cd /home/ec2-user/irg_gdp/backend && set -a && source .env && set +a && python manage.py shell -c \" *)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 'cd /home/ec2-user/irg_gdp/backend && set -a && source .env && set +a && python3 manage.py shell -c \" *)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"sudo systemctl status nginx 2>&1 | head -20 && echo '---' && ps aux | grep gunicorn | grep -v grep\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cat /etc/nginx/conf.d/irggdp.conf\")",
+      "Bash(curl -v --max-time 10 http://43.205.237.197/admin/)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd /home/ec2-user/irg_gdp && git pull && kill \\\\$\\(cat /tmp/gunicorn.pid 2>/dev/null\\) 2>/dev/null; pkill -f 'gunicorn wsgi' 2>/dev/null; sleep 2 && cd backend && set -a && source .env && set +a && python3 /home/ec2-user/.local/bin/gunicorn wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile /home/ec2-user/gunicorn-access.log --error-logfile /home/ec2-user/gunicorn-error.log --daemon && echo 'gunicorn restarted'\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"sleep 3 && ps aux | grep gunicorn | grep -v grep | wc -l\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd /home/ec2-user/irg_gdp/backend && set -a && source .env && set +a && python3 /home/ec2-user/.local/bin/gunicorn wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile /home/ec2-user/gunicorn-access.log --error-logfile /home/ec2-user/gunicorn-error.log --daemon && sleep 2 && ps aux | grep gunicorn | grep -v grep | wc -l\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\" http://43.205.237.197/admin/)",
+      "Bash(curl -s -c /tmp/irg_cookies.txt http://43.205.237.197/admin/login/)",
+      "Bash(curl -s -b /tmp/irg_cookies.txt -c /tmp/irg_cookies.txt -X POST http://43.205.237.197/admin/login/ -d 'csrfmiddlewaretoken=oZMVC2kOE4moXI0vfUhveTCYEGzdzr2s1Biv0BSYgr4tr5hkHK36HgvF1629wBeQ&username=prathmeshwalimbe2004%40gmail.com&password=IRGadmin2026&next=%2Fadmin%2F' -w '\\\\nHTTP_CODE: %{http_code}\\\\nREDIRECT: %{redirect_url}' -o /dev/null)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd /home/ec2-user/irg_gdp && git pull && pkill -f 'gunicorn wsgi' 2>/dev/null; sleep 2 && cd backend && set -a && source .env && set +a && python3 /home/ec2-user/.local/bin/gunicorn wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile /home/ec2-user/gunicorn-access.log --error-logfile /home/ec2-user/gunicorn-error.log --daemon && sleep 2 && echo done\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"tail -20 /home/ec2-user/gunicorn-error.log\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd /home/ec2-user/irg_gdp && git pull && pkill -f 'gunicorn wsgi' 2>/dev/null; sleep 2 && cd backend && set -a && source .env && set +a && python3 /home/ec2-user/.local/bin/gunicorn wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile /home/ec2-user/gunicorn-access.log --error-logfile /home/ec2-user/gunicorn-error.log --daemon && sleep 3 && echo done\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd /home/ec2-user/irg_gdp/backend && set -a && source .env && set +a && python3 /home/ec2-user/.local/bin/gunicorn wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile /home/ec2-user/gunicorn-access.log --error-logfile /home/ec2-user/gunicorn-error.log --daemon && sleep 3 && ps aux | grep gunicorn | grep -v grep | wc -l\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"tail -5 /home/ec2-user/gunicorn-access.log\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 ' *)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"ps aux | grep gunicorn | grep -v grep | wc -l && cd /home/ec2-user/irg_gdp/backend && set -a && source .env && set +a && python3 manage.py shell -c \\\\\"from core.models import User; u=User.objects.get\\(email='prathmeshwalimbe2004@gmail.com'\\); print\\('pw ok:', u.check_password\\('Admin1234'\\)\\)\\\\\"\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd /home/ec2-user/irg_gdp/backend && set -a && source .env && set +a && echo -e 'Admin1234\\\\nAdmin1234' | python3 manage.py changepassword prathmesh 2>&1 | grep -v FutureWarning | grep -v warnings.warn && python3 manage.py shell -c \\\\\"from core.models import User; u=User.objects.get\\(email='prathmeshwalimbe2004@gmail.com'\\); print\\('pw ok:', u.check_password\\('Admin1234'\\)\\)\\\\\" 2>&1 | grep -v FutureWarning | grep -v warnings.warn\")",
+      "Bash(xargs cat *)",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"grep -i 'FIREBASE_CREDENTIALS\\\\|GOOGLE_APPLICATION\\\\|firebase' /home/ec2-user/irg_gdp/backend/.env 2>/dev/null | grep -v '#'\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"find /home/ec2-user -name '*.json' -not -path '*/node_modules/*' -not -path '*/__pycache__/*' 2>/dev/null | head -20 && ls /home/ec2-user/*.json 2>/dev/null\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(list\\(d.keys\\(\\)\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(a.get\\('email'\\)\\) for a in d.get\\('accounts',[]\\)]\")",
+      "Bash(ssh -i /Users/prathmeshwalimbe/Downloads/irg-key.pem -o StrictHostKeyChecking=no ec2-user@43.205.237.197 \"cd /home/ec2-user/irg_gdp/backend && set -a && source .env && set +a && python3 /home/ec2-user/.local/bin/gunicorn wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile /home/ec2-user/gunicorn-access.log --error-logfile /home/ec2-user/gunicorn-error.log --daemon && sleep 4 && ps aux | grep gunicorn | grep -v grep | wc -l && tail -5 /home/ec2-user/gunicorn-error.log\")"
+    ]
+  }
+}
