@@ -116,6 +116,102 @@ def _confirm_payment(modeladmin, request, queryset):
 _confirm_payment.short_description = 'Confirm payment and issue JR + GDP units'
 
 
+def _backfill_gdp_units(modeladmin, request, queryset):
+    """
+    For COMPLETED issuances whose customer has NO GDPUnit linked to the jr_unit
+    (happens when the legacy single-step 'issue' endpoint was used, which never
+    mints GDP units).  Reads gold data from the JRUnit itself.
+    """
+    from services.blockchain import BlockchainService
+    from irg_gdp.models import GDPUnit, MintingRecord
+    from django.conf import settings
+    import uuid, logging
+    logger = logging.getLogger(__name__)
+    blockchain = BlockchainService()
+
+    done = 0
+    skipped = 0
+
+    for issuance in queryset.filter(status='COMPLETED'):
+        jr = issuance.jr_unit
+        if not jr:
+            modeladmin.message_user(
+                request, f'Issuance {issuance.id} skipped — no JR unit linked.', messages.WARNING,
+            )
+            skipped += 1
+            continue
+
+        # Skip if a GDPUnit already exists whose minting_record is tied to this customer
+        # via the same jeweler + gold_weight + purity (good enough as dedup check)
+        already = MintingRecord.objects.filter(
+            user=issuance.customer,
+            certifying_jeweler=issuance.jeweler,
+            gold_grams=jr.gold_weight,
+            purity=jr.purity,
+        ).exists()
+        if already:
+            skipped += 1
+            continue
+
+        try:
+            config = settings.IRG_GDP_CONFIG
+            purity_factor = {
+                '24K': Decimal('1.0'), '22K': Decimal('0.9167'),
+                '18K': Decimal('0.75'), '14K': Decimal('0.5833'),
+            }[jr.purity]
+            pure_gold  = Decimal(str(jr.gold_weight)) * purity_factor
+            benchmark  = Decimal(str(jr.benchmark_at_issue))
+            saleable   = int(float(pure_gold) * config['SALEABLE_PER_GRAM'])
+            reserve    = int(float(pure_gold) * config['RESERVE_PER_GRAM'])
+            total      = saleable + reserve
+
+            gdp_tx = blockchain.mint_gdp(
+                to_address=issuance.customer.blockchain_address or '0x0',
+                gold_grams=int(pure_gold * 10**18),
+                purity=int(jr.purity.replace('K', '')),
+                benchmark_rate=int(benchmark * 100),
+            )
+            mint_record = MintingRecord.objects.create(
+                user=issuance.customer,
+                gold_grams=jr.gold_weight, purity=jr.purity,
+                pure_gold_equivalent=pure_gold,
+                invoice_hash=issuance.utr_number or issuance.invoice_number or '',
+                invoice_verified=True, jeweler_certified=True,
+                nw_certified=True, within_cap=True, undertaking_signed=True,
+                certifying_jeweler=issuance.jeweler,
+                units_to_mint=total, saleable_units=saleable, reserve_units=reserve,
+                earmarking_amount=Decimal(str(jr.issue_value)) * Decimal(str(config['EARMARKING_PERCENTAGE'])) / 100,
+                corpus_contribution=issuance.corpus_contribution,
+                status='COMPLETED', transaction_hash=gdp_tx,
+                completed_at=timezone.now(),
+            )
+            GDPUnit.objects.create(
+                owner=issuance.customer,
+                gold_grams=jr.gold_weight, purity=jr.purity,
+                pure_gold_equivalent=pure_gold,
+                benchmark_rate_at_mint=benchmark,
+                benchmark_value=pure_gold * benchmark,
+                saleable_units=saleable, reserve_units=reserve, total_units=total,
+                source_jeweler=issuance.jeweler, minting_record=mint_record,
+                blockchain_id=str(uuid.uuid4()), minting_tx_hash=gdp_tx,
+            )
+            done += 1
+        except Exception as e:
+            logger.error('Backfill GDP failed for issuance %s: %s', issuance.id, e)
+            modeladmin.message_user(request, f'Issuance {issuance.id} failed: {e}', messages.ERROR)
+
+    if done:
+        modeladmin.message_user(
+            request, f'{done} GDP unit(s) backfilled successfully.', messages.SUCCESS,
+        )
+    if skipped:
+        modeladmin.message_user(
+            request, f'{skipped} issuance(s) skipped (already have GDP units or no JR unit).', messages.WARNING,
+        )
+
+_backfill_gdp_units.short_description = 'Backfill missing GDP units for COMPLETED issuances'
+
+
 def _approve_buyback(modeladmin, request, queryset):
     from services.blockchain import BlockchainService
     blockchain = BlockchainService()
@@ -154,7 +250,7 @@ class IssuanceRecordAdmin(admin.ModelAdmin):
     search_fields   = ['customer__email', 'jeweler__business_name', 'invoice_number', 'utr_number']
     readonly_fields = ['id', 'created_at', 'pending_data']
     ordering        = ['-created_at']
-    actions         = [_confirm_payment]
+    actions         = [_confirm_payment, _backfill_gdp_units]
 
 
 @admin.register(BuybackRecord)
