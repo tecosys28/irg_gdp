@@ -96,7 +96,13 @@
       "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/prathmeshwalimbe/Downloads/irg_gdp/abis/IdentityRegistry.json'\\)\\); print\\([x['name'] for x in d if x.get\\('type'\\)=='function']\\)\")",
       "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/prathmeshwalimbe/Downloads/irg_gdp/abis/IPRLicense.json'\\)\\); print\\([x['name'] for x in d if x.get\\('type'\\)=='function']\\)\")",
       "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/prathmeshwalimbe/Downloads/irg_gdp/abis/GICRedemption.json'\\)\\); print\\([x['name'] for x in d if x.get\\('type'\\)=='function']\\)\")",
-      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/prathmeshwalimbe/Downloads/irg_gdp/abis/FTRRedemption.json'\\)\\); print\\([x['name'] for x in d if x.get\\('type'\\)=='function']\\)\")"
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/prathmeshwalimbe/Downloads/irg_gdp/abis/FTRRedemption.json'\\)\\); print\\([x['name'] for x in d if x.get\\('type'\\)=='function']\\)\")",
+      "Bash(curl -s --max-time 3 http://localhost:8000/healthz)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(dig irggdp.com +short)",
+      "Bash(nslookup irggdp.com)",
+      "Bash(firebase functions:config:get --project irggdp)",
+      "Bash(git rm *)"
     ]
   }
 }

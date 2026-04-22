@@ -126,6 +126,27 @@
         .copyright { color: var(--text-muted); font-size: 11px; text-align: center; }
         .chatbot-btn { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; font-size: 24px; border: none; }
         .chatbot-btn:hover { background: var(--gold-light); transform: scale(1.05); }
+        #chat-window { display: none; position: fixed; bottom: 90px; right: 24px; width: 360px; max-height: 520px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 1001; flex-direction: column; overflow: hidden; }
+        #chat-window.open { display: flex; }
+        #chat-header { background: var(--navy-dark); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        #chat-header span { color: var(--gold); font-weight: 600; font-size: 14px; }
+        #chat-header button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 0; }
+        #chat-header button:hover { color: var(--white); }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        #chat-messages::-webkit-scrollbar { width: 4px; }
+        #chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .chat-msg { max-width: 82%; padding: 9px 13px; border-radius: 10px; font-size: 13px; line-height: 1.5; word-break: break-word; }
+        .chat-msg.bot { background: var(--surface-light); color: var(--white); align-self: flex-start; border-bottom-left-radius: 3px; }
+        .chat-msg.user { background: var(--gold); color: var(--navy-dark); align-self: flex-end; border-bottom-right-radius: 3px; font-weight: 500; }
+        .chat-msg.typing { color: var(--text-muted); font-style: italic; }
+        .chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .chat-chip { background: var(--navy-dark); border: 1px solid var(--border); color: var(--gold); padding: 5px 10px; border-radius: 14px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+        .chat-chip:hover { background: rgba(228,180,74,0.15); }
+        #chat-input-row { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); background: var(--navy-dark); }
+        #chat-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 8px 14px; color: var(--white); font-size: 13px; outline: none; }
+        #chat-input:focus { border-color: var(--gold); }
+        #chat-send { background: var(--gold); border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        #chat-send:hover { background: var(--gold-light); }
         #dashboard-page { display: none; }
         #dashboard-page.active { display: flex; }
         .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); height: 100vh; overflow-y: auto; position: fixed; left: 0; top: 0; }
@@ -291,6 +312,20 @@
     </div>
 
     <button class="chatbot-btn" onclick="openChatbot()">💬</button>
+
+    <!-- ── Chat Assistant Window ─────────────────────────────────────────── -->
+    <div id="chat-window">
+      <div id="chat-header">
+        <span>💬 IRG Assistant</span>
+        <button onclick="openChatbot()" title="Close">✕</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div id="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Ask me anything…" autocomplete="off"
+               onkeydown="if(event.key==='Enter')sendChat()">
+        <button id="chat-send" onclick="sendChat()">➤</button>
+      </div>
+    </div>
 
     <!-- SIGN IN MODAL -->
     <div class="modal-overlay" id="signin-modal">
@@ -673,7 +708,7 @@
                 ]},
                 {group:'IRG_GDP Minting',items:[
                     {id:'my_units',label:'My IRG_GDP Units',icon:'🪙'},
-                    {id:'minting',label:'Request Minting',icon:'⛏️'},
+                    {id:'minting',label:'Mint GDP for Customer',icon:'⛏️'},
                     {id:'earmarking',label:'Earmarking',icon:'🔒'},
                     {id:'swap',label:'Swap for FTRs',icon:'🔄'},
                 ]},
@@ -932,7 +967,115 @@
         function hideModal(t){const m=document.getElementById(t+'-modal');if(m)m.classList.remove('active');}
         function showSearch(){alert('Search across IRG_GDP products and FTRs.');}
         function showHelp(){alert('Help Center');}
-        function openChatbot(){alert('Chat Assistant');}
+        function openChatbot(){
+          const win = document.getElementById('chat-window');
+          const isOpen = win.classList.toggle('open');
+          if (isOpen && document.getElementById('chat-messages').children.length === 0) {
+            _chatBotMsg(
+              'Hi! I\'m the IRG Assistant. I can help you with IRG_GDP, irg_jr, GIC, FTRs, wallet, and more.',
+              ['What is IRG_GDP?', 'How do I mint?', 'What is an FTR?', 'How does buyback work?', 'Wallet help']
+            );
+          }
+          if (isOpen) setTimeout(() => document.getElementById('chat-input').focus(), 100);
+        }
+
+        const _chatKB = [
+          { q: /irg.?gdp|what is irg/i,
+            a: 'IRG_GDP is a blockchain-registered right to swap gold value at the LBMA 24-carat rate for any of 45+ FTR categories, or resell it anytime from anywhere. It is backed by physical gold earmarked with registered IRG jewelers.' },
+          { q: /ftr|future transaction/i,
+            a: 'An FTR (Future Transaction Right) is your right to buy a service or goods at a pre-fixed rate any time in the future — covering 45+ categories like healthcare, education, travel, hospitality, real estate, and more.' },
+          { q: /mint|minting|how.*mint|create.*unit/i,
+            a: 'To mint IRG_GDP units: (1) Earmark your jewellery with a registered IRG jeweler. (2) The jeweler issues an irg_jr certificate. (3) After corpus contribution is verified, GDP units are credited to your wallet. Sign in and go to Request Minting.',
+            chips: ['How does buyback work?', 'What is irg_jr?'] },
+          { q: /irg.?jr|jewel.*right|jr unit/i,
+            a: 'irg_jr is a Tradable Jewellery Right with a no-loss buyback guarantee. Your jeweler issues it when you earmark gold. You can hold it, trade it, or redeem it for the buyback value at any time after the lock-in period.' },
+          { q: /buyback|no.loss|return.*gold/i,
+            a: 'The no-loss buyback means your jeweler is obligated to buy back your jewellery at the higher of: (a) the original benchmark value, or (b) the current LBMA gold price. Lock-in periods apply: 12 months for new jewellery, 6 months for old.' },
+          { q: /gic|gold investment cert/i,
+            a: 'GIC (Gold Investment Certificate) earns returns from 3 streams: corpus fund returns, trading fee share, and gold price appreciation. Minimum investment is ₹10,000 with maturity options of 12, 24, 36, or 60 months.' },
+          { q: /wallet|activate.*wallet|wallet.*help/i,
+            a: 'Your IRG Wallet holds your GDP units and irg_jr certificates on IRG Chain 888101. To activate it: set a wallet password, write down your 15-word recovery phrase, and register at least 2 nominees. Click 💼 My Wallet after signing in.' },
+          { q: /swap|exchange.*ftr|ftr.*swap/i,
+            a: 'You can swap your IRG_GDP units for any of 45+ FTR categories at the locked benchmark rate. Go to Dashboard → Swap for FTRs, select your GDP unit and the FTR category, then confirm.' },
+          { q: /kyc|verify|document/i,
+            a: 'KYC is required to transact. Upload your Aadhaar, PAN, or other documents from Dashboard → My Profile & KYC. Documents are reviewed within 1–2 business days.' },
+          { q: /jeweler|jeweller|register.*jewel/i,
+            a: 'Jewelers can register on the Sign On page. You will need your business name, license number, GST, and PAN. Once approved, you can issue irg_jr certificates and facilitate GDP minting for customers.' },
+          { q: /sign.*in|login|sign.*on|register/i,
+            a: 'Click Sign In at the top right to log in with your email and password. New users can click Sign On to register and select their role(s).' },
+          { q: /corpus|super.*cf|corpus.*fund/i,
+            a: 'The Super Corpus Fund acts as the buyer of last resort at benchmark value, ensuring liquidity at all times. It is held at Bank of Baroda, Santacruz East, Mumbai.' },
+          { q: /lbma|gold.*rate|price.*gold/i,
+            a: 'IRG_GDP units are pegged to the LBMA 24-carat gold rate (XAU). The rate is updated daily. Admins can update it from Dashboard → LBMA Rates.' },
+          { q: /dispute|complaint|ombudsman/i,
+            a: 'To file a dispute, go to Dashboard → File a Dispute. The IRG Ombudsman reviews all cases. For wallet recovery disputes, use the Recovery tab in your wallet.' },
+          { q: /licensee|territory|license/i,
+            a: 'Licensees hold exclusive territorial rights to operate IRG_GDP services. They earn revenue share from GIC corpus streams. Register as a Licensee from the Sign On page.' },
+          { q: /hi|hello|hey|help|start/i,
+            a: 'Hello! I can help you with IRG_GDP, irg_jr, GIC, FTRs, wallet activation, KYC, and more. What would you like to know?',
+            chips: ['What is IRG_GDP?', 'How do I mint?', 'Wallet help', 'What is an FTR?'] },
+        ];
+
+        function _chatBotMsg(text, chips) {
+          const box = document.getElementById('chat-messages');
+          const div = document.createElement('div');
+          div.className = 'chat-msg bot';
+          div.textContent = text;
+          box.appendChild(div);
+          if (chips && chips.length) {
+            const row = document.createElement('div');
+            row.className = 'chat-suggestions';
+            chips.forEach(c => {
+              const btn = document.createElement('button');
+              btn.className = 'chat-chip';
+              btn.textContent = c;
+              btn.onclick = () => _handleChat(c);
+              row.appendChild(btn);
+            });
+            box.appendChild(row);
+          }
+          box.scrollTop = box.scrollHeight;
+        }
+
+        function _chatUserMsg(text) {
+          const box = document.getElementById('chat-messages');
+          const div = document.createElement('div');
+          div.className = 'chat-msg user';
+          div.textContent = text;
+          box.appendChild(div);
+          box.scrollTop = box.scrollHeight;
+        }
+
+        function _handleChat(text) {
+          _chatUserMsg(text);
+          const input = document.getElementById('chat-input');
+          input.value = '';
+          // Show typing indicator
+          const box = document.getElementById('chat-messages');
+          const typing = document.createElement('div');
+          typing.className = 'chat-msg bot typing';
+          typing.textContent = 'Typing…';
+          box.appendChild(typing);
+          box.scrollTop = box.scrollHeight;
+          setTimeout(() => {
+            typing.remove();
+            const match = _chatKB.find(k => k.q.test(text));
+            if (match) {
+              _chatBotMsg(match.a, match.chips);
+            } else {
+              _chatBotMsg(
+                'I don\'t have a specific answer for that yet. For detailed help, please contact support@intechresearch.com or visit the Help section.',
+                ['What is IRG_GDP?', 'Wallet help', 'How do I mint?']
+              );
+            }
+          }, 600);
+        }
+
+        function sendChat() {
+          const text = document.getElementById('chat-input').value.trim();
+          if (!text) return;
+          _handleChat(text);
+        }
         async function showForgotPassword(){
           const email = document.getElementById('signin-email').value.trim();
           if (!email) { alert('Enter your email address first.'); return; }
@@ -1450,6 +1593,27 @@
         // GDP MINTING
         // ═══════════════════════════════════════════════════════
         async function renderGDPMint(){
+          // Jewelers mint GDP for customers via Issue irg_jr, not directly.
+          if(window._userRoles.includes('jeweler') && !window._userRoles.some(r=>['household','investor','minter'].includes(r))){
+            return panelCard('⛏️ Minting — Jeweler Flow',`
+              <div class="info-box info" style="margin-bottom:16px">
+                <strong>💡 How Jewelers Mint GDP</strong><br>
+                As a Jeweler, you mint IRG_GDP units <em>for your customers</em> through the
+                <strong>Issue irg_jr</strong> flow — not directly. Here's how it works:
+              </div>
+              <ol style="color:var(--text-muted);line-height:2.2;padding-left:20px;margin-bottom:20px">
+                <li>Customer brings jewellery → you assess it (Gold Assessment)</li>
+                <li>You fill in jewellery details in <strong>Issue irg_jr</strong></li>
+                <li>System calculates corpus contribution → you transfer it to IRG bank account</li>
+                <li>After UTR verification → <strong>irg_jr unit is issued to the customer</strong> and GDP units are credited to their wallet</li>
+              </ol>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <button class="btn btn-gold" onclick="selectPanel('jr_issuance')">📝 Issue irg_jr (Mint for Customer)</button>
+                <button class="btn btn-outline" onclick="selectPanel('jr_assess')">🔬 Gold Assessment First</button>
+              </div>
+            `);
+          }
+
           const records=await apiGet('/gdp/minting/').catch(()=>({results:[]}));
           const rows=(records.results||records||[]).map(m=>`<tr>
             <td>${m.id}</td><td>${m.gold_grams}g ${m.purity}</td>
@@ -1484,7 +1648,16 @@
             await apiPost('/gdp/minting/',{gold_grams:grams,purity,invoice_hash:invoice});
             alert('Minting request submitted. Complete the 5-point checklist to proceed.');
             renderPanel();
-          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+          }catch(e){
+            // Backend returns a specific code when a jeweler hits this endpoint
+            if(e.error==='jeweler_use_issue_jr'){
+              if(confirm('Jewelers mint GDP for customers via Issue irg_jr.\n\nGo to Issue irg_jr now?')){
+                selectPanel('jr_issuance');
+              }
+              return;
+            }
+            alert('Error: '+(e.error||JSON.stringify(e)));
+          }
         }
         async function showMintChecklist(id){
           const checks=['invoice_verified','jeweler_certified','nw_certified','within_cap','undertaking_signed'];
@@ -1760,7 +1933,8 @@
           if(proofFile) fd.append('payment_proof',proofFile);
           try{
             const r=await apiFormPost(`/jr/issuance/${issuanceId}/verify_payment/`,fd);
-            alert(`Payment verified! irg_jr unit issued.\nUnit ID: ${r.jr_unit?.id||'OK'}`);
+            const gdpMsg = r.gdp_unit ? `\nGDP units credited to customer wallet. ✅` : `\n⚠️ GDP minting pending — check admin logs.`;
+            alert(`Payment verified! irg_jr unit issued.\nUnit ID: ${r.jr_unit?.id||'OK'}${gdpMsg}`);
             renderPanel();
           }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
         }
@@ -2768,7 +2942,7 @@
         // Expose all functions used by inline onclick= handlers to window scope
         // (required because this is a type="module" script)
         Object.assign(window, {
-          showModal, hideModal, showSearch, showHelp, openChatbot,
+          showModal, hideModal, showSearch, showHelp, openChatbot, sendChat,
           showForgotPassword, resendOTP, selectProduct, signOut, changeRole,
           selectPanel, goToStep1, goToStep2, goToStep3, goToStep2FromStep3,
           navScrollTo, showHowItWorks, showLicensees, showFAQs,
@@ -2817,7 +2991,7 @@
   #irg-wallet-banner button  { background: rgba(0,0,0,0.2); color: inherit;
       border: 1px solid currentColor; padding: 6px 12px; border-radius: 4px;
       cursor: pointer; font-weight: 600; }
-  #irg-wallet-quick { position: fixed; bottom: 90px; right: 20px; z-index: 9998;
+  #irg-wallet-quick { display: none; position: fixed; bottom: 90px; right: 20px; z-index: 9998;
       background: #E4B44A; color: #00003A; padding: 12px 18px;
       border-radius: 24px; font-weight: 600; text-decoration: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -2829,7 +3003,12 @@
 import { auth } from './firebase-init.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 onAuthStateChanged(auth, async user => {
-  if (!user) return;
+  const walletBtn = document.getElementById('irg-wallet-quick');
+  if (!user) {
+    walletBtn.style.display = 'none';
+    return;
+  }
+  walletBtn.style.display = 'block';
   try {
     const t = await user.getIdToken();
     const r = await fetch(API + '/wallet/status-banner/', {
@@ -2840,8 +3019,9 @@ onAuthStateChanged(auth, async user => {
     if (!d.banner) return;
     const b = document.getElementById('irg-wallet-banner');
     b.className = d.banner.level;
+    const href = d.banner.cta_route === '/wallet/activate' ? 'wallet.html' : (d.banner.cta_route || 'wallet.html');
     b.innerHTML = `<span>${d.banner.message}</span>` +
-      (d.banner.cta_label ? `<button onclick="window.location='wallet.html'">${d.banner.cta_label}</button>` : '');
+      (d.banner.cta_label ? `<button onclick="window.location='${href}'">${d.banner.cta_label}</button>` : '');
     b.style.display = 'flex';
     document.body.style.marginTop = '48px';
   } catch (e) { /* silent */ }

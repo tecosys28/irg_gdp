@@ -35,8 +35,11 @@ const db = admin.firestore();
 //   firebase functions:config:set backend.host="your-domain.com"
 // or export DJANGO_BACKEND_HOST=your-domain.com before deploying.
 // ─────────────────────────────────────────────────────────────────────────────
+// Direct IP avoids the Firebase Hosting → Cloud Function loop that would
+// occur if we used irggdp.com (which resolves to Firebase Hosting).
 const EC2_HOST = process.env.DJANGO_BACKEND_HOST || '43.205.237.197';
 const EC2_PORT = parseInt(process.env.DJANGO_BACKEND_PORT || '80', 10);
+const EC2_PROTOCOL = process.env.DJANGO_BACKEND_PROTOCOL || 'http';
 
 exports.apiProxy = onRequest({ invoker: 'public' }, async (req, res) => {
   res.set('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -66,6 +69,9 @@ exports.apiProxy = onRequest({ invoker: 'public' }, async (req, res) => {
   const forwardHeaders = { ...req.headers, ...trustedHeaders };
   delete forwardHeaders['host'];
 
+  const https = require('https');
+  const transport = EC2_PROTOCOL === 'https' ? https : http;
+
   const options = {
     hostname: EC2_HOST,
     port: EC2_PORT,
@@ -79,7 +85,7 @@ exports.apiProxy = onRequest({ invoker: 'public' }, async (req, res) => {
     },
   };
 
-  const proxy = http.request(options, (backendRes) => {
+  const proxy = transport.request(options, (backendRes) => {
     res.status(backendRes.statusCode);
     Object.entries(backendRes.headers).forEach(([k, v]) => {
       if (k.toLowerCase() !== 'transfer-encoding') res.set(k, v);

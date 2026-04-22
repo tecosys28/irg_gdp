@@ -191,6 +191,15 @@ FIREBASE_PROJECT_ID = os.environ.get('FIREBASE_PROJECT_ID', 'irggdp')
 RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 
+# Email
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@irggdp.com')
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # IRG_GDP SYSTEM CONFIGURATION
@@ -347,14 +356,16 @@ IRG_CHAIN_ABI_DIR = os.environ.get('IRG_CHAIN_ABI_DIR', '')
 # HTTPS / SECURITY HEADERS (production only)
 # ─────────────────────────────────────────────────────────────────────────────
 if not DEBUG:
-    SECURE_SSL_REDIRECT = False   # SSL terminated by Firebase/CDN; EC2 has no cert on 443
+    SECURE_SSL_REDIRECT = False          # SSL terminated at nginx; no redirect needed
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_HSTS_SECONDS = 0               # no HSTS — no SSL cert on EC2
+    SECURE_HSTS_SECONDS = 31536000       # 1 year — nginx has a valid cert
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
-    SESSION_COOKIE_SECURE = False         # HTTP-only EC2; cookies must work over plain HTTP
+    SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    CSRF_COOKIE_SECURE = False            # same — no SSL on EC2
+    CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = False

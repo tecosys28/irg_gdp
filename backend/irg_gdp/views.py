@@ -44,14 +44,47 @@ class GDPUnitViewSet(viewsets.ModelViewSet):
             }
         })
 
+def _user_active_roles(user):
+    return set(user.roles.filter(status__in=['ACTIVE', 'PENDING']).values_list('role', flat=True))
+
+
 class MintingViewSet(viewsets.ModelViewSet):
-    """Minting with 5-point checklist"""
+    """Minting with 5-point checklist — Household/Investor/Minter roles only."""
     serializer_class = MintingRequestSerializer
     permission_classes = [IsAuthenticated]
-    
+
+    _ALLOWED_MINT_ROLES = {'HOUSEHOLD', 'INVESTOR', 'MINTER', 'ADMIN'}
+
     def get_queryset(self):
         return MintingRecord.objects.filter(user=self.request.user)
-    
+
+    def _check_mint_role(self):
+        roles = _user_active_roles(self.request.user)
+        if self.request.user.is_staff or roles & self._ALLOWED_MINT_ROLES:
+            return None
+        if 'JEWELER' in roles:
+            return Response(
+                {
+                    'error': 'jeweler_use_issue_jr',
+                    'message': (
+                        'Jewelers mint GDP for customers through the "Issue irg_jr" flow, '
+                        'not directly. Go to Issue irg_jr → enter customer details → '
+                        'after corpus payment is verified, GDP units are credited to the customer.'
+                    ),
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return Response(
+            {'error': 'role_not_permitted', 'message': 'Only Household, Investor, or Minter roles can request minting.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    def create(self, request, *args, **kwargs):
+        err = self._check_mint_role()
+        if err:
+            return err
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         record = serializer.save(user=self.request.user)
         record.calculate_units()
@@ -72,8 +105,16 @@ class MintingViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def verify_checklist(self, request, pk=None):
-        """Verify 5-point minting checklist"""
-        record = self.get_object()
+        """Verify 5-point minting checklist — only the record owner or staff."""
+        record = self.get_object()  # already scoped to request.user via get_queryset
+
+        # Extra guard: staff can verify any record, but non-staff must own it
+        if not request.user.is_staff and record.user != request.user:
+            return Response(
+                {'error': 'You do not have permission to verify this checklist.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         serializer = MintingChecklistSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -98,8 +139,15 @@ class MintingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     @require_transactable(require_nominees=True)
     def execute_mint(self, request, pk=None):
-        """Execute minting after checklist verification"""
-        record = self.get_object()
+        """Execute minting after checklist verification."""
+        record = self.get_object()  # scoped to request.user via get_queryset
+
+        # Extra guard: staff can execute any record, but non-staff must own it
+        if not request.user.is_staff and record.user != request.user:
+            return Response(
+                {'error': 'You do not have permission to execute this mint.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         
         if not record.is_checklist_complete():
             return Response({'error': '5-point checklist incomplete'}, status=status.HTTP_400_BAD_REQUEST)
@@ -107,23 +155,24 @@ class MintingViewSet(viewsets.ModelViewSet):
         if record.status not in ['VERIFIED']:
             return Response({'error': 'Record not verified'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # GDP units must always go to the record owner, not whoever calls the endpoint
+        recipient = record.user
+
         record.status = 'MINTING'
         record.save()
         
         try:
-            # Execute blockchain minting
             benchmark = self._get_current_benchmark()
             tx_hash = blockchain.mint_gdp(
-                to_address=request.user.blockchain_address or '0x0',
+                to_address=recipient.blockchain_address or '0x0',
                 gold_grams=int(record.pure_gold_equivalent * 10**18),
                 purity=int(record.purity.replace('K', '')),
                 benchmark_rate=int(benchmark * 100)
             )
             
-            # Create GDP Unit
             with transaction.atomic():
                 gdp_unit = GDPUnit.objects.create(
-                    owner=request.user,
+                    owner=recipient,          # ← always the record owner
                     gold_grams=record.gold_grams,
                     purity=record.purity,
                     pure_gold_equivalent=record.pure_gold_equivalent,

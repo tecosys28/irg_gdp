@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e
-python manage.py makemigrations --noinput
 python manage.py migrate --noinput
 exec gunicorn wsgi:application \
   --bind "0.0.0.0:${PORT:-8080}" \

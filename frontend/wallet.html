@@ -433,8 +433,10 @@ function authHeaders() {
 
 onAuthStateChanged(auth, user => {
   if (!user) {
-    // Redirect to login if not authenticated
-    window.location.href = 'index.html';
+    // Give Firebase a moment to restore session before redirecting
+    setTimeout(() => {
+      if (!auth.currentUser) window.location.href = 'index.html';
+    }, 1500);
   }
 });
 async function apiGet(path) {
@@ -572,10 +574,17 @@ async function loadBanner() {
     const slot = document.getElementById('banner-slot');
     if (!r.banner) { slot.innerHTML = ''; return; }
     const { level, message, cta_label, cta_route } = r.banner;
-    slot.innerHTML = `<div class="banner ${level}">
-      <div>${message}</div>
-      ${cta_label ? `<button onclick="window.location='${cta_route}'">${cta_label}</button>` : ''}
-    </div>`;
+    // If cta_route points to the activation API endpoint, scroll to the
+    // activation tab instead of navigating away from this page.
+    let ctaHandler = '';
+    if (cta_label) {
+      if (cta_route === '/wallet/activate') {
+        ctaHandler = `<button onclick="showTab('tab-activation', event)">${cta_label}</button>`;
+      } else {
+        ctaHandler = `<button onclick="window.location='${cta_route}'">${cta_label}</button>`;
+      }
+    }
+    slot.innerHTML = `<div class="banner ${level}"><div>${message}</div>${ctaHandler}</div>`;
   } catch (e) { /* banner is best-effort */ }
 }
 
@@ -591,7 +600,12 @@ function showTab(id, ev) {
   document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(id).classList.remove('hidden');
-  if (ev && ev.target) ev.target.classList.add('active');
+  // Activate the matching .tab element by its onclick attribute
+  const matchingTab = Array.from(document.querySelectorAll('.tab')).find(
+    t => t.getAttribute('onclick') && t.getAttribute('onclick').includes(`'${id}'`)
+  );
+  if (matchingTab) matchingTab.classList.add('active');
+  else if (ev && ev.target && ev.target.classList.contains('tab')) ev.target.classList.add('active');
   if (id === 'tab-nominees') loadNominees();
   if (id === 'tab-devices') loadDevices();
   if (id === 'tab-history') loadHistory();
@@ -724,6 +738,9 @@ async function submitActivation() {
   const platform = navigator.platform || 'web';
   const label = prompt('Give this device a name (e.g. "iPhone 14")') || 'This device';
 
+  const btn = document.getElementById('activate-btn');
+  btn.disabled = true;
+  btn.textContent = 'Activating… (this may take a few seconds)';
   try {
     await apiPost('/wallet/activate/', {
       wallet_password: pw,
@@ -738,13 +755,15 @@ async function submitActivation() {
       terms_accepted: true,
     });
     msg('Wallet activated!', 'success');
-    activationWords = [];                                    // clear from memory
+    activationWords = [];
     document.getElementById('wallet-password').value = '';
     document.getElementById('wallet-password-confirm').value = '';
     await loadWalletInfo();
     await loadBanner();
   } catch (e) {
     msg('Activation failed: ' + (e.error || 'unknown'), 'error');
+    btn.disabled = false;
+    btn.textContent = 'Activate Wallet';
   }
 }
 

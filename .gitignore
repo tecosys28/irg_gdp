@@ -1,0 +1,55 @@
+# Secrets — never commit real credentials
+backend/.env
+functions/.env
+functions/.env.local
+*.pem
+*.key
+*.p12
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Django
+backend/staticfiles/
+backend/media/
+backend/db.sqlite3
+
+# Virtual envs
+venv/
+.venv/
+env/
+
+# Node
+node_modules/
+functions/node_modules/
+middleware/node_modules/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+.firebaserc.local
+
+# Test / coverage
+.coverage
+htmlcov/
+.pytest_cache/

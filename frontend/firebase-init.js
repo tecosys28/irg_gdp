@@ -24,7 +24,7 @@ export const auth        = getAuth(firebaseApp);
 export const db          = getFirestore(firebaseApp);
 export const storage     = getStorage(firebaseApp);
 
-// Firebase Hosting rewrites to 2nd-gen Cloud Functions require a gcloud IAM
-// grant that isn't set up yet. Call the Firebase Functions URL directly — CORS
-// is configured in apiProxy to allow all Firebase Hosting origins.
-export const API_BASE = 'https://asia-south1-irggdp.cloudfunctions.net/apiProxy';
+// API calls go through Firebase Hosting rewrite rules → Cloud Function proxy → EC2.
+// Using a relative path means this works on every environment (irggdp.com,
+// irggdp.web.app, localhost:5000) without any per-environment config.
+export const API_BASE = '';

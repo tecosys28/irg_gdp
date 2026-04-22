@@ -190,9 +190,78 @@ class IssuanceViewSet(viewsets.ModelViewSet):
         issuance.status = 'COMPLETED'
         issuance.save()
 
+        # ── Mint GDP units to the customer ────────────────────────────────
+        gdp_unit = None
+        try:
+            from irg_gdp.models import GDPUnit, MintingRecord
+            benchmark = Decimal(pd['benchmark_at_issue'])
+            purity_factor = {
+                '24K': Decimal('1.0'), '22K': Decimal('0.9167'),
+                '18K': Decimal('0.75'), '14K': Decimal('0.5833'),
+            }[pd['purity']]
+            pure_gold = Decimal(pd['gold_weight']) * purity_factor
+
+            config = settings.IRG_GDP_CONFIG
+            saleable = int(float(pure_gold) * config['SALEABLE_PER_GRAM'])
+            reserve  = int(float(pure_gold) * config['RESERVE_PER_GRAM'])
+            total    = saleable + reserve
+
+            gdp_tx_hash = blockchain.mint_gdp(
+                to_address=issuance.customer.blockchain_address or '0x0',
+                gold_grams=int(pure_gold * 10**18),
+                purity=int(pd['purity'].replace('K', '')),
+                benchmark_rate=int(benchmark * 100),
+            )
+
+            mint_record = MintingRecord.objects.create(
+                user=issuance.customer,
+                gold_grams=pd['gold_weight'],
+                purity=pd['purity'],
+                pure_gold_equivalent=pure_gold,
+                invoice_hash=issuance.utr_number or '',
+                invoice_verified=True,
+                jeweler_certified=True,
+                nw_certified=True,
+                within_cap=True,
+                undertaking_signed=True,
+                certifying_jeweler=issuance.jeweler,
+                units_to_mint=total,
+                saleable_units=saleable,
+                reserve_units=reserve,
+                earmarking_amount=Decimal(pd['issue_value']) * Decimal(str(config['EARMARKING_PERCENTAGE'])) / 100,
+                corpus_contribution=issuance.corpus_contribution,
+                status='COMPLETED',
+                transaction_hash=gdp_tx_hash,
+                completed_at=timezone.now(),
+            )
+
+            gdp_unit = GDPUnit.objects.create(
+                owner=issuance.customer,
+                gold_grams=pd['gold_weight'],
+                purity=pd['purity'],
+                pure_gold_equivalent=pure_gold,
+                benchmark_rate_at_mint=benchmark,
+                benchmark_value=pure_gold * benchmark,
+                saleable_units=saleable,
+                reserve_units=reserve,
+                total_units=total,
+                source_jeweler=issuance.jeweler,
+                minting_record=mint_record,
+                blockchain_id=str(uuid.uuid4()),
+                minting_tx_hash=gdp_tx_hash,
+            )
+        except Exception as gdp_err:
+            # JR unit is already issued — log the GDP failure but don't roll back
+            import logging
+            logging.getLogger(__name__).error(
+                'GDP minting failed after JR issuance %s: %s', issuance.id, gdp_err
+            )
+        # ─────────────────────────────────────────────────────────────────
+
         return Response({
             'message': 'Payment verified. IRG JR unit issued successfully.',
             'jr_unit': JRUnitSerializer(jr_unit).data,
+            'gdp_unit': gdp_unit.id if gdp_unit else None,
             'issuance': IssuanceRecordSerializer(issuance).data,
             'tx_hash': tx_hash,
         })

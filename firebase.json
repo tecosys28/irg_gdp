@@ -9,9 +9,12 @@
       "**/*.pyc"
     ],
     "rewrites": [
-      { "source": "/wallet",     "destination": "/wallet.html" },
-      { "source": "/heir-guide", "destination": "/heir-guide.html" },
-      { "source": "/**",         "destination": "/index.html" }
+      { "source": "/api/**",      "function": "apiProxy" },
+      { "source": "/admin/**",    "function": "apiProxy" },
+      { "source": "/healthz",     "function": "apiProxy" },
+      { "source": "/wallet",      "destination": "/wallet.html" },
+      { "source": "/heir-guide",  "destination": "/heir-guide.html" },
+      { "source": "/**",          "destination": "/index.html" }
     ],
     "headers": [
       {
