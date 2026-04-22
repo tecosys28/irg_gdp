@@ -62,3 +62,21 @@ class MarketMakerProfileAdmin(admin.ModelAdmin):
 @admin.register(TrusteeBankerProfile)
 class TrusteeBankerProfileAdmin(admin.ModelAdmin):
     list_display = ['bank_name', 'designation', 'branch_details']
+
+@admin.register(ConsultantProfile)
+class ConsultantProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'specialization', 'experience_years', 'is_active']
+    list_filter = ['specialization', 'is_active']
+    search_fields = ['user__email']
+
+@admin.register(AdvertiserProfile)
+class AdvertiserProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'company_name', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['user__email', 'company_name']
+
+@admin.register(Advertisement)
+class AdvertisementAdmin(admin.ModelAdmin):
+    list_display = ['title', 'advertiser', 'status', 'starts_at', 'ends_at']
+    list_filter = ['status']
+    search_fields = ['title', 'advertiser__company_name']
