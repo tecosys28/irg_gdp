@@ -1574,18 +1574,18 @@
               <div class="stat-box"><div class="stat-icon">👛</div><div class="stat-value">${fmtAmt(s.total_units)}</div><div class="stat-label">Total Units</div></div>
               <div class="stat-box"><div class="stat-icon">✅</div><div class="stat-value">${s.active_count||0}</div><div class="stat-label">Active</div></div>
               <div class="stat-box"><div class="stat-icon">🔒</div><div class="stat-value">${s.earmarked_count||0}</div><div class="stat-label">Earmarked</div></div>
-              <div class="stat-box"><div class="stat-icon">💰</div><div class="stat-value">₹${fmtAmt(s.total_value_inr)}</div><div class="stat-label">Est. Value (INR)</div></div>
+              <div class="stat-box"><div class="stat-icon">💰</div><div class="stat-value">₹${fmtAmt(s.total_value_inr||s.total_value)}</div><div class="stat-label">Est. Value (INR)</div></div>
             </div>`;
             const units=(port.units||[]);
             const rows=units.map(u=>`<tr>
-              <td>${u.unit_id||u.id}</td>
-              <td>${u.gold_weight_grams}g ${u.purity||''}</td>
+              <td style="font-size:11px;font-family:monospace">${(u.id||'').slice(0,8)}…</td>
+              <td>${u.gold_grams}g ${u.purity||''}</td>
               <td>${fmtAmt(u.pure_gold_equivalent)}g</td>
-              <td>${fmtAmt(u.units_issued)}</td>
+              <td>${fmtAmt(u.total_units)}</td>
               <td>${badge(u.status,statusColor(u.status))}</td>
-              <td>${fmtDate(u.created_at)}</td>
+              <td>${fmtDate(u.minted_at)}</td>
             </tr>`);
-            return stats+panelCard('📋 My GDP Units',tbl(['Unit ID','Gold Weight','Pure Gold Equiv.','Units','Status','Created'],rows));
+            return stats+panelCard('📋 My GDP Units',tbl(['Unit ID','Gold Weight','Pure Gold Equiv.','Units','Status','Minted'],rows));
           }catch(e){return errCard('Could not load portfolio: '+(e.error||''));}
         }
 
@@ -1846,8 +1846,8 @@
         async function renderJRIssuance(){
           const data=await apiGet('/jr/issuance/').catch(()=>({results:[]}));
           const rows=(data.results||data||[]).map(r=>`<tr>
-            <td class="mono" style="font-size:11px">${r.id.slice(0,8)}…</td>
-            <td>${r.customer||'—'}</td>
+            <td style="font-size:11px;font-family:monospace">${r.id.slice(0,8)}…</td>
+            <td>${r.customer_email||r.customer||'—'}</td>
             <td>₹${fmtAmt(r.corpus_contribution)}</td>
             <td>${fmtDate(r.created_at)}</td>
             <td>${badge(r.status||'—',statusColor(r.status))}</td>
@@ -1960,34 +1960,35 @@
             apiGet('/jr/buyback/').catch(()=>({results:[]})),
           ]);
           const unitRows=(units.results||units||[]).map(u=>`<tr>
-            <td>${u.id}</td><td>${u.owner||'—'}</td><td>${u.gold_weight}g ${u.purity}</td>
+            <td style="font-size:11px;font-family:monospace">${(u.id||'').slice(0,8)}…</td>
+            <td>${u.owner_email||u.owner||'—'}</td>
+            <td>${u.gold_weight}g ${u.purity}</td>
             <td>₹${fmtAmt(u.buyback_guarantee_value)}</td>
             <td>${badge(u.status,statusColor(u.status))}</td>
-            <td>${u.status==='ACTIVE'?`<button class="btn btn-sm btn-gold" onclick="requestBuyback(${u.id})">Request Buyback</button>`:'—'}</td>
+            <td>${u.status==='ACTIVE'?`<button class="btn btn-sm btn-gold" onclick="requestBuyback('${u.id}')">Request Buyback</button>`:'—'}</td>
           </tr>`);
           const bbRows=(buybacks.results||buybacks||[]).map(b=>`<tr>
-            <td>${b.id}</td><td>${b.jr_unit||'—'}</td><td>₹${fmtAmt(b.buyback_value)}</td>
+            <td>${b.id}</td><td style="font-size:11px;font-family:monospace">${(b.jr_unit||'').slice(0,8)}…</td><td>₹${fmtAmt(b.buyback_value)}</td>
             <td>${badge(b.status,statusColor(b.status))}</td><td>${fmtDate(b.created_at)}</td>
-            <td>${b.status==='REQUESTED'?`<button class="btn btn-sm btn-gold" onclick="approveBuyback(${b.id},${b.buyback_value||0})">Approve &amp; Pay</button>`:'—'}</td>
+            <td>${b.status==='REQUESTED'?`<button class="btn btn-sm btn-gold" onclick="approveBuyback('${b.id}',${b.buyback_value||0})">Approve &amp; Pay</button>`:'—'}</td>
           </tr>`);
           return panelCard('↩️ JR Units',tbl(['ID','Owner','Weight & Purity','Buyback Value','Status','Action'],unitRows))
             +panelCard('📋 Buyback Requests',tbl(['ID','JR Unit','Value','Status','Date','Action'],bbRows));
         }
         async function requestBuyback(unitId){
-          if(!confirm('Request buyback for JR unit #'+unitId+'?'))return;
+          if(!confirm('Request buyback for JR unit '+unitId.slice(0,8)+'…?'))return;
           try{await apiPost('/jr/buyback/request_buyback/',{jr_unit_id:unitId});alert('Buyback requested.');renderPanel();}
           catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
         }
         async function approveBuyback(id,valueInr){
-          if(!confirm(`Approve buyback #${id}?\nBuyback value: ₹${fmtAmt(valueInr||0)}`))return;
-          // Collect payment receipt before approving
+          if(!confirm(`Approve buyback?\nBuyback value: ₹${fmtAmt(valueInr||0)}`))return;
           if(valueInr>0){
             openRazorpay({
               amountPaise: Math.round(valueInr*100),
-              purpose: `irg_jr Buyback #${id}`,
+              purpose: `irg_jr Buyback`,
               referenceId: `buyback-${id}`,
               onSuccess: async(paymentId)=>{
-                try{await apiPost(`/jr/buyback/${id}/approve/`,{payment_id:paymentId});alert(`Buyback #${id} approved.\nPayment: ${paymentId}`);renderPanel();}
+                try{await apiPost(`/jr/buyback/${id}/approve/`,{payment_id:paymentId});alert(`Buyback approved.\nPayment: ${paymentId}`);renderPanel();}
                 catch(e){alert('Payment ok but approval failed: '+(e.error||JSON.stringify(e)));}
               },
             });

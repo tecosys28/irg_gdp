@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import CorpusFund, Deposit, Investment, Settlement
+from django.contrib import messages
+from .models import CorpusFund, Deposit, Investment, Settlement, CorpusBankAccount
 
 
 @admin.register(CorpusFund)
@@ -32,3 +33,34 @@ class SettlementAdmin(admin.ModelAdmin):
     search_fields = ['beneficiary__email', 'reference_id', 'settlement_tx_hash']
     readonly_fields = ['id', 'settled_at']
     ordering      = ['-settled_at']
+
+
+@admin.register(CorpusBankAccount)
+class CorpusBankAccountAdmin(admin.ModelAdmin):
+    list_display  = ['bank_name', 'account_number', 'ifsc_code', 'branch', 'is_active', 'updated_at', 'updated_by']
+    list_filter   = ['is_active']
+    readonly_fields = ['updated_at', 'updated_by']
+    fieldsets = (
+        ('Account Details', {
+            'fields': ('account_name', 'account_number', 'account_type'),
+        }),
+        ('Bank Details', {
+            'fields': ('bank_name', 'branch', 'city', 'postal_code', 'country', 'swift_code', 'ifsc_code'),
+        }),
+        ('Status', {
+            'fields': ('is_active', 'updated_at', 'updated_by'),
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        # Deactivate all other records when this one is set to active
+        if obj.is_active:
+            CorpusBankAccount.objects.exclude(pk=obj.pk).update(is_active=False)
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+        messages.success(
+            request,
+            f'Bank account "{obj.bank_name} — {obj.account_number}" saved and set as active.'
+            if obj.is_active else
+            f'Bank account "{obj.bank_name} — {obj.account_number}" saved (inactive).'
+        )

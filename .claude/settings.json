@@ -102,7 +102,27 @@
       "Bash(dig irggdp.com +short)",
       "Bash(nslookup irggdp.com)",
       "Bash(firebase functions:config:get --project irggdp)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp log --oneline -5)",
+      "Bash(curl -sk https://irggdp.com/healthz)",
+      "Bash(curl -s https://irggdp.com/healthz)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://irggdp.com/api/v1/auth/users/me/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://irggdp.com/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://irggdp.com/wallet)",
+      "Bash(curl -s -o /dev/null -w \"admin: %{http_code}\" https://irggdp.com/admin/)",
+      "Bash(scp -i /Users/prathmeshwalimbe/Downloads/irg-key.pem ec2-user@43.205.237.197:/home/ec2-user/irg_gdp/backend/core/migrations/0004_alter_advertisement_id_alter_advertiserprofile_id_and_more.py /Users/prathmeshwalimbe/Downloads/irg_gdp/backend/core/migrations/)",
+      "Bash(scp -i /Users/prathmeshwalimbe/Downloads/irg-key.pem ec2-user@43.205.237.197:/home/ec2-user/irg_gdp/backend/irg_gic/migrations/0003_alter_giccertificate_id_alter_giccertificate_status_and_more.py /Users/prathmeshwalimbe/Downloads/irg_gdp/backend/irg_gic/migrations/)",
+      "Bash(scp -i /Users/prathmeshwalimbe/Downloads/irg-key.pem ec2-user@43.205.237.197:/home/ec2-user/irg_gdp/backend/irg_jdb/migrations/0003_alter_copyright_id_alter_design_category_and_more.py /Users/prathmeshwalimbe/Downloads/irg_gdp/backend/irg_jdb/migrations/)",
+      "Bash(scp -i /Users/prathmeshwalimbe/Downloads/irg-key.pem ec2-user@43.205.237.197:/home/ec2-user/irg_gdp/backend/irg_jr/migrations/0004_alter_goldassessment_id.py /Users/prathmeshwalimbe/Downloads/irg_gdp/backend/irg_jr/migrations/)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp status)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp add backend/core/migrations/0004_alter_advertisement_id_alter_advertiserprofile_id_and_more.py backend/irg_gic/migrations/0003_alter_giccertificate_id_alter_giccertificate_status_and_more.py backend/irg_jdb/migrations/0003_alter_copyright_id_alter_design_category_and_more.py backend/irg_jr/migrations/0004_alter_goldassessment_id.py)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp commit -m ' *)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp push origin main)",
+      "Bash(openssl rand *)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp add functions/index.js firebase.json)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp add functions/index.js)",
+      "Bash(curl -sv https://irggdp.com/admin/login/)",
+      "Bash(git -C /Users/prathmeshwalimbe/Downloads/irg_gdp add backend/settings.py)"
     ]
   }
 }

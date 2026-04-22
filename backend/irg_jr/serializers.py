@@ -3,16 +3,26 @@ from rest_framework import serializers
 from .models import *
 
 class JRUnitSerializer(serializers.ModelSerializer):
+    owner_email = serializers.SerializerMethodField()
+
     class Meta:
         model = JRUnit
         fields = '__all__'
 
+    def get_owner_email(self, obj):
+        return obj.owner.email if obj.owner_id else '—'
+
 class IssuanceRecordSerializer(serializers.ModelSerializer):
+    customer_email = serializers.SerializerMethodField()
+
     class Meta:
         model = IssuanceRecord
         fields = '__all__'
         read_only_fields = ['jeweler', 'customer', 'corpus_contribution', 'status',
                             'jr_unit', 'pending_data', 'created_at']
+
+    def get_customer_email(self, obj):
+        return obj.customer.email if obj.customer_id else '—'
 
 class BuybackRecordSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,9 +49,9 @@ class InitiateIssuanceSerializer(serializers.Serializer):
     invoice_number = serializers.CharField()
 
 class VerifyPaymentSerializer(serializers.Serializer):
-    """Step 2: jeweler submits UTR + payment proof → issuance proceeds."""
+    """Step 2: jeweler submits UTR + mandatory payment proof screenshot."""
     utr_number = serializers.CharField(max_length=50)
-    payment_proof = serializers.FileField(required=False)
+    payment_proof = serializers.FileField(required=True)
 
 class GoldAssessmentSerializer(serializers.ModelSerializer):
     class Meta:

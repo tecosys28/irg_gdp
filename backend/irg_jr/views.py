@@ -43,7 +43,11 @@ class JRUnitViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return JRUnit.objects.filter(owner=self.request.user)
+        user = self.request.user
+        # Jewelers see units they issued; customers see units they own.
+        if hasattr(user, 'jeweler_profile'):
+            return JRUnit.objects.filter(issuing_jeweler=user.jeweler_profile)
+        return JRUnit.objects.filter(owner=user)
 
 
 class IssuanceViewSet(viewsets.ModelViewSet):
@@ -134,33 +138,72 @@ class IssuanceViewSet(viewsets.ModelViewSet):
             ),
         }, status=status.HTTP_201_CREATED)
 
-    # ── Step 2: Jeweler submits UTR + proof, system issues JR unit ────────
+    # ── Step 2: Jeweler submits UTR + proof ──────────────────────────────────
     @action(detail=True, methods=['post'])
     @require_transactable()
     def verify_payment(self, request, pk=None):
         """
-        Accept UTR number + payment proof document.
-        Creates JRUnit and marks issuance COMPLETED.
+        Jeweler submits UTR number + mandatory payment proof screenshot.
+        Status moves to PAYMENT_VERIFIED (pending admin confirmation).
+        JR unit and GDP units are NOT created here — they are created
+        only after an admin calls confirm_payment.
         """
         issuance = self.get_object()
 
         if issuance.status != 'PENDING_PAYMENT':
             return Response(
-                {'error': f'Cannot verify payment for issuance in status {issuance.status}'},
+                {'error': f'Cannot submit payment for issuance in status {issuance.status}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = VerifyPaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
 
-        issuance.utr_number = data['utr_number']
-        if 'payment_proof' in request.FILES:
-            issuance.payment_proof = request.FILES['payment_proof']
-        issuance.status = 'PAYMENT_VERIFIED'
+        # Belt-and-suspenders: serializer already enforces required=True,
+        # but double-check the file actually arrived in the multipart upload.
+        if 'payment_proof' not in request.FILES:
+            return Response(
+                {'error': 'payment_proof file is required. Upload a screenshot or PDF of the bank transfer receipt.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        issuance.utr_number = serializer.validated_data['utr_number']
+        issuance.payment_proof = request.FILES['payment_proof']
+        issuance.status = 'PAYMENT_VERIFIED'   # awaiting admin confirmation
         issuance.save()
 
-        # Create JRUnit from snapshot
+        return Response({
+            'message': 'Payment proof submitted. An admin will verify the transfer and complete the issuance.',
+            'issuance_id': str(issuance.id),
+            'status': issuance.status,
+        })
+
+    # ── Step 3: Admin confirms payment and issues JR + GDP units ──────────────
+    @action(detail=True, methods=['post'])
+    def confirm_payment(self, request, pk=None):
+        """
+        Admin-only. Confirms the bank transfer was received, then:
+          1. Creates the JRUnit for the customer.
+          2. Mints GDP units to the customer.
+          3. Sets issuance status to COMPLETED.
+        """
+        if not request.user.is_staff:
+            return Response({'error': 'Admin only.'}, status=status.HTTP_403_FORBIDDEN)
+
+        issuance = self.get_object()
+
+        if issuance.status != 'PAYMENT_VERIFIED':
+            return Response(
+                {'error': f'Cannot confirm issuance in status {issuance.status}. Expected PAYMENT_VERIFIED.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not issuance.payment_proof:
+            return Response(
+                {'error': 'No payment proof on file. Jeweler must re-submit with a document.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         pd = issuance.pending_data or {}
         tx_hash = blockchain.issue_jr(
             jeweler_address=issuance.jeweler.blockchain_address or '0x0',
@@ -190,7 +233,7 @@ class IssuanceViewSet(viewsets.ModelViewSet):
         issuance.status = 'COMPLETED'
         issuance.save()
 
-        # ── Mint GDP units to the customer ────────────────────────────────
+        # Mint GDP units to the customer
         gdp_unit = None
         try:
             from irg_gdp.models import GDPUnit, MintingRecord
@@ -200,7 +243,6 @@ class IssuanceViewSet(viewsets.ModelViewSet):
                 '18K': Decimal('0.75'), '14K': Decimal('0.5833'),
             }[pd['purity']]
             pure_gold = Decimal(pd['gold_weight']) * purity_factor
-
             config = settings.IRG_GDP_CONFIG
             saleable = int(float(pure_gold) * config['SALEABLE_PER_GRAM'])
             reserve  = int(float(pure_gold) * config['RESERVE_PER_GRAM'])
@@ -212,56 +254,41 @@ class IssuanceViewSet(viewsets.ModelViewSet):
                 purity=int(pd['purity'].replace('K', '')),
                 benchmark_rate=int(benchmark * 100),
             )
-
             mint_record = MintingRecord.objects.create(
                 user=issuance.customer,
                 gold_grams=pd['gold_weight'],
                 purity=pd['purity'],
                 pure_gold_equivalent=pure_gold,
                 invoice_hash=issuance.utr_number or '',
-                invoice_verified=True,
-                jeweler_certified=True,
-                nw_certified=True,
-                within_cap=True,
-                undertaking_signed=True,
+                invoice_verified=True, jeweler_certified=True,
+                nw_certified=True, within_cap=True, undertaking_signed=True,
                 certifying_jeweler=issuance.jeweler,
-                units_to_mint=total,
-                saleable_units=saleable,
-                reserve_units=reserve,
+                units_to_mint=total, saleable_units=saleable, reserve_units=reserve,
                 earmarking_amount=Decimal(pd['issue_value']) * Decimal(str(config['EARMARKING_PERCENTAGE'])) / 100,
                 corpus_contribution=issuance.corpus_contribution,
-                status='COMPLETED',
-                transaction_hash=gdp_tx_hash,
+                status='COMPLETED', transaction_hash=gdp_tx_hash,
                 completed_at=timezone.now(),
             )
-
             gdp_unit = GDPUnit.objects.create(
                 owner=issuance.customer,
-                gold_grams=pd['gold_weight'],
-                purity=pd['purity'],
+                gold_grams=pd['gold_weight'], purity=pd['purity'],
                 pure_gold_equivalent=pure_gold,
                 benchmark_rate_at_mint=benchmark,
                 benchmark_value=pure_gold * benchmark,
-                saleable_units=saleable,
-                reserve_units=reserve,
-                total_units=total,
-                source_jeweler=issuance.jeweler,
-                minting_record=mint_record,
-                blockchain_id=str(uuid.uuid4()),
-                minting_tx_hash=gdp_tx_hash,
+                saleable_units=saleable, reserve_units=reserve, total_units=total,
+                source_jeweler=issuance.jeweler, minting_record=mint_record,
+                blockchain_id=str(uuid.uuid4()), minting_tx_hash=gdp_tx_hash,
             )
         except Exception as gdp_err:
-            # JR unit is already issued — log the GDP failure but don't roll back
             import logging
             logging.getLogger(__name__).error(
                 'GDP minting failed after JR issuance %s: %s', issuance.id, gdp_err
             )
-        # ─────────────────────────────────────────────────────────────────
 
         return Response({
-            'message': 'Payment verified. IRG JR unit issued successfully.',
+            'message': 'Payment confirmed. JR unit issued and GDP units minted.',
             'jr_unit': JRUnitSerializer(jr_unit).data,
-            'gdp_unit': gdp_unit.id if gdp_unit else None,
+            'gdp_unit': str(gdp_unit.id) if gdp_unit else None,
             'issuance': IssuanceRecordSerializer(issuance).data,
             'tx_hash': tx_hash,
         })

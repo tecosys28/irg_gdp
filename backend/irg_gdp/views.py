@@ -31,16 +31,20 @@ class GDPUnitViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def portfolio(self, request):
         """Get user's complete GDP portfolio"""
-        units = self.get_queryset().filter(status='ACTIVE')
-        total_units = sum(u.total_units for u in units)
-        total_value = sum(u.benchmark_value for u in units)
-        
+        all_units = self.get_queryset()
+        active = all_units.filter(status='ACTIVE')
+        earmarked = all_units.filter(status='EARMARKED')
+        total_units = sum(u.total_units for u in active)
+        total_value = sum(u.benchmark_value for u in active)
+
         return Response({
-            'units': GDPUnitSerializer(units, many=True).data,
+            'units': GDPUnitSerializer(all_units, many=True).data,
             'summary': {
                 'total_units': total_units,
                 'total_value': str(total_value),
-                'active_count': units.count()
+                'total_value_inr': str(total_value),
+                'active_count': active.count(),
+                'earmarked_count': earmarked.count(),
             }
         })
 
