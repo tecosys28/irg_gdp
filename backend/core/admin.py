@@ -15,6 +15,7 @@ from .models import (User, UserRole, KYCDocument, JewelerProfile, DesignerProfil
 
 class KYCDocumentInline(admin.TabularInline):
     model = KYCDocument
+    fk_name = 'user'
     extra = 0
     fields = ['document_type', 'document_number', 'status', 'verified_at']
     readonly_fields = ['uploaded_at', 'verified_at']
@@ -23,6 +24,7 @@ class KYCDocumentInline(admin.TabularInline):
 
 class UserRoleInline(admin.TabularInline):
     model = UserRole
+    fk_name = 'user'
     extra = 0
     fields = ['role', 'status', 'approved_by', 'approved_at']
     readonly_fields = ['approved_by', 'approved_at', 'created_at']
@@ -159,8 +161,7 @@ class ConsultantProfileAdmin(admin.ModelAdmin):
 
 @admin.register(AdvertiserProfile)
 class AdvertiserProfileAdmin(admin.ModelAdmin):
-    list_display  = ['user', 'company_name', 'is_active']
-    list_filter   = ['is_active']
+    list_display  = ['user', 'company_name', 'registered_at']
     search_fields = ['user__email', 'company_name']
 
 
