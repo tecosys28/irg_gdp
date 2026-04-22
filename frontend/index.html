@@ -831,6 +831,7 @@
 
         // ─── API helpers ──────────────────────────────────────────────────────
         const API = (window.IRG_API_BASE || 'https://asia-south1-irggdp.cloudfunctions.net/apiProxy') + '/api/v1';
+        window.API = API;
         async function _freshToken(){
           const u=window._auth&&window._auth.currentUser;
           if(u){const t=await u.getIdToken();localStorage.setItem('authToken',t);return t;}
@@ -1449,7 +1450,6 @@
         // ═══════════════════════════════════════════════════════
         // PROFILE & KYC
         // ═══════════════════════════════════════════════════════
-        }
         function _infoRow(label,val){return val?`<div><div class="bank-detail-label">${label}</div><div class="bank-detail-value">${val}</div></div>`:'';}
         function _roleProfileCard(label,p){
           if(!p)return'';
@@ -3074,7 +3074,7 @@ onAuthStateChanged(auth, async user => {
   walletBtn.style.display = 'block';
   try {
     const t = await user.getIdToken();
-    const r = await fetch(API + '/wallet/status-banner/', {
+    const r = await fetch(window.API + '/wallet/status-banner/', {
       headers: { 'Authorization': 'Bearer ' + t }
     });
     if (!r.ok) return;
