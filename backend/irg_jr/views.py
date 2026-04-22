@@ -56,7 +56,6 @@ class IssuanceViewSet(viewsets.ModelViewSet):
 
     # ── Step 1: Jeweler initiates issuance ────────────────────────────────
     @action(detail=False, methods=['post'])
-    @require_transactable(require_nominees=True)
     def initiate(self, request):
         """
         Create a pending IssuanceRecord and return IRG bank account details
