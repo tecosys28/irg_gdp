@@ -99,11 +99,11 @@ exports.apiProxy = onRequest({ invoker: 'public' }, async (req, res) => {
     res.status(502).json({ error: 'backend_unavailable', detail: err.message });
   });
 
-  if (req.body && req.method !== 'GET' && req.method !== 'HEAD') {
-    const body = typeof req.body === 'object'
-      ? JSON.stringify(req.body)
-      : req.body;
-    proxy.write(body);
+  // Use rawBody so form-encoded POST data (e.g. Django admin CSRF token) is
+  // forwarded verbatim — re-serialising req.body as JSON breaks CSRF.
+  const rawBody = req.rawBody;
+  if (rawBody && rawBody.length && req.method !== 'GET' && req.method !== 'HEAD') {
+    proxy.write(rawBody);
   }
   proxy.end();
 });
