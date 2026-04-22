@@ -1365,7 +1365,7 @@
         async function renderGDPMint(){
           const records=await apiGet('/gdp/minting/').catch(()=>({results:[]}));
           const rows=(records.results||records||[]).map(m=>`<tr>
-            <td>${m.id}</td><td>${m.gold_weight_grams}g ${m.purity}</td>
+            <td>${m.id}</td><td>${m.gold_grams}g ${m.purity}</td>
             <td>${m.invoice_hash||'—'}</td>
             <td>${badge(m.status,statusColor(m.status))}</td>
             <td>${fmtDate(m.created_at)}</td>
@@ -1376,7 +1376,8 @@
               <div class="form-group"><label>Gold Weight (grams)</label><input type="number" class="input" id="mint-grams" placeholder="e.g. 10" min="0.1" max="500" step="0.001"></div>
               <div class="form-group"><label>Purity</label>
                 <select class="select" id="mint-purity">
-                  <option value="24K">24K (Pure)</option><option value="22K">22K</option><option value="18K">18K</option><option value="14K">14K</option>
+                  <option value="">— Select purity —</option>
+                  <option value="24K">24K (Pure Gold)</option><option value="22K">22K</option><option value="18K">18K</option><option value="14K">14K</option>
                 </select>
               </div>
             </div>
@@ -1390,9 +1391,10 @@
           const purity=document.getElementById('mint-purity')?.value;
           const invoice=document.getElementById('mint-invoice')?.value.trim();
           if(!grams||grams<=0||grams>500){alert('Enter valid gold weight (0.1–500g).');return;}
+          if(!purity){alert('Select gold purity.');return;}
           if(!invoice){alert('Enter invoice hash.');return;}
           try{
-            await apiPost('/gdp/minting/',{gold_weight_grams:grams,purity,invoice_hash:invoice});
+            await apiPost('/gdp/minting/',{gold_grams:grams,purity,invoice_hash:invoice});
             alert('Minting request submitted. Complete the 5-point checklist to proceed.');
             renderPanel();
           }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}

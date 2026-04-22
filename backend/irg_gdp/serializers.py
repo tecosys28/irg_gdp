@@ -28,7 +28,8 @@ class MintingRequestSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user', 'status', 'transaction_hash', 'completed_at',
                            'saleable_units', 'reserve_units', 'units_to_mint',
-                           'earmarking_amount', 'corpus_contribution']
+                           'earmarking_amount', 'corpus_contribution',
+                           'pure_gold_equivalent']
 
 class MintingChecklistSerializer(serializers.Serializer):
     """5-point checklist verification"""
