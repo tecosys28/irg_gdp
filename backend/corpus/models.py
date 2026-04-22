@@ -84,3 +84,51 @@ class Settlement(models.Model):
     
     class Meta:
         db_table = 'corpus_settlement'
+
+
+class CorpusBankAccount(models.Model):
+    """Super Corpus Fund bank account details — editable by admin. Only one record can be active at a time."""
+    account_name   = models.CharField(max_length=200)
+    account_number = models.CharField(max_length=50)
+    account_type   = models.CharField(max_length=50)
+    bank_name      = models.CharField(max_length=200)
+    branch         = models.CharField(max_length=200)
+    city           = models.CharField(max_length=100)
+    postal_code    = models.CharField(max_length=20)
+    country        = models.CharField(max_length=100, default='INDIA')
+    swift_code     = models.CharField(max_length=20, blank=True)
+    ifsc_code      = models.CharField(max_length=20)
+    is_active      = models.BooleanField(default=True)
+    updated_at     = models.DateTimeField(auto_now=True)
+    updated_by     = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='+'
+    )
+
+    class Meta:
+        db_table = 'corpus_bank_account'
+
+    def __str__(self):
+        return f"{self.bank_name} — {self.account_number} ({'active' if self.is_active else 'inactive'})"
+
+    def to_dict(self):
+        return {
+            'account_name':   self.account_name,
+            'account_number': self.account_number,
+            'account_type':   self.account_type,
+            'bank_name':      self.bank_name,
+            'branch':         self.branch,
+            'city':           self.city,
+            'postal_code':    self.postal_code,
+            'country':        self.country,
+            'swift_code':     self.swift_code,
+            'ifsc_code':      self.ifsc_code,
+        }
+
+
+def get_active_bank_account():
+    """Return the active CorpusBankAccount, falling back to settings.SUPER_CF_ACCOUNT."""
+    account = CorpusBankAccount.objects.filter(is_active=True).order_by('-updated_at').first()
+    if account:
+        return account.to_dict()
+    return getattr(settings, 'SUPER_CF_ACCOUNT', {})

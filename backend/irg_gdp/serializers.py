@@ -23,13 +23,23 @@ class GDPUnitSerializer(serializers.ModelSerializer):
         return str(obj.benchmark_value)
 
 class MintingRequestSerializer(serializers.ModelSerializer):
+    remaining_cap_grams = serializers.SerializerMethodField()
+
     class Meta:
         model = MintingRecord
         fields = '__all__'
         read_only_fields = ['user', 'status', 'transaction_hash', 'completed_at',
                            'saleable_units', 'reserve_units', 'units_to_mint',
                            'earmarking_amount', 'corpus_contribution',
-                           'pure_gold_equivalent']
+                           'pure_gold_equivalent', 'within_cap']
+
+    def get_remaining_cap_grams(self, obj):
+        from django.db.models import Sum
+        from decimal import Decimal
+        minted = MintingRecord.objects.filter(
+            user=obj.user, status='COMPLETED'
+        ).exclude(id=obj.id).aggregate(total=Sum('pure_gold_equivalent'))['total'] or Decimal('0')
+        return str(Decimal('500') - minted)
 
 class MintingChecklistSerializer(serializers.Serializer):
     """5-point checklist verification"""

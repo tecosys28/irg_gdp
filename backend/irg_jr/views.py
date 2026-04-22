@@ -119,17 +119,18 @@ class IssuanceViewSet(viewsets.ModelViewSet):
             pending_data=pending_data,
         )
 
-        bank = settings.SUPER_CF_ACCOUNT
+        from corpus.models import get_active_bank_account
+        bank = get_active_bank_account()
         return Response({
             'issuance_id': str(issuance.id),
             'corpus_contribution': str(corpus_contribution),
             'bank_details': {
-                'account_name': bank['ACCOUNT_NAME'],
-                'account_number': bank['ACCOUNT_NUMBER'],
-                'account_type': bank['ACCOUNT_TYPE'],
-                'bank_name': bank['BANK_NAME'],
-                'branch': bank['BRANCH'],
-                'ifsc_code': bank['IFSC_CODE'],
+                'account_name':   bank.get('account_name',   bank.get('ACCOUNT_NAME', '')),
+                'account_number': bank.get('account_number', bank.get('ACCOUNT_NUMBER', '')),
+                'account_type':   bank.get('account_type',   bank.get('ACCOUNT_TYPE', '')),
+                'bank_name':      bank.get('bank_name',      bank.get('BANK_NAME', '')),
+                'branch':         bank.get('branch',         bank.get('BRANCH', '')),
+                'ifsc_code':      bank.get('ifsc_code',      bank.get('IFSC_CODE', '')),
             },
             'payment_instructions': (
                 f"Transfer ₹{corpus_contribution:,.2f} via NEFT/RTGS to the above account. "

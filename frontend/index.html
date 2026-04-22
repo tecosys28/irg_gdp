@@ -1447,18 +1447,30 @@
         // ═══════════════════════════════════════════════════════
         // PROFILE & KYC
         // ═══════════════════════════════════════════════════════
+        }
+        function _infoRow(label,val){return val?`<div><div class="bank-detail-label">${label}</div><div class="bank-detail-value">${val}</div></div>`:'';}
+        function _roleProfileCard(label,p){
+          if(!p)return'';
+          const rows=Object.entries(p).filter(([k])=>!['id','user'].includes(k)).map(([k,v])=>{
+            if(v===null||v===undefined||v==='')return'';
+            const lbl=k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+            return`<div class="param-item"><span>${lbl}</span><span>${v}</span></div>`;
+          }).join('');
+          return rows?`<div class="param-category" style="margin-top:12px"><h4 style="color:var(--gold);margin:0 0 8px">${label}</h4>${rows}</div>`:'';
+        }
         async function saveProfile(){
           const payload={
             first_name: document.getElementById('prof-fname')?.value.trim()||'',
             last_name:  document.getElementById('prof-lname')?.value.trim()||'',
             mobile:     document.getElementById('prof-mobile')?.value.trim()||'',
             city:       document.getElementById('prof-city')?.value.trim()||'',
+            state:      document.getElementById('prof-state')?.value.trim()||'',
+            pincode:    document.getElementById('prof-pincode')?.value.trim()||'',
           };
-          const role=document.getElementById('prof-role')?.value||'';
+          const role=(document.getElementById('prof-role')?.value||'').toUpperCase();
           if(role) payload.role=role;
           try{
             await apiPost('/auth/users/me/',payload,'PATCH');
-            // Refresh dashboard roles if role was added
             if(role){const me=await apiGet('/auth/users/me/');const active=(me.roles||[]).filter(x=>x.status==='ACTIVE'||x.status==='PENDING').map(x=>x.role.toLowerCase());if(active.length)window._userRoles=active;}
             alert('Profile saved successfully.');
             renderPanel();
@@ -1466,21 +1478,66 @@
         }
         async function renderProfile(){
           try{
-            const u=await apiGet('/auth/users/me/');
-            const kycs=await apiGet('/auth/kyc/').catch(()=>({results:[]}));
-            const kycList=(kycs.results||kycs||[]);
-            const kycRows=kycList.map(k=>`<tr><td>${k.document_type}</td><td>${fmtDate(k.uploaded_at)}</td><td>${badge(k.verification_status||k.status,statusColor(k.verification_status||k.status))}</td><td>${k.rejection_reason||'—'}</td></tr>`);
+            const [u,kycsRaw]=await Promise.all([
+              apiGet('/auth/users/me/'),
+              apiGet('/auth/kyc/').catch(()=>({results:[]}))
+            ]);
+            const kycList=(kycsRaw.results||kycsRaw||[]);
+            const kycRows=kycList.map(k=>`<tr><td>${k.document_type}</td><td>${k.document_number||'—'}</td><td>${fmtDate(k.uploaded_at)}</td><td>${badge(k.verification_status||k.status,statusColor(k.verification_status||k.status))}</td><td>${k.rejection_reason||'—'}</td></tr>`);
             const myRoles=(u.roles||[]).map(r=>`${badge(r.role,'info')} ${badge(r.status,statusColor(r.status))}`).join('&nbsp; ')||'<span style="color:var(--text-muted)">No roles yet</span>';
             const allRoles=['HOUSEHOLD','JEWELER','DESIGNER','LICENSEE','INVESTOR','RETURNEE','OMBUDSMAN','CONSULTANT','MARKETMAKER','MINTER','TRUSTEE'];
             const myRoleKeys=(u.roles||[]).map(r=>r.role);
             const availRoles=allRoles.filter(r=>!myRoleKeys.includes(r));
-            return panelCard('👤 My Profile',`
-              <div class="form-row" style="margin-bottom:16px">
-                <div><div class="bank-detail-label">Email</div><div class="bank-detail-value">${u.email||'—'}</div></div>
-                <div><div class="bank-detail-label">KYC Tier</div><div class="bank-detail-value">${badge(u.kyc_tier||'NONE',u.kyc_tier==='FULL'?'success':u.kyc_tier==='NONE'?'warning':'info')}</div></div>
-                <div style="grid-column:1/-1"><div class="bank-detail-label">My Roles</div><div class="bank-detail-value">${myRoles}</div></div>
+
+            const overviewHtml=`
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+                ${_infoRow('Email',u.email)}
+                ${_infoRow('Username',u.username)}
+                ${_infoRow('Mobile',u.mobile)}
+                ${_infoRow('City',u.city)}
+                ${_infoRow('State',u.state)}
+                ${_infoRow('Pincode',u.pincode)}
+                ${_infoRow('KYC Tier',badge(u.kyc_tier||'NONE',u.kyc_tier==='FULL'?'success':u.kyc_tier==='NONE'?'warning':'info'))}
+                ${_infoRow('Aadhaar Verified',u.aadhaar_verified?'<span style="color:var(--success)">✓ Yes</span>':'<span style="color:var(--text-muted)">No</span>')}
+                ${_infoRow('PAN Verified',u.pan_verified?'<span style="color:var(--success)">✓ Yes</span>':'<span style="color:var(--text-muted)">No</span>')}
+                ${_infoRow('Bank Verified',u.bank_verified?'<span style="color:var(--success)">✓ Yes</span>':'<span style="color:var(--text-muted)">No</span>')}
+                ${_infoRow('Account Status',u.is_active?'<span style="color:var(--success)">Active</span>':'<span style="color:var(--danger)">Inactive</span>')}
+                ${_infoRow('Registered',fmtDate(u.created_at))}
+                ${_infoRow('Last Login',fmtDate(u.last_login))}
+                ${u.blockchain_address?_infoRow('Blockchain Address',`<span style="font-family:monospace;font-size:12px">${u.blockchain_address}</span>`):''}
               </div>
-              <h4 style="color:var(--gold);margin-bottom:12px">Edit Details</h4>
+              <div style="margin-bottom:16px">
+                <div class="bank-detail-label">My Roles</div>
+                <div class="bank-detail-value" style="margin-top:4px">${myRoles}</div>
+              </div>
+              <div style="margin-bottom:16px">
+                <div class="bank-detail-label" style="margin-bottom:6px">Role Details</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  ${(u.roles||[]).map(r=>`<div style="padding:8px 12px;background:var(--surface-light);border-radius:6px;font-size:12px">
+                    <strong style="color:var(--gold)">${r.role}</strong>
+                    <span style="margin-left:6px">${badge(r.status,statusColor(r.status))}</span>
+                    ${r.approved_at?`<div style="color:var(--text-muted);margin-top:2px">Approved: ${fmtDate(r.approved_at)}</div>`:''}
+                    <div style="color:var(--text-muted);margin-top:2px">Since: ${fmtDate(r.created_at)}</div>
+                  </div>`).join('')}
+                </div>
+              </div>`;
+
+            const roleProfiles=[
+              _roleProfileCard('💎 Jeweler Profile',u.jeweler_profile),
+              _roleProfileCard('🎨 Designer Profile',u.designer_profile),
+              _roleProfileCard('📋 Licensee Profile',u.licensee_profile),
+              _roleProfileCard('⚖️ Ombudsman Profile',u.ombudsman_profile),
+              _roleProfileCard('📊 Market Maker Profile',u.marketmaker_profile),
+              _roleProfileCard('🏦 Trustee Banker Profile',u.trustee_profile),
+              _roleProfileCard('💼 Consultant Profile',u.consultant_profile),
+              _roleProfileCard('📢 Advertiser Profile',u.advertiser_profile),
+            ].filter(Boolean).join('');
+
+            return panelCard('👤 My Profile',
+              overviewHtml
+              +(roleProfiles?`<div style="margin-bottom:20px"><div class="bank-detail-label" style="margin-bottom:8px">Role-Specific Details</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">${roleProfiles}</div></div>`:'')
+              +`<hr style="border-color:rgba(228,180,74,0.2);margin:20px 0">
+              <h4 style="color:var(--gold);margin-bottom:12px">✏️ Edit Details</h4>
               <div class="form-row">
                 <div class="form-group"><label>First Name</label><input type="text" class="input" id="prof-fname" value="${u.first_name||''}"></div>
                 <div class="form-group"><label>Last Name</label><input type="text" class="input" id="prof-lname" value="${u.last_name||''}"></div>
@@ -1489,9 +1546,13 @@
                 <div class="form-group"><label>Mobile</label><input type="tel" class="input" id="prof-mobile" value="${u.mobile||''}" placeholder="+91XXXXXXXXXX"></div>
                 <div class="form-group"><label>City</label><input type="text" class="input" id="prof-city" value="${u.city||''}"></div>
               </div>
+              <div class="form-row">
+                <div class="form-group"><label>State</label><input type="text" class="input" id="prof-state" value="${u.state||''}"></div>
+                <div class="form-group"><label>Pincode</label><input type="text" class="input" id="prof-pincode" value="${u.pincode||''}"></div>
+              </div>
               ${availRoles.length?`<div class="form-group"><label>Add Role</label><select class="select" id="prof-role"><option value="">— Select to add a role —</option>${availRoles.map(r=>`<option value="${r}">${ROLE_LABEL[r.toLowerCase()]||r}</option>`).join('')}</select></div>`:''}
               <button class="btn btn-gold" onclick="saveProfile()">Save Profile</button>`)
-            +panelCard('🪪 KYC Documents',tbl(['Type','Uploaded','Status','Notes'],kycRows)
+            +panelCard('🪪 KYC Documents',tbl(['Type','Doc Number','Uploaded','Status','Notes'],kycRows)
               +`<div style="margin-top:16px">
                 <h4 style="color:var(--gold);margin-bottom:8px">Upload New Document</h4>
                 <div class="form-row">
@@ -1508,8 +1569,7 @@
                 </div>
                 <div class="form-group" style="margin-top:8px">
                   <label>Upload File <span style="color:var(--muted);font-size:12px">(PDF or JPG/PNG — max 10 MB)</span></label>
-                  <input type="file" class="input" id="kyc-file" accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf"
-                    style="padding:10px;cursor:pointer">
+                  <input type="file" class="input" id="kyc-file" accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf" style="padding:10px;cursor:pointer">
                 </div>
                 <button class="btn btn-gold btn-sm" onclick="submitKYC()">Upload Document</button>
               </div>`);

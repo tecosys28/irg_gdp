@@ -6,6 +6,8 @@ from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -13,6 +15,16 @@ from .models import *
 from .serializers import *
 
 User = get_user_model()
+
+
+class RegisterThrottle(AnonRateThrottle):
+    rate = '10/hour'
+
+
+class StandardPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class RegisterView(generics.CreateAPIView):
@@ -24,6 +36,7 @@ class RegisterView(generics.CreateAPIView):
     """
     serializer_class = UserRegistrationSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [RegisterThrottle]
 
     def create(self, request, *args, **kwargs):
         user = request.user  # already created by FirebaseAuthentication
@@ -71,6 +84,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """User CRUD operations"""
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardPagination
     
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -82,13 +96,11 @@ class UserViewSet(viewsets.ModelViewSet):
         """Get or update current user profile"""
         if request.method == 'PATCH':
             allowed = ('first_name', 'last_name', 'mobile', 'city', 'state', 'pincode')
-            for field in allowed:
-                val = request.data.get(field)
-                if val is not None:
-                    setattr(request.user, field, val)
-            request.user.save(update_fields=list(
-                f for f in allowed if request.data.get(f) is not None
-            ))
+            changed = [f for f in allowed if request.data.get(f) is not None]
+            for field in changed:
+                setattr(request.user, field, request.data[field])
+            if changed:
+                request.user.save(update_fields=changed)
             # Register role if provided and not already held
             role = (request.data.get('role') or '').upper()
             if role:
