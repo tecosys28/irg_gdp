@@ -15,10 +15,15 @@ admin_site = IRGAdminSite(name='irg_admin')
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ['email', 'get_full_name', 'mobile', 'kyc_tier', 'is_active', 'created_at']
+    list_display = ['email', 'get_full_name', 'mobile', 'city', 'kyc_tier', 'is_active', 'created_at']
     list_filter = ['kyc_tier', 'is_active', 'is_staff']
-    search_fields = ['email', 'first_name', 'last_name', 'mobile']
+    search_fields = ['email', 'first_name', 'last_name', 'mobile', 'firebase_uid']
     ordering = ['-created_at']
+    fieldsets = UserAdmin.fieldsets + (
+        ('IRG Profile', {'fields': ('firebase_uid', 'mobile', 'city', 'state', 'pincode',
+                                    'kyc_tier', 'aadhaar_verified', 'pan_verified',
+                                    'bank_verified', 'blockchain_address')}),
+    )
 
 @admin.register(UserRole)
 class UserRoleAdmin(admin.ModelAdmin):

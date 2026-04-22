@@ -77,9 +77,25 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(id=self.request.user.id)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
-        """Get current user profile"""
+        """Get or update current user profile"""
+        if request.method == 'PATCH':
+            allowed = ('first_name', 'last_name', 'mobile', 'city', 'state', 'pincode')
+            for field in allowed:
+                val = request.data.get(field)
+                if val is not None:
+                    setattr(request.user, field, val)
+            request.user.save(update_fields=list(
+                f for f in allowed if request.data.get(f) is not None
+            ))
+            # Register role if provided and not already held
+            role = (request.data.get('role') or '').upper()
+            if role:
+                UserRole.objects.get_or_create(
+                    user=request.user, role=role,
+                    defaults={'status': 'ACTIVE'},
+                )
         return Response(UserSerializer(request.user).data)
     
     @action(detail=False, methods=['get'])
