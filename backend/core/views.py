@@ -164,10 +164,15 @@ class KYCDocumentViewSet(viewsets.ModelViewSet):
     """KYC document management"""
     serializer_class = KYCDocumentSerializer
     permission_classes = [IsAuthenticated]
-    
+    parser_classes = [
+        __import__('rest_framework.parsers', fromlist=['MultiPartParser']).MultiPartParser,
+        __import__('rest_framework.parsers', fromlist=['FormParser']).FormParser,
+        __import__('rest_framework.parsers', fromlist=['JSONParser']).JSONParser,
+    ]
+
     def get_queryset(self):
         return KYCDocument.objects.filter(user=self.request.user)
-    
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
     

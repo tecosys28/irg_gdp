@@ -1297,14 +1297,19 @@
                     <select class="select" id="kyc-type">
                       <option value="AADHAAR">Aadhaar</option><option value="PAN">PAN</option>
                       <option value="PASSPORT">Passport</option><option value="VOTER_ID">Voter ID</option>
-                      <option value="DRIVING_LICENSE">Driving Licence</option><option value="GST">GST Certificate</option>
-                      <option value="BUSINESS_REG">Business Registration</option><option value="BANK_STATEMENT">Bank Statement</option>
-                      <option value="PHOTO">Photo</option><option value="OTHER">Other</option>
+                      <option value="DRIVING_LICENSE">Driving Licence</option><option value="GST_CERT">GST Certificate</option>
+                      <option value="JEWELER_LICENSE">Jeweler License</option><option value="COMPANY_REG">Company Registration</option>
+                      <option value="BANK_STATEMENT">Bank Statement</option><option value="ADDRESS_PROOF">Address Proof</option>
                     </select>
                   </div>
                   <div class="form-group"><label>Document Number</label><input type="text" class="input" id="kyc-number" placeholder="e.g. AADHAAR-1234-5678-9012"></div>
                 </div>
-                <button class="btn btn-gold btn-sm" onclick="submitKYC()">Submit Document</button>
+                <div class="form-group" style="margin-top:8px">
+                  <label>Upload File <span style="color:var(--muted);font-size:12px">(PDF or JPG/PNG — max 10 MB)</span></label>
+                  <input type="file" class="input" id="kyc-file" accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf"
+                    style="padding:10px;cursor:pointer">
+                </div>
+                <button class="btn btn-gold btn-sm" onclick="submitKYC()">Upload Document</button>
               </div>`);
           }catch(e){
             const hint=e&&(e.detail||e.error||e.message||'');
@@ -1317,9 +1322,21 @@
         async function submitKYC(){
           const dt=document.getElementById('kyc-type')?.value;
           const dn=document.getElementById('kyc-number')?.value.trim();
+          const fileInput=document.getElementById('kyc-file');
+          const file=fileInput?.files?.[0];
           if(!dn){alert('Enter document number.');return;}
-          try{await apiPost('/auth/kyc/',{document_type:dt,document_number:dn});alert('Document submitted for verification.');renderPanel();}
-          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+          if(!file){alert('Please select a PDF or JPG/PNG file to upload.');return;}
+          const maxMB=10;
+          if(file.size>maxMB*1024*1024){alert(`File is too large. Maximum size is ${maxMB} MB.`);return;}
+          const fd=new FormData();
+          fd.append('document_type',dt);
+          fd.append('document_number',dn);
+          fd.append('document_file',file);
+          try{
+            await apiFormPost('/auth/kyc/',fd);
+            alert('Document uploaded successfully and submitted for verification.');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
         }
 
         // ═══════════════════════════════════════════════════════
