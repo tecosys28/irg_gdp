@@ -214,3 +214,86 @@ class DesignerProfileViewSet(viewsets.ModelViewSet):
     serializer_class = DesignerProfileSerializer
     permission_classes = [IsAuthenticated]
     queryset = DesignerProfile.objects.all()
+
+class ConsultantProfileViewSet(viewsets.ModelViewSet):
+    serializer_class = ConsultantProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return ConsultantProfile.objects.all()
+        return ConsultantProfile.objects.filter(user=self.request.user)
+
+    @action(detail=False, methods=['get', 'patch'])
+    def me(self, request):
+        profile, _ = ConsultantProfile.objects.get_or_create(
+            user=request.user,
+            defaults={'expertise': 'General Advisory', 'years_experience': 0, 'advisory_fee_per_hour': 0}
+        )
+        if request.method == 'PATCH':
+            for field in ('expertise', 'years_experience', 'advisory_fee_per_hour', 'bio'):
+                val = request.data.get(field)
+                if val is not None:
+                    setattr(profile, field, val)
+            profile.save()
+        return Response(ConsultantProfileSerializer(profile).data)
+
+
+class AdvertiserProfileViewSet(viewsets.ModelViewSet):
+    serializer_class = AdvertiserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return AdvertiserProfile.objects.all()
+        return AdvertiserProfile.objects.filter(user=self.request.user)
+
+    @action(detail=False, methods=['get', 'patch'])
+    def me(self, request):
+        profile, _ = AdvertiserProfile.objects.get_or_create(
+            user=request.user,
+            defaults={'company_name': request.user.email}
+        )
+        if request.method == 'PATCH':
+            for field in ('company_name', 'website'):
+                val = request.data.get(field)
+                if val is not None:
+                    setattr(profile, field, val)
+            profile.save()
+        return Response(AdvertiserProfileSerializer(profile).data)
+
+
+class AdvertisementViewSet(viewsets.ModelViewSet):
+    serializer_class = AdvertisementSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Advertisement.objects.all()
+        try:
+            return Advertisement.objects.filter(advertiser=self.request.user.advertiser_profile)
+        except Exception:
+            return Advertisement.objects.none()
+
+    def perform_create(self, serializer):
+        profile, _ = AdvertiserProfile.objects.get_or_create(
+            user=self.request.user,
+            defaults={'company_name': self.request.user.email}
+        )
+        serializer.save(advertiser=profile)
+
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
+        ad = self.get_object()
+        if ad.status != 'DRAFT':
+            return Response({'error': 'Only drafts can be submitted'}, status=status.HTTP_400_BAD_REQUEST)
+        ad.status = 'PENDING'
+        ad.save()
+        return Response(AdvertisementSerializer(ad).data)
+
+    @action(detail=True, methods=['post'])
+    def pause(self, request, pk=None):
+        ad = self.get_object()
+        ad.status = 'PAUSED' if ad.status == 'ACTIVE' else 'ACTIVE'
+        ad.save()
+        return Response(AdvertisementSerializer(ad).data)

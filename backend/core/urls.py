@@ -8,6 +8,9 @@ router.register(r'roles', views.UserRoleViewSet, basename='role')
 router.register(r'kyc', views.KYCDocumentViewSet, basename='kyc')
 router.register(r'jewelers', views.JewelerProfileViewSet, basename='jeweler')
 router.register(r'designers', views.DesignerProfileViewSet, basename='designer')
+router.register(r'consultants', views.ConsultantProfileViewSet, basename='consultant')
+router.register(r'advertisers', views.AdvertiserProfileViewSet, basename='advertiser')
+router.register(r'ads', views.AdvertisementViewSet, basename='advertisement')
 
 app_name = 'core'
 urlpatterns = [

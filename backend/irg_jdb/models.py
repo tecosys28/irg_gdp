@@ -80,15 +80,33 @@ class Copyright(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     design = models.OneToOneField(Design, on_delete=models.PROTECT, related_name='copyright_record')
     designer = models.ForeignKey('core.DesignerProfile', on_delete=models.PROTECT)
-    
+
     copyright_number = models.CharField(max_length=50, unique=True)
     design_hash = models.CharField(max_length=66)
     registration_tx_hash = models.CharField(max_length=66)
-    
+
     valid_from = models.DateField()
     valid_until = models.DateField()
-    
+
     registered_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         db_table = 'irg_jdb_copyright'
+
+
+class DesignLicense(models.Model):
+    """A jeweler licenses a design from a designer for production"""
+    STATUS_CHOICES = [('ACTIVE', 'Active'), ('EXPIRED', 'Expired'), ('REVOKED', 'Revoked')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    design = models.ForeignKey(Design, on_delete=models.PROTECT, related_name='licenses')
+    licensed_to = models.ForeignKey('core.JewelerProfile', on_delete=models.PROTECT, related_name='design_licenses')
+    license_fee = models.DecimalField(max_digits=12, decimal_places=2)
+    royalty_per_unit_sold = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ACTIVE')
+    valid_until = models.DateField(null=True, blank=True)
+    license_tx_hash = models.CharField(max_length=66, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'irg_jdb_design_license'

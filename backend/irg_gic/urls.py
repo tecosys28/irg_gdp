@@ -4,6 +4,7 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'certificates', views.GICCertificateViewSet, basename='gic')
+router.register(r'households', views.HouseholdRegistrationViewSet, basename='gic-household')
 
 app_name = 'irg_gic'
 urlpatterns = [path('', include(router.urls))]

@@ -24,3 +24,10 @@ class CopyrightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Copyright
         fields = '__all__'
+
+class DesignLicenseSerializer(serializers.ModelSerializer):
+    design_title = serializers.CharField(source='design.title', read_only=True)
+    class Meta:
+        model = DesignLicense
+        fields = '__all__'
+        read_only_fields = ['licensed_to', 'license_tx_hash', 'status', 'created_at']

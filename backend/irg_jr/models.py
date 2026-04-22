@@ -97,3 +97,30 @@ class RedemptionRecord(models.Model):
     delivered_at = models.DateTimeField(null=True, blank=True)
     class Meta:
         db_table = 'irg_jr_redemption'
+
+
+class GoldAssessment(models.Model):
+    """Standalone gold assessment certificate issued by jeweler before JR issuance"""
+    STATUS_CHOICES = [('DRAFT', 'Draft'), ('SUBMITTED', 'Submitted'), ('CONFIRMED', 'Confirmed')]
+    PURITY_CHOICES = [('24K', '24K'), ('22K', '22K'), ('18K', '18K'), ('14K', '14K')]
+    TEST_METHODS = [
+        ('XRF', 'XRF Spectrometer'), ('ACID', 'Acid Test'),
+        ('FIRE', 'Fire Assay'), ('DENSITY', 'Density Test'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    jeweler = models.ForeignKey('core.JewelerProfile', on_delete=models.PROTECT, related_name='assessments')
+    customer_email = models.EmailField()
+    item_description = models.TextField()
+    estimated_weight = models.DecimalField(max_digits=10, decimal_places=4)
+    purity = models.CharField(max_length=4, choices=PURITY_CHOICES)
+    test_method = models.CharField(max_length=10, choices=TEST_METHODS, default='XRF')
+    estimated_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    benchmark_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    assessment_notes = models.TextField(blank=True)
+    certificate_number = models.CharField(max_length=50, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'irg_jr_gold_assessment'

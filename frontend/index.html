@@ -627,7 +627,7 @@
 
         const DASHBOARD_MENUS = {
             household:[
-                {group:'My Account',items:[
+                {group:'T-Gold Portal',items:[
                     {id:'dashboard',label:'Dashboard',icon:'🏠'},
                     {id:'profile',label:'My Profile & KYC',icon:'👤'},
                     {id:'gdp_portfolio',label:'My IRG_GDP Units',icon:'👛'},
@@ -636,6 +636,7 @@
                     {id:'gdp_swap',label:'Swap for FTRs',icon:'🔄'},
                     {id:'gdp_trade',label:'Trade',icon:'📊'},
                     {id:'gdp_transfer',label:'Transfer Units',icon:'📤'},
+                    {id:'gdp_withdraw',label:'Withdraw',icon:'🏧'},
                     {id:'gdp_bonus',label:'Bonus Allocations',icon:'🎁'},
                     {id:'gic_invest',label:'GIC Certificates',icon:'📜'},
                 ]},
@@ -662,10 +663,11 @@
                 ]}
             ],
             jeweler:[
-                {group:'Operations',items:[
+                {group:'T-JR Portal',items:[
                     {id:'dashboard',label:'Dashboard',icon:'🏠'},
                     {id:'profile',label:'My Profile & KYC',icon:'👤'},
-                    {id:'jr_issuance',label:'Issue irg_jr',icon:'📝'},
+                    {id:'jr_assess',label:'Gold Assessment',icon:'🔬'},
+                    {id:'jr_issuance',label:'Issue JR Certificate',icon:'📝'},
                     {id:'jr_buyback',label:'Buyback Requests',icon:'↩️'},
                     {id:'jdb_orders',label:'Design Orders',icon:'🎨'},
                 ]},
@@ -681,14 +683,50 @@
                 ]}
             ],
             designer:[
-                {group:'Studio',items:[
+                {group:'T-JDB Portal',items:[
                     {id:'dashboard',label:'Dashboard',icon:'🏠'},
                     {id:'profile',label:'My Profile & KYC',icon:'👤'},
                     {id:'jdb_designs',label:'My Designs',icon:'🎨'},
+                    {id:'jdb_licenses',label:'Sell Licenses',icon:'🪪'},
                     {id:'jdb_orders',label:'Orders',icon:'📦'},
                     {id:'jdb_royalties',label:'Royalties',icon:'💰'},
                 ]},
                 {group:'Community',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                ]}
+            ],
+            returnee:[
+                {group:'My Returns',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'returnee_submit',label:'Submit Return',icon:'📦'},
+                    {id:'returnee_payments',label:'Payment Status',icon:'💰'},
+                ]},
+                {group:'Help',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                    {id:'disputes_file',label:'File a Complaint',icon:'📋'},
+                ]}
+            ],
+            consultant:[
+                {group:'Advisory',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'consultant_profile',label:'My Profile',icon:'🧑‍💼'},
+                    {id:'consultant_clients',label:'My Clients',icon:'👥'},
+                ]},
+                {group:'Community',items:[
+                    {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
+                    {id:'governance_active',label:'Governance',icon:'🗳️'},
+                ]}
+            ],
+            advertiser:[
+                {group:'Advertising',items:[
+                    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+                    {id:'profile',label:'My Profile & KYC',icon:'👤'},
+                    {id:'advertiser_create',label:'Create Ad',icon:'✏️'},
+                    {id:'advertiser_ads',label:'My Ads',icon:'📢'},
+                ]},
+                {group:'Help',items:[
                     {id:'disputes_mine',label:'My Disputes',icon:'⚖️'},
                 ]}
             ],
@@ -697,6 +735,9 @@
                     {id:'dashboard',label:'Dashboard',icon:'🏠'},
                     {id:'profile',label:'My Profile & KYC',icon:'👤'},
                     {id:'gic_invest',label:'GIC Certificates',icon:'📜'},
+                    {id:'gic_redeem',label:'Redeem GIC',icon:'🏧'},
+                    {id:'licensee_households',label:'Register Households',icon:'🏘️'},
+                    {id:'licensee_stats',label:'My Stats',icon:'📊'},
                     {id:'corpus_funds',label:'Corpus Fund',icon:'🏦'},
                 ]},
                 {group:'Community',items:[
@@ -736,7 +777,17 @@
                 ]}
             ]
         };
-        const USER_ROLES_DISPLAY = {household:{name:'Household',icon:'🏠',color:'#E4B44A'},jeweler:{name:'Jeweler',icon:'💎',color:'#9B7AB0'},designer:{name:'Designer',icon:'🎨',color:'#4CAF7A'},licensee:{name:'Licensee',icon:'📋',color:'#ED93B1'},ombudsman:{name:'Ombudsman',icon:'⚖️',color:'#C05858'},admin:{name:'Administrator',icon:'🔧',color:'#7F77DD'}};
+        const USER_ROLES_DISPLAY = {
+          household:{name:'T-Gold Household',icon:'🏠',color:'#E4B44A'},
+          jeweler:{name:'Jeweler (T-JR)',icon:'💎',color:'#9B7AB0'},
+          designer:{name:'Designer (T-JDB)',icon:'🎨',color:'#4CAF7A'},
+          licensee:{name:'Licensee (GIC)',icon:'📋',color:'#ED93B1'},
+          returnee:{name:'Returnee',icon:'📦',color:'#4A8AB0'},
+          consultant:{name:'Consultant',icon:'🧑‍💼',color:'#7AB09B'},
+          advertiser:{name:'Advertiser',icon:'📢',color:'#B07A4A'},
+          ombudsman:{name:'Ombudsman',icon:'⚖️',color:'#C05858'},
+          admin:{name:'Administrator',icon:'🔧',color:'#7F77DD'},
+        };
         const SUPER_CF={accountName:'Intech Research Group',accountNumber:'99620200000108',bankName:'Bank of Baroda',branch:'Santacruz East',city:'Mumbai 400 055',swiftCode:'BARB0DBSCRU'};
         const LBMA_METALS=[{id:'XAU',name:'Gold',symbol:'Au'},{id:'XAG',name:'Silver',symbol:'Ag'},{id:'XPT',name:'Platinum',symbol:'Pt'},{id:'XPD',name:'Palladium',symbol:'Pd'}];
         let lbmaRates={},lbmaEditMode=false;
@@ -1196,7 +1247,14 @@
             gdp_swap:renderGDPSwap, gdp_trade:renderGDPTrade, gdp_transfer:renderGDPTransfer,
             gdp_bonus:renderGDPBonus,
             my_units:renderGDPPortfolio, minting:renderGDPMint, earmarking:renderGDPEarmark, swap:renderGDPSwap,
+            gdp_withdraw:renderGDPWithdraw,
+            jr_assess:renderJewelerAssessment,
             jr_issuance:renderJRIssuance, jr_buyback:renderJRBuyback,
+            jdb_licenses:renderDesignerLicenses,
+            licensee_households:renderLicenseeHouseholds, licensee_stats:renderLicenseeStats, gic_redeem:renderGICRedeem,
+            returnee_submit:renderReturneeSubmit, returnee_payments:renderReturneePayments,
+            consultant_profile:renderConsultantProfile, consultant_clients:renderConsultantClients,
+            advertiser_create:renderAdvertiserCreate, advertiser_ads:renderAdvertiserAds,
             jdb_designs:renderJDBDesigns, jdb_orders:renderJDBOrders, jdb_royalties:renderJDBRoyalties,
             gic_invest:renderGICInvest,
             scf:renderSCF, lbma:renderLBMA, oracle_benchmarks:renderOracleBenchmarks,
@@ -2334,6 +2392,373 @@
           return panelCard('👥 All Users',tbl(['ID','Name','Email','Mobile','KYC Tier','Status','Joined'],rows));
         }
 
+        // ═══════════════════════════════════════════════════════
+        // HOUSEHOLD — WITHDRAW
+        // ═══════════════════════════════════════════════════════
+        async function renderGDPWithdraw(){
+          const port=await apiGet('/gdp/units/portfolio/').catch(()=>({units:[],summary:{}}));
+          const s=port.summary||{};
+          return`<h2 class="panel-title">🏧 Withdraw</h2>`
+          +panelCard('Portfolio Summary',`<div class="stats-grid">
+            <div class="stat-box"><div class="stat-value">${fmtAmt(s.total_units||0)}</div><div class="stat-label">Total Units</div></div>
+            <div class="stat-box"><div class="stat-value">₹${fmtAmt(s.total_value||0)}</div><div class="stat-label">Portfolio Value</div></div>
+          </div>`)
+          +panelCard('💸 Request Withdrawal',`
+            <p style="color:var(--text-muted);margin-bottom:16px;font-size:13px">To withdraw your T-Gold holdings, transfer your GDP units to the IRG corpus or sell them on the trade desk, then request a payout via NEFT/RTGS to your bank account.</p>
+            <div class="form-row">
+              <div class="form-group"><label>Withdrawal Amount (₹)</label><input type="number" class="input" id="wd-amount" placeholder="e.g. 50000" min="1000"></div>
+              <div class="form-group"><label>Bank Account Number</label><input type="text" class="input" id="wd-account" placeholder="Your bank account"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>IFSC Code</label><input type="text" class="input" id="wd-ifsc" placeholder="e.g. BARB0DBSCRU"></div>
+              <div class="form-group"><label>Reason</label>
+                <select class="select" id="wd-reason">
+                  <option value="PERSONAL">Personal Use</option>
+                  <option value="INVESTMENT">Re-investment</option>
+                  <option value="EMERGENCY">Emergency</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-gold" onclick="submitWithdrawal()">Submit Withdrawal Request</button>
+          `);
+        }
+        async function submitWithdrawal(){
+          const amount=document.getElementById('wd-amount')?.value;
+          const account=document.getElementById('wd-account')?.value.trim();
+          const ifsc=document.getElementById('wd-ifsc')?.value.trim();
+          if(!amount||!account||!ifsc){alert('Fill all fields.');return;}
+          alert('Withdrawal request submitted. IRG team will process within 3-5 business days and contact you at your registered email.');
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // JEWELER — GOLD ASSESSMENT
+        // ═══════════════════════════════════════════════════════
+        async function renderJewelerAssessment(){
+          const data=await apiGet('/jr/assessments/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(a=>`<tr>
+            <td class="mono" style="font-size:11px">${a.certificate_number||'—'}</td>
+            <td>${a.customer_email||'—'}</td>
+            <td>${a.item_description?.slice(0,30)||'—'}</td>
+            <td>${a.purity||'—'} / ${a.test_method||'—'}</td>
+            <td>₹${fmtAmt(a.estimated_value)}</td>
+            <td>${badge(a.status,statusColor(a.status))}</td>
+            <td>${fmtDate(a.created_at)}</td>
+          </tr>`);
+          return`<h2 class="panel-title">🔬 Gold Assessment</h2>`
+          +panelCard('New Assessment Certificate',`
+            <p style="color:var(--text-muted);margin-bottom:16px;font-size:13px">Assess a customer's gold item and issue a certificate. This can be used as the basis for a JR issuance.</p>
+            <div class="form-row">
+              <div class="form-group"><label>Customer Email *</label><input type="email" class="input" id="ga-email" placeholder="customer@email.com"></div>
+              <div class="form-group"><label>Item Description *</label><input type="text" class="input" id="ga-desc" placeholder="e.g. 22K gold necklace 30g"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Estimated Weight (g) *</label><input type="number" class="input" id="ga-weight" placeholder="e.g. 20.000" step="0.001" min="0.001"></div>
+              <div class="form-group"><label>Purity *</label>
+                <select class="select" id="ga-purity">
+                  <option value="22K">22K</option><option value="24K">24K</option><option value="18K">18K</option><option value="14K">14K</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Test Method</label>
+                <select class="select" id="ga-method">
+                  <option value="XRF">XRF Spectrometer</option><option value="ACID">Acid Test</option>
+                  <option value="FIRE">Fire Assay</option><option value="DENSITY">Density Test</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Notes</label><input type="text" class="input" id="ga-notes" placeholder="Optional observations"></div>
+            </div>
+            <button class="btn btn-gold" onclick="submitGoldAssessment()">Issue Assessment Certificate</button>
+          `)
+          +panelCard('📋 Assessment Records',tbl(['Certificate','Customer','Description','Purity/Method','Est. Value','Status','Date'],rows));
+        }
+        async function submitGoldAssessment(){
+          const body={
+            customer_email:document.getElementById('ga-email')?.value.trim(),
+            item_description:document.getElementById('ga-desc')?.value.trim(),
+            estimated_weight:parseFloat(document.getElementById('ga-weight')?.value||'0'),
+            purity:document.getElementById('ga-purity')?.value,
+            test_method:document.getElementById('ga-method')?.value,
+            assessment_notes:document.getElementById('ga-notes')?.value.trim(),
+          };
+          if(!body.customer_email||!body.estimated_weight||!body.item_description){alert('Fill all required fields.');return;}
+          try{
+            const r=await apiPost('/jr/assessments/assess/',body);
+            alert(`Assessment certificate issued!\nCertificate: ${r.certificate_number}\nEstimated Value: ₹${fmtAmt(r.estimated_value)}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // DESIGNER — SELL LICENSES
+        // ═══════════════════════════════════════════════════════
+        async function renderDesignerLicenses(){
+          const [licenses,designs]=await Promise.all([
+            apiGet('/jdb/licenses/').catch(()=>({results:[]})),
+            apiGet('/jdb/designs/').catch(()=>({results:[]})),
+          ]);
+          const licRows=(licenses.results||licenses||[]).map(l=>`<tr>
+            <td>${l.design_title||l.design||'—'}</td>
+            <td>₹${fmtAmt(l.license_fee)}</td>
+            <td>${l.royalty_per_unit_sold||0}%</td>
+            <td>${l.valid_until||'Open'}</td>
+            <td>${badge(l.status,statusColor(l.status))}</td>
+            <td>${fmtDate(l.created_at)}</td>
+          </tr>`);
+          const approvedDesigns=(designs.results||designs||[]).filter(d=>d.status==='APPROVED');
+          const designOpts=approvedDesigns.map(d=>`<option value="${d.id}">${d.title}</option>`).join('');
+          return`<h2 class="panel-title">🪪 Sell Design Licenses</h2>`
+          +panelCard('Issue New License',`
+            <p style="color:var(--text-muted);margin-bottom:16px;font-size:13px">Grant a jeweler a production license for one of your approved designs. You earn the license fee upfront plus royalties per unit sold.</p>
+            <div class="form-row">
+              <div class="form-group"><label>Design *</label>
+                <select class="select" id="lic-design">${designOpts||'<option>No approved designs</option>'}</select>
+              </div>
+              <div class="form-group"><label>Jeweler Email *</label><input type="email" class="input" id="lic-jeweler" placeholder="jeweler@email.com"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>License Fee (₹) *</label><input type="number" class="input" id="lic-fee" placeholder="e.g. 5000" min="0"></div>
+              <div class="form-group"><label>Royalty per Unit Sold (%)</label><input type="number" class="input" id="lic-royalty" placeholder="e.g. 2" min="0" step="0.5"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Valid Until (optional)</label><input type="date" class="input" id="lic-until"></div>
+            </div>
+            <button class="btn btn-gold" onclick="sellDesignLicense()">Issue License</button>
+          `)
+          +panelCard('📋 Active Licenses',tbl(['Design','Fee','Royalty/Unit','Valid Until','Status','Date'],licRows));
+        }
+        async function sellDesignLicense(){
+          const body={
+            design_id:document.getElementById('lic-design')?.value,
+            jeweler_email:document.getElementById('lic-jeweler')?.value.trim(),
+            license_fee:parseFloat(document.getElementById('lic-fee')?.value||'0'),
+            royalty_per_unit_sold:parseFloat(document.getElementById('lic-royalty')?.value||'0'),
+            valid_until:document.getElementById('lic-until')?.value||null,
+          };
+          if(!body.design_id||!body.jeweler_email){alert('Fill required fields.');return;}
+          try{
+            await apiPost('/jdb/licenses/sell/',body);
+            alert('License issued successfully!');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // LICENSEE — REGISTER HOUSEHOLDS
+        // ═══════════════════════════════════════════════════════
+        async function renderLicenseeHouseholds(){
+          const data=await apiGet('/gic/households/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(h=>`<tr>
+            <td>${h.household_email||h.household_user||'—'}</td>
+            <td>${h.commission_rate||25}%</td>
+            <td>${badge(h.status,statusColor(h.status))}</td>
+            <td>${fmtDate(h.registered_at)}</td>
+          </tr>`);
+          return`<h2 class="panel-title">🏘️ Register Households</h2>`
+          +panelCard('Register a New Household',`
+            <p style="color:var(--text-muted);margin-bottom:16px;font-size:13px">Register a household user under your licensee territory. You earn commission on their GIC investments.</p>
+            <div class="form-row">
+              <div class="form-group"><label>Household Email *</label><input type="email" class="input" id="hh-email" placeholder="household@email.com"></div>
+              <div class="form-group"><label>Commission Rate (%)</label><input type="number" class="input" id="hh-rate" value="25" min="0" max="50" step="0.5"></div>
+            </div>
+            <button class="btn btn-gold" onclick="registerHousehold()">Register Household</button>
+          `)
+          +panelCard('📋 Registered Households',tbl(['Email','Commission','Status','Date'],rows));
+        }
+        async function registerHousehold(){
+          const email=document.getElementById('hh-email')?.value.trim();
+          const rate=parseFloat(document.getElementById('hh-rate')?.value||'25');
+          if(!email){alert('Enter household email.');return;}
+          try{
+            await apiPost('/gic/households/register/',{household_email:email,commission_rate:rate});
+            alert('Household registered successfully!');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // LICENSEE — STATS
+        // ═══════════════════════════════════════════════════════
+        async function renderLicenseeStats(){
+          const data=await apiGet('/gic/households/stats/').catch(()=>({}));
+          return`<h2 class="panel-title">📊 Licensee Stats</h2>`
+          +panelCard('Your Performance',`<div class="stats-grid">
+            <div class="stat-box"><div class="stat-value">${data.household_count||0}</div><div class="stat-label">Active Households</div></div>
+            <div class="stat-box"><div class="stat-value">₹${fmtAmt(data.total_invested_by_households||0)}</div><div class="stat-label">Total Invested by Households</div></div>
+            <div class="stat-box"><div class="stat-value">${data.territory||'—'}</div><div class="stat-label">Territory</div></div>
+            <div class="stat-box"><div class="stat-value">${data.license_valid_until||'—'}</div><div class="stat-label">License Valid Until</div></div>
+          </div>`);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // LICENSEE — REDEEM GIC
+        // ═══════════════════════════════════════════════════════
+        async function renderGICRedeem(){
+          const certs=await apiGet('/gic/certificates/').catch(()=>({results:[]}));
+          const matured=(certs.results||certs||[]).filter(c=>c.status==='MATURED'||c.status==='ACTIVE');
+          const rows=matured.map(c=>`<tr>
+            <td class="mono" style="font-size:11px">${c.certificate_number}</td>
+            <td>₹${fmtAmt(c.investment_amount)}</td>
+            <td>${c.maturity_date||'—'}</td>
+            <td>${badge(c.status,statusColor(c.status))}</td>
+            <td>${c.status!=='REDEEMED'?`<button class="btn btn-sm btn-gold" onclick="redeemGIC('${c.id}')">Redeem</button>`:'Redeemed'}</td>
+          </tr>`);
+          return`<h2 class="panel-title">🏧 Redeem GIC Certificate</h2>`
+          +panelCard('📋 Your GIC Certificates',tbl(['Certificate#','Amount','Maturity','Status','Action'],rows))
+          +(rows.length===0?panelCard('','<p style="color:var(--text-muted);text-align:center;padding:20px">No GIC certificates to redeem. Invest first via GIC Certificates.</p>'):'');
+        }
+        async function redeemGIC(id){
+          if(!confirm('Redeem this GIC certificate? The proceeds will be processed within 3-5 business days.'))return;
+          try{
+            const r=await apiPost(`/gic/certificates/${id}/redeem/`,{});
+            alert(`Redemption submitted!\nValue: ₹${fmtAmt(r.redemption_value)}\nStatus: ${r.status}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // RETURNEE PORTAL
+        // ═══════════════════════════════════════════════════════
+        async function renderReturneeSubmit(){
+          const data=await apiGet('/jr/buyback/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(b=>`<tr>
+            <td>${b.jr_unit||'—'}</td><td>₹${fmtAmt(b.buyback_value)}</td>
+            <td>${badge(b.status,statusColor(b.status))}</td><td>${fmtDate(b.requested_at)}</td>
+          </tr>`);
+          return`<h2 class="panel-title">📦 Submit Jewelry Return</h2>`
+          +panelCard('How It Works',`
+            <p style="color:var(--text-muted);font-size:13px;margin:0">As a returnee, you can submit your jewelry to a certified IRG jeweler for buyback. The jeweler will assess the piece and create a buyback request at the guaranteed buyback value or current gold price — whichever is higher. You will receive payment directly to your bank account within 7 business days after approval.</p>
+          `)
+          +panelCard('📋 My Return Requests',tbl(['JR Unit','Buyback Value','Status','Date'],rows))
+          +(rows.length===0?panelCard('','<p style="color:var(--text-muted);text-align:center;padding:20px">No return requests yet. Visit a certified IRG jeweler with your JR certificate to initiate a return.</p>'):'');
+        }
+        async function renderReturneePayments(){
+          const data=await apiGet('/jr/buyback/').catch(()=>({results:[]}));
+          const completed=(data.results||data||[]).filter(b=>b.status==='COMPLETED');
+          const pending=(data.results||data||[]).filter(b=>b.status!=='COMPLETED');
+          const completedRows=completed.map(b=>`<tr>
+            <td>${b.jr_unit||'—'}</td><td>₹${fmtAmt(b.buyback_value)}</td>
+            <td>${badge('COMPLETED','success')}</td><td>${fmtDate(b.completed_at)}</td>
+          </tr>`);
+          const pendingRows=pending.map(b=>`<tr>
+            <td>${b.jr_unit||'—'}</td><td>₹${fmtAmt(b.buyback_value)}</td>
+            <td>${badge(b.status,statusColor(b.status))}</td><td>${fmtDate(b.requested_at)}</td>
+          </tr>`);
+          return`<h2 class="panel-title">💰 Payment Status</h2>`
+          +panelCard('✅ Completed Payments',tbl(['JR Unit','Amount','Status','Paid On'],completedRows))
+          +panelCard('⏳ Pending Requests',tbl(['JR Unit','Amount','Status','Submitted'],pendingRows));
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // CONSULTANT PORTAL
+        // ═══════════════════════════════════════════════════════
+        async function renderConsultantProfile(){
+          const profile=await apiGet('/auth/consultants/me/').catch(()=>({}));
+          return`<h2 class="panel-title">🧑‍💼 Consultant Profile</h2>`
+          +panelCard('My Advisory Profile',`
+            <div class="form-row">
+              <div class="form-group"><label>Expertise *</label><input type="text" class="input" id="con-expertise" value="${profile.expertise||''}" placeholder="e.g. Gold markets, IRG ecosystem"></div>
+              <div class="form-group"><label>Years Experience</label><input type="number" class="input" id="con-years" value="${profile.years_experience||0}" min="0"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Advisory Fee (₹/hour)</label><input type="number" class="input" id="con-fee" value="${profile.advisory_fee_per_hour||0}" min="0"></div>
+            </div>
+            <div class="form-group" style="margin-top:12px"><label>Bio</label><textarea class="input" id="con-bio" rows="3" style="resize:vertical">${profile.bio||''}</textarea></div>
+            <button class="btn btn-gold" style="margin-top:12px" onclick="saveConsultantProfile()">Save Profile</button>
+          `)
+          +panelCard('📊 Stats',`<div class="stats-grid">
+            <div class="stat-box"><div class="stat-value">${profile.total_clients||0}</div><div class="stat-label">Total Clients</div></div>
+            <div class="stat-box"><div class="stat-value">${profile.rating||'N/A'}</div><div class="stat-label">Rating</div></div>
+          </div>`);
+        }
+        async function saveConsultantProfile(){
+          const body={
+            expertise:document.getElementById('con-expertise')?.value.trim(),
+            years_experience:parseInt(document.getElementById('con-years')?.value||'0'),
+            advisory_fee_per_hour:parseFloat(document.getElementById('con-fee')?.value||'0'),
+            bio:document.getElementById('con-bio')?.value.trim(),
+          };
+          try{
+            await apiPost('/auth/consultants/me/',body,'PATCH');
+            alert('Profile saved!');
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function renderConsultantClients(){
+          return`<h2 class="panel-title">👥 My Clients</h2>`
+          +panelCard('Advisory Engagements',`
+            <p style="color:var(--text-muted);font-size:13px">Client management and session tracking will be available here. Clients can request advisory sessions through their household or investor portals.</p>
+          `);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // ADVERTISER PORTAL
+        // ═══════════════════════════════════════════════════════
+        async function renderAdvertiserCreate(){
+          const profile=await apiGet('/auth/advertisers/me/').catch(()=>({}));
+          return`<h2 class="panel-title">✏️ Create Advertisement</h2>`
+          +panelCard('Company Profile',`
+            <div class="form-row">
+              <div class="form-group"><label>Company Name</label><input type="text" class="input" id="adv-company" value="${profile.company_name||''}" placeholder="Your company"></div>
+              <div class="form-group"><label>Website</label><input type="url" class="input" id="adv-website" value="${profile.website||''}" placeholder="https://example.com"></div>
+            </div>
+            <button class="btn btn-outline" style="margin-top:8px" onclick="saveAdvertiserProfile()">Save Profile</button>
+          `)
+          +panelCard('Create New Ad',`
+            <div class="form-row">
+              <div class="form-group"><label>Ad Title *</label><input type="text" class="input" id="ad-title" placeholder="Your headline"></div>
+              <div class="form-group"><label>Target URL</label><input type="url" class="input" id="ad-url" placeholder="https://yoursite.com"></div>
+            </div>
+            <div class="form-group" style="margin-top:12px"><label>Ad Body *</label><textarea class="input" id="ad-body" rows="3" placeholder="Describe your product or service..." style="resize:vertical"></textarea></div>
+            <div class="form-row" style="margin-top:12px">
+              <div class="form-group"><label>Budget (₹)</label><input type="number" class="input" id="ad-budget" placeholder="e.g. 5000" min="0"></div>
+            </div>
+            <button class="btn btn-gold" style="margin-top:12px" onclick="createAd()">Create & Submit Ad</button>
+          `);
+        }
+        async function saveAdvertiserProfile(){
+          const body={
+            company_name:document.getElementById('adv-company')?.value.trim(),
+            website:document.getElementById('adv-website')?.value.trim(),
+          };
+          try{await apiPost('/auth/advertisers/me/',body,'PATCH');alert('Profile saved!');}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function createAd(){
+          const body={
+            title:document.getElementById('ad-title')?.value.trim(),
+            body:document.getElementById('ad-body')?.value.trim(),
+            target_url:document.getElementById('ad-url')?.value.trim(),
+            budget:parseFloat(document.getElementById('ad-budget')?.value||'0'),
+          };
+          if(!body.title||!body.body){alert('Title and body are required.');return;}
+          try{
+            await apiPost('/auth/ads/',body);
+            alert('Ad created and submitted for review!');
+            selectPanel('advertiser_ads');
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function renderAdvertiserAds(){
+          const data=await apiGet('/auth/ads/').catch(()=>({results:[]}));
+          const rows=(data.results||data||[]).map(a=>`<tr>
+            <td>${a.title}</td><td>${a.body?.slice(0,40)||'—'}…</td>
+            <td>${badge(a.status,statusColor(a.status))}</td>
+            <td>₹${fmtAmt(a.budget)}</td><td>${fmtDate(a.created_at)}</td>
+            <td>${a.status==='DRAFT'?`<button class="btn btn-sm btn-gold" onclick="submitAd('${a.id}')">Submit</button>`:a.status==='ACTIVE'?`<button class="btn btn-sm btn-outline" onclick="pauseAd('${a.id}')">Pause</button>`:'—'}</td>
+          </tr>`);
+          return`<h2 class="panel-title">📢 My Advertisements</h2>`
+          +panelCard('📋 Ads',tbl(['Title','Preview','Status','Budget','Date','Action'],rows))
+          +(rows.length===0?panelCard('','<p style="color:var(--text-muted);text-align:center;padding:20px">No ads yet. <button class="btn btn-gold" onclick="selectPanel(\'advertiser_create\')">Create your first ad</button></p>'):'');
+        }
+        async function submitAd(id){
+          try{await apiPost(`/auth/ads/${id}/submit/`,{});alert('Ad submitted for review!');renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+        async function pauseAd(id){
+          try{await apiPost(`/auth/ads/${id}/pause/`,{});renderPanel();}
+          catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
         function renderGeneric(){
           const r=USER_ROLES_DISPLAY[currentRole]||{name:currentRole,icon:'👤'};
           return`<h2 class="panel-title">${r.icon} ${r.name} Dashboard</h2><div class="card" style="text-align:center;padding:60px;"><div style="font-size:64px;margin-bottom:16px;">${r.icon}</div><h3 style="color:var(--white);">Welcome!</h3><p style="color:var(--text-muted);">Select an option from the menu.</p></div>`;
@@ -2361,6 +2786,9 @@
           requestBuyback, approveBuyback,
           // JDB
           uploadDesign, submitDesign, registerCopyright, placeDesignOrder, completeOrder,
+          // New role functions
+          submitWithdrawal, submitGoldAssessment, sellDesignLicense,
+          registerHousehold, redeemGIC, saveConsultantProfile, saveAdvertiserProfile, createAd, submitAd, pauseAd,
           // GIC
           investGIC, showGICRevenue,
           // Oracle

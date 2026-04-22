@@ -6,18 +6,17 @@ After=network.target
 User=ec2-user
 Group=ec2-user
 WorkingDirectory=/home/ec2-user/irg_gdp/backend
-EnvironmentFile=/home/ec2-user/irg_gdp/.env
-ExecStart=/home/ec2-user/irg_gdp/venv/bin/gunicorn \
-    --workers 3 \
+EnvironmentFile=/home/ec2-user/irg_gdp/backend/.env
+ExecStart=/home/ec2-user/.local/bin/gunicorn \
+    wsgi:application \
     --bind 127.0.0.1:8000 \
-    --timeout 120 \
-    --access-logfile /var/log/gunicorn/access.log \
-    --error-logfile /var/log/gunicorn/error.log \
-    wsgi:application
+    --workers 3 \
+    --timeout 60 \
+    --access-logfile /home/ec2-user/gunicorn-access.log \
+    --error-logfile /home/ec2-user/gunicorn-error.log
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
-PrivateTmp=true
 Restart=always
 RestartSec=5
 

@@ -107,6 +107,22 @@ class TrusteeBankerProfileSerializer(serializers.ModelSerializer):
         model = TrusteeBankerProfile
         fields = '__all__'
 
+class ConsultantProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConsultantProfile
+        fields = '__all__'
+
+class AdvertiserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdvertiserProfile
+        fields = '__all__'
+
+class AdvertisementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Advertisement
+        fields = '__all__'
+        read_only_fields = ['advertiser', 'created_at']
+
 class OTPVerificationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(min_length=6, max_length=6)

@@ -248,6 +248,9 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
   <section id="tab-nominees" class="card hidden">
     <h2>Your Nominees</h2>
     <p class="text-muted">In case of emergency, these nominees can initiate wallet recovery. Shares must total 100%.</p>
+    <div id="nominees-wallet-hint" class="hidden" style="margin-bottom:14px;padding:12px 16px;background:rgba(212,146,74,0.12);border:1px solid var(--warning);border-radius:6px;color:var(--gold-light);font-size:14px">
+      ⚠️ Your wallet is not yet fully activated — you can save nominees here now, but you still need to complete <strong>Activation</strong> (set password + seed phrase) before you can transact.
+    </div>
     <table id="nominees-table">
       <thead><tr><th>Name</th><th>Relationship</th><th>Contact</th><th>Share</th><th>Status</th></tr></thead>
       <tbody></tbody>
@@ -257,9 +260,11 @@ label { color: var(--text-muted); font-size: 0.9em; display: block; margin-top: 
       <h3>Edit nominees</h3>
       <div id="edit-nominee-list"></div>
       <button class="btn btn-secondary" onclick="addEditNomineeRow()">+ Add nominee</button>
-      <label>Wallet password</label>
-      <input type="password" id="edit-nominees-pw">
-      <button class="btn" onclick="submitNominees()">Save</button>
+      <div id="nominees-pw-row" style="margin-top:12px">
+        <label>Wallet password <span style="color:var(--text-muted);font-size:12px">(required for activated wallets)</span></label>
+        <input type="password" id="edit-nominees-pw" placeholder="Leave blank if not yet activated">
+      </div>
+      <button class="btn" onclick="submitNominees()" style="margin-top:12px">Save</button>
     </div>
   </section>
 
@@ -747,6 +752,13 @@ async function submitActivation() {
 // Nominees tab
 // ─────────────────────────────────────────────────────────────────────────────
 async function loadNominees() {
+  // Show hint if wallet is not yet activated
+  try {
+    const info = await apiGet('/wallet/info/');
+    const hint = document.getElementById('nominees-wallet-hint');
+    if (hint) hint.classList.toggle('hidden', info.state === 'ACTIVATED');
+  } catch (e) { /* best-effort */ }
+
   try {
     const rows = await apiGet('/wallet/nominees/');
     document.querySelector('#nominees-table tbody').innerHTML = rows.map(n => `
@@ -762,7 +774,7 @@ function editNominees() {
   document.getElementById('edit-nominees-panel').classList.remove('hidden');
   const list = document.getElementById('edit-nominee-list');
   list.innerHTML = '';
-  addEditNomineeRow(); addEditNomineeRow();
+  addEditNomineeRow();
 }
 function addEditNomineeRow() { addNomineeRow('edit-nominee-list'); }
 async function submitNominees() {
@@ -770,7 +782,7 @@ async function submitNominees() {
   const pw = document.getElementById('edit-nominees-pw').value;
   try {
     await apiPost('/wallet/nominees/update/', { nominees, wallet_password: pw }, 'PUT');
-    msg('Nominees updated', 'success');
+    msg('Nominees saved successfully!', 'success');
     document.getElementById('edit-nominees-pw').value = '';
     loadNominees();
   } catch (e) { msg('Update failed: ' + (e.error || 'unknown'), 'error'); }

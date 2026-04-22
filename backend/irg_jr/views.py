@@ -333,3 +333,59 @@ class BuybackViewSet(viewsets.ModelViewSet):
         buyback.jr_unit.save()
 
         return Response(BuybackRecordSerializer(buyback).data)
+
+
+class GoldAssessmentViewSet(viewsets.ModelViewSet):
+    """Standalone gold assessment certificate — step before JR issuance"""
+    serializer_class = GoldAssessmentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return GoldAssessment.objects.filter(jeweler__user=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def assess(self, request):
+        """Create a gold assessment certificate."""
+        serializer = GoldAssessmentRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        from core.models import JewelerProfile as _JP
+        jeweler, _ = _JP.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'business_name': f"{request.user.first_name or ''} {request.user.last_name or ''}".strip() or request.user.email,
+                'license_number': f"LIC-{request.user.id}",
+                'gst_number': 'PENDING', 'pan_number': 'PENDING', 'business_address': 'PENDING',
+            }
+        )
+
+        from oracle.models import LBMARate
+        latest = LBMARate.objects.filter(metal='XAU').order_by('-date').first()
+        benchmark = latest.inr_per_gram if latest else Decimal('6500')
+
+        purity_factor = {'24K': Decimal('1.0'), '22K': Decimal('0.9167'), '18K': Decimal('0.75'), '14K': Decimal('0.5833')}[data['purity']]
+        estimated_value = Decimal(str(data['estimated_weight'])) * purity_factor * benchmark
+
+        assessment = GoldAssessment.objects.create(
+            jeweler=jeweler,
+            customer_email=data['customer_email'],
+            item_description=data['item_description'],
+            estimated_weight=data['estimated_weight'],
+            purity=data['purity'],
+            test_method=data.get('test_method', 'XRF'),
+            assessment_notes=data.get('assessment_notes', ''),
+            estimated_value=estimated_value,
+            benchmark_used=benchmark,
+            certificate_number=f"GA-{str(uuid.uuid4())[:8].upper()}",
+            status='SUBMITTED',
+        )
+        return Response(GoldAssessmentSerializer(assessment).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def confirm(self, request, pk=None):
+        """Confirm assessment — marks certificate as official."""
+        assessment = self.get_object()
+        assessment.status = 'CONFIRMED'
+        assessment.save()
+        return Response(GoldAssessmentSerializer(assessment).data)

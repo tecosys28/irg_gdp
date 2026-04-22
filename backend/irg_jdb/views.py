@@ -174,8 +174,64 @@ class DesignOrderViewSet(viewsets.ModelViewSet):
 class RoyaltyPaymentViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RoyaltyPaymentSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
         if hasattr(self.request.user, 'designer_profile'):
             return RoyaltyPayment.objects.filter(designer=self.request.user.designer_profile)
         return RoyaltyPayment.objects.none()
+
+
+class DesignLicenseViewSet(viewsets.ModelViewSet):
+    """Designer sells a production license to a jeweler"""
+    serializer_class = DesignLicenseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if hasattr(self.request.user, 'designer_profile'):
+            return DesignLicense.objects.filter(design__designer=self.request.user.designer_profile)
+        if hasattr(self.request.user, 'jeweler_profile'):
+            return DesignLicense.objects.filter(licensed_to=self.request.user.jeweler_profile)
+        return DesignLicense.objects.none()
+
+    @action(detail=False, methods=['post'])
+    def sell(self, request):
+        """Designer issues a license for one of their designs to a jeweler."""
+        design_id = request.data.get('design_id')
+        jeweler_email = request.data.get('jeweler_email')
+        license_fee = Decimal(str(request.data.get('license_fee', '0')))
+        royalty_per_unit = Decimal(str(request.data.get('royalty_per_unit_sold', '0')))
+        valid_until = request.data.get('valid_until')
+
+        try:
+            designer = request.user.designer_profile
+        except Exception:
+            return Response({'error': 'Designer profile required'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            design = Design.objects.get(id=design_id, designer=designer, status='APPROVED')
+        except Design.DoesNotExist:
+            return Response({'error': 'Approved design not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            jeweler_user = User.objects.get(email=jeweler_email)
+            jeweler = jeweler_user.jeweler_profile
+        except Exception:
+            return Response({'error': 'Jeweler not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        tx_hash = blockchain._simulate_tx('LICENSE_ISSUE', str(design.id))
+
+        license_obj = DesignLicense.objects.create(
+            design=design,
+            licensed_to=jeweler,
+            license_fee=license_fee,
+            royalty_per_unit_sold=royalty_per_unit,
+            valid_until=valid_until,
+            license_tx_hash=tx_hash,
+        )
+
+        designer.royalties_earned += license_fee
+        designer.save()
+
+        return Response(DesignLicenseSerializer(license_obj).data, status=status.HTTP_201_CREATED)

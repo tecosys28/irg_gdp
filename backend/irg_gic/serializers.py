@@ -14,3 +14,16 @@ class GICRevenueDistributionSerializer(serializers.ModelSerializer):
     class Meta:
         model = GICRevenueDistribution
         fields = '__all__'
+
+class HouseholdRegistrationSerializer(serializers.ModelSerializer):
+    household_email = serializers.CharField(source='household_user.email', read_only=True)
+    class Meta:
+        model = HouseholdRegistration
+        fields = '__all__'
+        read_only_fields = ['licensee', 'registered_at']
+
+class GICRedemptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GICRedemption
+        fields = '__all__'
+        read_only_fields = ['redeemed_by', 'redemption_value', 'status', 'redemption_tx_hash', 'requested_at', 'completed_at']

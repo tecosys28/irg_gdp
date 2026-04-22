@@ -442,15 +442,21 @@ def _register_failed_password_attempt(wallet: WalletActivation) -> None:
 @db_transaction.atomic
 def update_nominees(user, *, nominees: List[dict], wallet_password: str) -> None:
     """
-    Replace the active nominee set. Requires wallet password re-entry since
-    this is a sensitive change.
+    Replace the active nominee set.
+    For CREATED (pre-activation) wallets: password is not required yet.
+    For ACTIVATED wallets: wallet password must be re-entered (sensitive change).
     """
     wallet = _require_wallet(user)
-    if not verify_wallet_password(user, wallet_password):
-        raise InvalidPassword('Wallet password incorrect.')
 
-    if not nominees or len(nominees) < 2:
-        raise NomineePolicyViolation('At least two nominees are required.')
+    # Only require password verification on already-activated wallets
+    if wallet.state == 'ACTIVATED':
+        if not verify_wallet_password(user, wallet_password):
+            raise InvalidPassword('Wallet password incorrect.')
+    elif wallet.state not in ('CREATED',):
+        raise WalletNotTransactable(wallet.blocking_reason or 'Wallet is not in a state that allows nominee updates.')
+
+    if not nominees or len(nominees) < 1:
+        raise NomineePolicyViolation('At least one nominee is required.')
     total = sum((Decimal(str(n['share_percent'])) for n in nominees), Decimal('0'))
     if total != Decimal('100'):
         raise NomineePolicyViolation(f'Nominee shares must total 100% (got {total}).')

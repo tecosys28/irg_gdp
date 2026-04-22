@@ -43,6 +43,20 @@ class VerifyPaymentSerializer(serializers.Serializer):
     utr_number = serializers.CharField(max_length=50)
     payment_proof = serializers.FileField(required=False)
 
+class GoldAssessmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoldAssessment
+        fields = '__all__'
+        read_only_fields = ['jeweler', 'certificate_number', 'estimated_value', 'benchmark_used', 'status', 'created_at']
+
+class GoldAssessmentRequestSerializer(serializers.Serializer):
+    customer_email = serializers.EmailField()
+    item_description = serializers.CharField()
+    estimated_weight = serializers.DecimalField(max_digits=10, decimal_places=4)
+    purity = serializers.ChoiceField(choices=[('24K','24K'),('22K','22K'),('18K','18K'),('14K','14K')])
+    test_method = serializers.ChoiceField(choices=['XRF','ACID','FIRE','DENSITY'], default='XRF')
+    assessment_notes = serializers.CharField(required=False, allow_blank=True)
+
 # kept for backward-compat with the old single-step `issue` action
 class IssueJRRequestSerializer(serializers.Serializer):
     customer_email = serializers.EmailField()

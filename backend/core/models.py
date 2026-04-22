@@ -67,6 +67,7 @@ class UserRole(models.Model):
         ('DESIGNER', 'Jewelry Designer'),
         ('OMBUDSMAN', 'Ombudsman'),
         ('CONSULTANT', 'Consultant'),
+        ('ADVERTISER', 'Advertiser'),
         ('MARKETMAKER', 'Market Maker'),
         ('LICENSEE', 'Licensee'),
         ('MINTER', 'FTR Minter'),
@@ -371,19 +372,83 @@ class MarketMakerProfile(models.Model):
 
 class TrusteeBankerProfile(models.Model):
     """Extended profile for Trustee Banker role"""
-    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='trustee_profile')
-    
+
     bank_name = models.CharField(max_length=200)
     banking_license = models.CharField(max_length=50)
     designation = models.CharField(max_length=100)
     branch_details = models.CharField(max_length=200)
-    
+
     registered_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         db_table = 'core_trustee_profile'
-    
+
     def __str__(self):
         return f"{self.bank_name} - {self.designation}"
+
+
+class ConsultantProfile(models.Model):
+    """Extended profile for Consultant role"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='consultant_profile')
+
+    expertise = models.CharField(max_length=200)
+    years_experience = models.PositiveIntegerField(default=0)
+    advisory_fee_per_hour = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    bio = models.TextField(blank=True)
+    total_clients = models.PositiveIntegerField(default=0)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'core_consultant_profile'
+
+    def __str__(self):
+        return f"Consultant: {self.user.get_full_name()}"
+
+
+class AdvertiserProfile(models.Model):
+    """Extended profile for Advertiser role"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='advertiser_profile')
+
+    company_name = models.CharField(max_length=200)
+    website = models.URLField(blank=True)
+
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'core_advertiser_profile'
+
+    def __str__(self):
+        return self.company_name
+
+
+class Advertisement(models.Model):
+    """Advertisement published by an advertiser"""
+
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'), ('PENDING', 'Pending Review'),
+        ('ACTIVE', 'Active'), ('PAUSED', 'Paused'), ('REJECTED', 'Rejected'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    advertiser = models.ForeignKey(AdvertiserProfile, on_delete=models.CASCADE, related_name='ads')
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    target_url = models.URLField(blank=True)
+    budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'core_advertisement'
+
+    def __str__(self):
+        return self.title

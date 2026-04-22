@@ -37,16 +37,52 @@ class GICCertificate(models.Model):
 class GICRevenueDistribution(models.Model):
     """Revenue distribution record for GIC holders"""
     STREAM_CHOICES = [('CORPUS','Corpus Returns'),('TRADING','Trading Fees'),('APPRECIATION','Gold Appreciation')]
-    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     certificate = models.ForeignKey(GICCertificate, on_delete=models.PROTECT, related_name='distributions')
-    
+
     stream = models.CharField(max_length=15, choices=STREAM_CHOICES)
     period = models.CharField(max_length=20)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
-    
+
     distribution_tx_hash = models.CharField(max_length=66)
     distributed_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         db_table = 'irg_gic_distribution'
+
+
+class HouseholdRegistration(models.Model):
+    """Licensee registers a household user under their territory"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    licensee = models.ForeignKey('core.LicenseeProfile', on_delete=models.PROTECT, related_name='registered_households')
+    household_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='licensee_registrations')
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=25)
+    status = models.CharField(max_length=20, default='ACTIVE',
+                               choices=[('ACTIVE', 'Active'), ('INACTIVE', 'Inactive')])
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'irg_gic_household_registration'
+        unique_together = ['licensee', 'household_user']
+
+
+class GICRedemption(models.Model):
+    """Redemption request for a matured GIC certificate"""
+    STATUS_CHOICES = [
+        ('REQUESTED', 'Requested'), ('PROCESSING', 'Processing'),
+        ('COMPLETED', 'Completed'), ('REJECTED', 'Rejected'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    certificate = models.ForeignKey(GICCertificate, on_delete=models.PROTECT, related_name='redemptions')
+    redeemed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    redemption_value = models.DecimalField(max_digits=15, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='REQUESTED')
+    redemption_tx_hash = models.CharField(max_length=66, blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'irg_gic_redemption'
