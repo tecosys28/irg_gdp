@@ -113,7 +113,7 @@ class UserViewSet(viewsets.ModelViewSet):
         # Add role-specific stats
         if 'HOUSEHOLD' in roles or 'INVESTOR' in roles:
             from irg_gdp.models import GDPUnit
-            dashboard_data['stats']['gdp_units'] = GDPUnit.objects.filter(owner=user, is_active=True).count()
+            dashboard_data['stats']['gdp_units'] = GDPUnit.objects.filter(owner=user, status='ACTIVE').count()
         
         if 'JEWELER' in roles:
             try:
