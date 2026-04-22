@@ -65,10 +65,17 @@ class IssuanceViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        try:
-            jeweler = request.user.jeweler_profile
-        except Exception:
-            return Response({'error': 'Jeweler profile required'}, status=status.HTTP_403_FORBIDDEN)
+        from core.models import JewelerProfile as _JP
+        jeweler, _ = _JP.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'business_name': f"{request.user.first_name or ''} {request.user.last_name or ''}".strip() or request.user.email,
+                'license_number': f"LIC-{request.user.id}",
+                'gst_number': 'PENDING',
+                'pan_number': 'PENDING',
+                'business_address': 'PENDING',
+            }
+        )
 
         from django.contrib.auth import get_user_model
         User = get_user_model()
@@ -199,10 +206,17 @@ class IssuanceViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        try:
-            jeweler = request.user.jeweler_profile
-        except Exception:
-            return Response({'error': 'Jeweler profile required'}, status=status.HTTP_403_FORBIDDEN)
+        from core.models import JewelerProfile as _JP
+        jeweler, _ = _JP.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'business_name': f"{request.user.first_name or ''} {request.user.last_name or ''}".strip() or request.user.email,
+                'license_number': f"LIC-{request.user.id}",
+                'gst_number': 'PENDING',
+                'pan_number': 'PENDING',
+                'business_address': 'PENDING',
+            }
+        )
 
         from django.contrib.auth import get_user_model
         User = get_user_model()
