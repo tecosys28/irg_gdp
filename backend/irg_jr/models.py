@@ -39,15 +39,35 @@ class JRUnit(models.Model):
         db_table = 'irg_jr_unit'
 
 class IssuanceRecord(models.Model):
-    """Record of JR issuance"""
+    """Record of JR issuance — two-step: initiate → verify payment → issue JR unit"""
+    STATUS_CHOICES = [
+        ('PENDING_PAYMENT', 'Pending Payment'),
+        ('PAYMENT_VERIFIED', 'Payment Verified'),
+        ('COMPLETED', 'Completed'),
+        ('REJECTED', 'Rejected'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    jr_unit = models.OneToOneField(JRUnit, on_delete=models.PROTECT, related_name='issuance_record')
+    jr_unit = models.OneToOneField(
+        JRUnit, on_delete=models.PROTECT, related_name='issuance_record',
+        null=True, blank=True,
+    )
     jeweler = models.ForeignKey('core.JewelerProfile', on_delete=models.PROTECT)
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     invoice_number = models.CharField(max_length=50)
-    invoice_file = models.FileField(upload_to='jr_invoices/')
+    invoice_file = models.FileField(upload_to='jr_invoices/', blank=True, null=True)
     corpus_contribution = models.DecimalField(max_digits=15, decimal_places=2)
+
+    # Bank-transfer payment proof
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING_PAYMENT')
+    utr_number = models.CharField(max_length=50, blank=True, null=True)
+    payment_proof = models.FileField(upload_to='jr_payment_proofs/', blank=True, null=True)
+
+    # Snapshot of jewellery data used to create JRUnit after payment is verified
+    pending_data = models.JSONField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         db_table = 'irg_jr_issuance'
 

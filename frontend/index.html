@@ -785,6 +785,12 @@
           if(!r.ok)throw await r.json().catch(()=>({error:'request_failed'}));
           return r.json();
         }
+        async function apiFormPost(path,formData){
+          const t=await _freshToken();
+          const r=await fetch(API+path,{method:'POST',headers:{...(t?{'Authorization':'Bearer '+t}:{})},body:formData});
+          if(!r.ok)throw await r.json().catch(()=>({error:'request_failed'}));
+          return r.json();
+        }
         function fmtDate(s){return s?(s+'').slice(0,16).replace('T',' '):'—';}
         function fmtAmt(v){return v!=null?parseFloat(v).toLocaleString('en-IN',{maximumFractionDigits:4}):'—';}
         function badge(label,cls){return`<span class="badge badge-${cls||'warning'}">${label}</span>`;}
@@ -794,7 +800,7 @@
         }
         function panelCard(title,content){return`<div class="card" style="margin-bottom:20px"><h3 style="color:var(--gold);margin-bottom:16px">${title}</h3>${content}</div>`;}
         function errCard(msg){return`<div class="card"><p style="color:var(--danger)">${msg}</p></div>`;}
-        function statusColor(s){const m={ACTIVE:'success',FINAL:'success',CONFIRMED:'success',ACTIVATED:'success',APPROVED:'success',PASSED:'success',RESOLVED:'success',PENDING:'warning',SUBMITTED:'warning',INITIATED:'warning',FILED:'warning',UNDER_REVIEW:'warning',VOTING:'warning',FAILED:'danger',REJECTED:'danger',RECALLED:'danger',LOCKED:'danger',SUSPENDED:'danger',FROZEN:'danger'};return m[s]||'info';}
+        function statusColor(s){const m={ACTIVE:'success',FINAL:'success',CONFIRMED:'success',ACTIVATED:'success',APPROVED:'success',PASSED:'success',RESOLVED:'success',COMPLETED:'success',PAYMENT_VERIFIED:'success',PENDING:'warning',SUBMITTED:'warning',INITIATED:'warning',FILED:'warning',UNDER_REVIEW:'warning',VOTING:'warning',PENDING_PAYMENT:'warning',FAILED:'danger',REJECTED:'danger',RECALLED:'danger',LOCKED:'danger',SUSPENDED:'danger',FROZEN:'danger'};return m[s]||'info';}
 
         function debounce(d=300){const n=Date.now();if(n-lastClickTime<d)return false;lastClickTime=n;return true;}
         // ─── Landing nav scroll helpers ───────────────────────────────────────
@@ -1580,70 +1586,111 @@
         }
 
         // ═══════════════════════════════════════════════════════
-        // JR ISSUANCE
+        // JR ISSUANCE  (two-step: initiate → bank transfer → verify)
         // ═══════════════════════════════════════════════════════
         async function renderJRIssuance(){
           const data=await apiGet('/jr/issuance/').catch(()=>({results:[]}));
           const rows=(data.results||data||[]).map(r=>`<tr>
-            <td>${r.id}</td><td>${r.customer||'—'}</td><td>${r.gold_weight}g ${r.purity}</td>
-            <td>₹${fmtAmt(r.making_charges)}</td>
-            <td>${fmtDate(r.created_at)}</td><td>${badge(r.jr_unit_status||'—',statusColor(r.jr_unit_status))}</td>
+            <td class="mono" style="font-size:11px">${r.id.slice(0,8)}…</td>
+            <td>${r.customer||'—'}</td>
+            <td>₹${fmtAmt(r.corpus_contribution)}</td>
+            <td>${fmtDate(r.created_at)}</td>
+            <td>${badge(r.status||'—',statusColor(r.status))}</td>
+            <td>${r.status==='PENDING_PAYMENT'?`<button class="btn btn-sm btn-gold" onclick="showJRPaymentForm('${r.id}',${r.corpus_contribution})">Submit Payment</button>`:'—'}</td>
           </tr>`);
-          return panelCard('📝 Issue irg_jr — New Issuance',`
+          return panelCard('📝 Issue irg_jr — Step 1: Jewellery Details',`
+            <p style="margin:0 0 12px;color:var(--muted);font-size:13px">Fill in the jewellery details. You will receive the corpus fund bank account and the amount to transfer.</p>
             <div class="form-row">
-              <div class="form-group"><label>Customer Email</label><input type="email" class="input" id="jr-email" placeholder="customer@email.com"></div>
-              <div class="form-group"><label>Invoice Number</label><input type="text" class="input" id="jr-invoice" placeholder="INV-2026-001"></div>
+              <div class="form-group"><label>Customer Email *</label><input type="email" class="input" id="jr-email" placeholder="customer@email.com"></div>
+              <div class="form-group"><label>Invoice Number *</label><input type="text" class="input" id="jr-invoice" placeholder="INV-2026-001"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>Gold Weight (g)</label><input type="number" class="input" id="jr-grams" placeholder="e.g. 20" min="0.1" step="0.001"></div>
-              <div class="form-group"><label>Purity</label>
+              <div class="form-group"><label>Gold Weight (g) *</label><input type="number" class="input" id="jr-grams" placeholder="e.g. 20.000" min="0.001" step="0.001"></div>
+              <div class="form-group"><label>Purity *</label>
                 <select class="select" id="jr-purity">
-                  <option value="24K">24K</option><option value="22K">22K</option><option value="18K">18K</option><option value="14K">14K</option>
+                  <option value="22K">22K</option><option value="24K">24K</option><option value="18K">18K</option><option value="14K">14K</option>
                 </select>
               </div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>Making Charges (₹)</label><input type="number" class="input" id="jr-making" placeholder="e.g. 5000" min="0"></div>
-              <div class="form-group"><label>Stone Value (₹)</label><input type="number" class="input" id="jr-stone" placeholder="e.g. 0" min="0"></div>
+              <div class="form-group"><label>Making Charges (₹)</label><input type="number" class="input" id="jr-making" placeholder="0" min="0"></div>
+              <div class="form-group"><label>Stone Value (₹)</label><input type="number" class="input" id="jr-stone" placeholder="0" min="0"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>Jewellery Type</label><input type="text" class="input" id="jr-type" placeholder="e.g. Necklace, Ring"></div>
-              <div class="form-group"><label>Description</label><input type="text" class="input" id="jr-desc" placeholder="Brief description"></div>
+              <div class="form-group"><label>Jewellery Type *</label>
+                <select class="select" id="jr-jtype">
+                  <option value="NEW">New Jewelry</option><option value="OLD">Old Jewelry</option><option value="REMADE">Remade Jewelry</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Description *</label><input type="text" class="input" id="jr-desc" placeholder="e.g. 22K Gold Necklace with pendant"></div>
             </div>
-            <button class="btn btn-gold" onclick="submitJRIssuance()">Issue irg_jr</button>
+            <button class="btn btn-gold" onclick="initiateJRIssuance()">Calculate Corpus &amp; Get Bank Details</button>
+            <div id="jr-bank-details" style="display:none;margin-top:20px;padding:16px;background:rgba(228,180,74,0.08);border:1px solid rgba(228,180,74,0.3);border-radius:8px"></div>
           `)
-          +panelCard('📋 Issuance Records',tbl(['ID','Customer','Weight & Purity','Making Charges','Date','Unit Status'],rows));
+          +panelCard('📋 Issuance Records',tbl(['ID','Customer','Corpus (₹)','Date','Status','Action'],rows));
         }
-        async function submitJRIssuance(){
+
+        async function initiateJRIssuance(){
           const body={
             customer_email:document.getElementById('jr-email')?.value.trim(),
             invoice_number:document.getElementById('jr-invoice')?.value.trim(),
-            gold_weight:parseFloat(document.getElementById('jr-grams')?.value),
+            gold_weight:parseFloat(document.getElementById('jr-grams')?.value||'0'),
             purity:document.getElementById('jr-purity')?.value,
             making_charges:parseFloat(document.getElementById('jr-making')?.value||'0'),
             stone_value:parseFloat(document.getElementById('jr-stone')?.value||'0'),
-            jewelry_type:document.getElementById('jr-type')?.value.trim(),
+            jewelry_type:document.getElementById('jr-jtype')?.value,
             description:document.getElementById('jr-desc')?.value.trim(),
           };
-          if(!body.customer_email||!body.gold_weight){alert('Fill in required fields.');return;}
-          const totalInr=body.making_charges+body.stone_value;
-          // If there are charges, collect payment via Razorpay before issuing
-          if(totalInr>0){
-            openRazorpay({
-              amountPaise: Math.round(totalInr*100),
-              purpose: `irg_jr Issuance — ${body.gold_weight}g ${body.purity} for ${body.customer_email}`,
-              referenceId: body.invoice_number||'',
-              onSuccess: async(paymentId)=>{
-                body.payment_id=paymentId;
-                try{const r=await apiPost('/jr/issuance/issue/',body);alert(`irg_jr issued! Unit ID: ${r.jr_unit?.id||'OK'}\nPayment: ${paymentId}`);renderPanel();}
-                catch(e){alert('Payment succeeded but issuance failed: '+(e.error||JSON.stringify(e)));}
-              },
-            });
-            return;
-          }
+          if(!body.customer_email||!body.gold_weight||!body.description){alert('Please fill all required fields.');return;}
           try{
-            const r=await apiPost('/jr/issuance/issue/',body);
-            alert(`irg_jr issued! Unit ID: ${r.jr_unit?.id||'OK'}`);
+            const r=await apiPost('/jr/issuance/initiate/',body);
+            const b=r.bank_details||{};
+            const panel=document.getElementById('jr-bank-details');
+            panel.style.display='block';
+            panel.innerHTML=`
+              <h4 style="margin:0 0 12px;color:var(--gold)">Step 2 — Transfer Corpus Contribution</h4>
+              <p style="margin:0 0 12px;color:var(--muted);font-size:13px">${r.payment_instructions||''}</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;font-size:13px">
+                <div><span style="color:var(--muted)">Account Name</span><br><strong>${b.account_name}</strong></div>
+                <div><span style="color:var(--muted)">Account Number</span><br><strong class="mono">${b.account_number}</strong></div>
+                <div><span style="color:var(--muted)">Bank</span><br><strong>${b.bank_name}</strong></div>
+                <div><span style="color:var(--muted)">IFSC Code</span><br><strong class="mono">${b.ifsc_code}</strong></div>
+                <div><span style="color:var(--muted)">Account Type</span><br><strong>${b.account_type}</strong></div>
+                <div><span style="color:var(--muted)">Amount to Transfer</span><br><strong style="color:var(--gold);font-size:16px">₹${fmtAmt(r.corpus_contribution)}</strong></div>
+              </div>
+              <hr style="border-color:rgba(255,255,255,0.1);margin:12px 0">
+              <h4 style="margin:0 0 12px;color:var(--white)">Step 3 — Submit Payment Proof</h4>
+              <div class="form-row">
+                <div class="form-group"><label>UTR / Reference Number *</label><input type="text" class="input" id="jr-utr" placeholder="e.g. BARB00202600001234"></div>
+                <div class="form-group"><label>Payment Screenshot / Receipt</label><input type="file" class="input" id="jr-proof" accept="image/*,application/pdf"></div>
+              </div>
+              <button class="btn btn-gold" onclick="submitJRPayment('${r.issuance_id}')">Verify Payment &amp; Issue irg_jr</button>
+            `;
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        async function submitJRPayment(issuanceId){
+          const utr=document.getElementById('jr-utr')?.value.trim();
+          if(!utr){alert('Enter the UTR / reference number.');return;}
+          const fd=new FormData();
+          fd.append('utr_number',utr);
+          const proofFile=document.getElementById('jr-proof')?.files?.[0];
+          if(proofFile) fd.append('payment_proof',proofFile);
+          try{
+            const r=await apiFormPost(`/jr/issuance/${issuanceId}/verify_payment/`,fd);
+            alert(`Payment verified! irg_jr unit issued.\nUnit ID: ${r.jr_unit?.id||'OK'}`);
+            renderPanel();
+          }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
+        }
+
+        async function showJRPaymentForm(issuanceId,corpus){
+          const utr=prompt(`Enter UTR / reference number for ₹${fmtAmt(corpus)} corpus transfer:`);
+          if(!utr) return;
+          const fd=new FormData();
+          fd.append('utr_number',utr.trim());
+          try{
+            const r=await apiFormPost(`/jr/issuance/${issuanceId}/verify_payment/`,fd);
+            alert(`Payment verified! irg_jr unit issued.\nUnit ID: ${r.jr_unit?.id||'OK'}`);
             renderPanel();
           }catch(e){alert('Error: '+(e.error||JSON.stringify(e)));}
         }
@@ -2286,7 +2333,8 @@
           initiateSwap, confirmSwap, placeOrder,
           initiateTransfer,
           // JR
-          submitJRIssuance, requestBuyback, approveBuyback,
+          initiateJRIssuance, submitJRPayment, showJRPaymentForm,
+          requestBuyback, approveBuyback,
           // JDB
           uploadDesign, submitDesign, registerCopyright, placeDesignOrder, completeOrder,
           // GIC

@@ -11,6 +11,8 @@ class IssuanceRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = IssuanceRecord
         fields = '__all__'
+        read_only_fields = ['jeweler', 'customer', 'corpus_contribution', 'status',
+                            'jr_unit', 'pending_data', 'created_at']
 
 class BuybackRecordSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,12 +25,31 @@ class RedemptionRecordSerializer(serializers.ModelSerializer):
         model = RedemptionRecord
         fields = '__all__'
 
-class IssueJRRequestSerializer(serializers.Serializer):
+# ── Request bodies ──────────────────────────────────────────────────────────
+
+class InitiateIssuanceSerializer(serializers.Serializer):
+    """Step 1: jeweler submits jewellery details → gets bank account + corpus amount."""
     customer_email = serializers.EmailField()
-    jewelry_type = serializers.ChoiceField(choices=[('NEW','New'),('OLD','Old'),('REMADE','Remade')])
+    jewelry_type = serializers.ChoiceField(choices=[('NEW', 'New'), ('OLD', 'Old'), ('REMADE', 'Remade')])
     description = serializers.CharField()
     gold_weight = serializers.DecimalField(max_digits=10, decimal_places=4)
-    purity = serializers.ChoiceField(choices=[('24K','24K'),('22K','22K'),('18K','18K'),('14K','14K')])
+    purity = serializers.ChoiceField(choices=[('24K', '24K'), ('22K', '22K'), ('18K', '18K'), ('14K', '14K')])
+    making_charges = serializers.DecimalField(max_digits=12, decimal_places=2)
+    stone_value = serializers.DecimalField(max_digits=12, decimal_places=2, default=0)
+    invoice_number = serializers.CharField()
+
+class VerifyPaymentSerializer(serializers.Serializer):
+    """Step 2: jeweler submits UTR + payment proof → issuance proceeds."""
+    utr_number = serializers.CharField(max_length=50)
+    payment_proof = serializers.FileField(required=False)
+
+# kept for backward-compat with the old single-step `issue` action
+class IssueJRRequestSerializer(serializers.Serializer):
+    customer_email = serializers.EmailField()
+    jewelry_type = serializers.ChoiceField(choices=[('NEW', 'New'), ('OLD', 'Old'), ('REMADE', 'Remade')])
+    description = serializers.CharField()
+    gold_weight = serializers.DecimalField(max_digits=10, decimal_places=4)
+    purity = serializers.ChoiceField(choices=[('24K', '24K'), ('22K', '22K'), ('18K', '18K'), ('14K', '14K')])
     making_charges = serializers.DecimalField(max_digits=12, decimal_places=2)
     stone_value = serializers.DecimalField(max_digits=12, decimal_places=2, default=0)
     invoice_number = serializers.CharField()
