@@ -6,7 +6,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),
+        ('core', '0002_alter_user_groups_alter_user_is_active_and_more'),
     ]
 
     operations = [
