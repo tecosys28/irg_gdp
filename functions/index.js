@@ -79,9 +79,10 @@ exports.apiProxy = onRequest({ invoker: 'public' }, async (req, res) => {
     method: req.method,
     headers: {
       ...forwardHeaders,
-      host: EC2_HOST,
+      host: 'irggdp.com',
       'x-forwarded-for': req.ip,
       'x-forwarded-proto': 'https',
+      'x-forwarded-host': 'irggdp.com',
     },
   };
 

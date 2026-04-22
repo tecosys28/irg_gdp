@@ -11,6 +11,8 @@
     "rewrites": [
       { "source": "/api/**",      "function": "apiProxy" },
       { "source": "/admin/**",    "function": "apiProxy" },
+      { "source": "/static/**",   "function": "apiProxy" },
+      { "source": "/media/**",    "function": "apiProxy" },
       { "source": "/healthz",     "function": "apiProxy" },
       { "source": "/wallet",      "destination": "/wallet.html" },
       { "source": "/heir-guide",  "destination": "/heir-guide.html" },
