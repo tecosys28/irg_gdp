@@ -367,5 +367,9 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    CSRF_COOKIE_SECURE = True
-    CSRF_COOKIE_HTTPONLY = False
+    # Firebase Hosting CDN only forwards the cookie named exactly '__session'
+    # to Cloud Functions — all others (csrftoken, sessionid) are stripped.
+    # Storing CSRF in the session and renaming the session cookie to '__session'
+    # makes both tokens survive the CDN hop.
+    SESSION_COOKIE_NAME = '__session'
+    CSRF_USE_SESSIONS = True
