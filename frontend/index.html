@@ -1655,8 +1655,8 @@
         // GDP MINTING
         // ═══════════════════════════════════════════════════════
         async function renderGDPMint(){
-          // Jewelers mint GDP for customers via Issue irg_jr, not directly.
-          if(window._userRoles.includes('jeweler') && !window._userRoles.some(r=>['household','investor','minter'].includes(r))){
+          // Jewelers always mint for customers via Issue irg_jr, never the direct form.
+          if(window._userRoles.includes('jeweler')){
             return panelCard('⛏️ Minting — Jeweler Flow',`
               <div class="info-box info" style="margin-bottom:16px">
                 <strong>💡 How Jewelers Mint GDP</strong><br>
